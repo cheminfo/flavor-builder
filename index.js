@@ -184,9 +184,9 @@ function generateHtml(rootStructure, structure, currentPath) {
                 var url = config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev;
                 request(url, {
                     auth: {
-                        user: 'username',
-                        pass: 'password',
-                        sendImmediately: false
+                        user: config.couchUsername,
+                        pass: config.couchPassword,
+                        sendImmediately: true
                     }
                 }, function(error, response, body) {
                     if(!error && response.statusCode === 200) {
@@ -195,7 +195,9 @@ function generateHtml(rootStructure, structure, currentPath) {
                         if(homeData) {
                             writeFile('./layout/' + config.layoutFile, path.join(config.dir, 'index.html'), homeData);
                         }
+                        return
                     }
+                    console.log('could not get meta');
                 });
             }
             else {
