@@ -162,7 +162,6 @@ function generateHtml(rootStructure, structure, currentPath) {
         if(key === '__name') continue;
         var el = structure[key];
         if(el.__id) {
-            debugger;
             var name = el.__name || '';
             var data = {
                 viewURL: el.__view ? config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev : undefined,
@@ -174,17 +173,29 @@ function generateHtml(rootStructure, structure, currentPath) {
                 title: el.__name
             };
 
+            var homeData;
+            console.log(currentPath);
+            if(el.__name === config.home) {
+                homeData = _.cloneDeep(data);
+                homeData.menuHtml = doMenu(rootStructure, config.dir);
+                homeData.reldir = '.';
+            }
+
             if(el.__meta) {
                 var url = config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev;
                 request(url, function(error, response, body) {
                     if(!error && response.statusCode === 200) {
                         data.meta = JSON.parse(body);
-                        writeFile('./layout/' + config.layoutFile , path.join(path.join(currentPath, name.trim())) + '.html', data);
+                        writeFile('./layout/' + config.layoutFile , path.join(currentPath, name.trim()) + '.html', data);
+                        if(homeData) {
+                            writeFile('./layout/' + config.layoutFile, path.join(config.dir, 'index.html'), homeData);
+                        }
                     }
                 });
             }
             else {
-                writeFile('./layout/' + config.layoutFile , path.join(path.join(currentPath, name.trim())) + '.html', data);
+                writeFile('./layout/' + config.layoutFile , path.join(currentPath, name.trim()) + '.html', data);
+                writeFile('./layout/' + config.layoutFile, path.join(config.dir, 'index.html'), homeData);
             }
 
 
