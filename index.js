@@ -183,7 +183,13 @@ function generateHtml(rootStructure, structure, currentPath) {
 
             if(el.__meta) {
                 var url = config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev;
-                request(url, function(error, response, body) {
+                request(url, {
+                    auth: {
+                        user: 'username',
+                        pass: 'password',
+                        sendImmediately: false
+                    }
+                }, function(error, response, body) {
                     if(!error && response.statusCode === 200) {
                         data.meta = JSON.parse(body);
                         writeFile('./layout/' + config.layoutFile , path.join(currentPath, name.trim()) + '.html', data);
