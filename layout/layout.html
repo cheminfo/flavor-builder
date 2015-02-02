@@ -1,0 +1,29 @@
+
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %} Visualizer {% endblock %}</title>
+    <script src="http://www.lactame.com/lib/jquery/2.1.1/jquery.min.js"></script>
+    {% block head %}
+
+    {% endblock %}
+</head>
+<body>
+{% block menu %}
+    {{ menuHtml|safe }}
+{% endblock %}
+{% block content %}{% endblock %}
+
+{% block couchStatic %}
+{{ meta.static.value|safe }}
+{% endblock %}
+
+{% block visualizer %}
+    {% if viewURL %}
+        {% include "./visualizer.html" %}
+    {% endif %}
+{% endblock %}
+
+</body>
+</html>

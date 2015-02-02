@@ -1,0 +1,43 @@
+<script>
+
+    window.onload = function () {
+        $.getJSON('http://www.lactame.com/visualizer/versions.php').then(function(versions) {
+            var url;
+            var div = document.getElementById('errorMessage');
+
+            url = '{{ viewURL }}';
+            if(!url) {
+                div.innerHTML = 'No view URL specified';
+                return;
+            }
+            $.getJSON(url).then(function (view) {
+                var version = 'latest';
+                if (view.version) {
+                    var idx = versions.indexOf('v' + view.version);
+                    if (idx > -1) {
+                        version = versions[idx];
+                    }
+                    else {
+                        version = 'HEAD';
+                    }
+                }
+
+                var visualizer = document.createElement('script');
+                var prefix = 'http://www.lactame.com/visualizer/';
+                visualizer.setAttribute('data-main', prefix + version + '/init');
+                visualizer.setAttribute('src', prefix + version + '/components/requirejs/require.js');
+                document.head.appendChild(visualizer);
+            }, function () {
+                div.innerHTML = 'view at <a href="' + url + '" target="_blank">' + url + '</a> could not be loaded';
+            });
+        });
+    }
+</script>
+<div id="errorMessage"></div>
+<tr>
+    <td class="left"></td>
+    <td colspan="3">
+        <div id="ci-visualizer" style="margin-top: 15px" {% if dataURL %} dataURL="{{ dataURL }}" {% endif %} viewURL="{{ viewURL }}" config="{{ config.urlPrefix }}/config.json"/>
+    </td>
+    <td class="right"></td>
+</tr>

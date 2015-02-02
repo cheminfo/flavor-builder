@@ -1,0 +1,24 @@
+{
+  "name": "flavor-builder",
+  "version": "0.0.0",
+  "description": "Make an indexable website from a flavor (a bunch of views in the visualizer)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "visualizer",
+    "build"
+  ],
+  "author": "Daniel Kostro",
+  "license": "MIT",
+  "dependencies": {
+    "nano": "~6.0.2",
+    "minimist": "~1.1.0",
+    "bluebird": "~2.9.3",
+    "lodash": "~3.0.0",
+    "swig": "~1.4.2",
+    "fs-extra": "~0.16.0",
+    "request": "~2.52.0"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "lockView": false,
+  "usrDir": "usr",
+  "debugLevel": -1,
+  "contextMenu": ["fullscreen", "move", "export", "print", "tofront", "toback"],
+  "filters": [
+    {
+      "file": "usr/filters/doitourl.js",
+      "name": "DOI to URL"
+    },
+    {
+      "file": "usr/filters/flickr.js",
+      "name": "Flickr image"
+    },
+    {
+      "file": "usr/filters/gcgenerator.js",
+      "name": "Generate GC"
+    },
+    {
+      "file": "usr/filters/hclust.js",
+      "name": "Hierarchical clustering"
+    },
+    {
+      "file": "usr/filters/histogram.js",
+      "name": "Color histogram"
+    },
+    {
+      "file": "usr/filters/testdelay.js",
+      "name": "Delay test"
+    }
+  ],
+  "modules": {
+    "folders":["modules/types"]
+  }
+
+}
