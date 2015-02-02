@@ -13,10 +13,6 @@ var parseArgs = require('minimist'),
     request = require('request'),
     auth = '';
 
-config.urlPrefix = config.urlPrefix.replace(/\/$/, '');
-config.themeUrl = config.urlPrefix + '/themes';
-config.libUrl = config.urlPrefix + '/lib';
-config.staticUrl = config.urlPrefix + '/static';
 config.couchurl = config.couchurl.replace(/\/$/, '');
 
 
@@ -107,7 +103,7 @@ function handleFlavor(data) {
         var flavors = row.value.flavors;
         getStructure(flavors, structure, row.value);
     }
-    addPath(structure, './build');
+    addPath(structure, config.dir);
     generateHtml(structure, structure, config.dir);
     copyFiles();
 }
@@ -173,7 +169,9 @@ function generateHtml(rootStructure, structure, currentPath) {
                 dataURL: el.__data ? config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev : undefined,
                 structure: rootStructure,
                 config: config,
-                menuHtml: doMenu(rootStructure, currentPath)
+                menuHtml: doMenu(rootStructure, currentPath),
+                reldir: path.relative(currentPath, config.dir) === '' ? '.' : path.relative(currentPath, config.dir),
+                title: el.__name
             };
 
             if(el.__meta) {
