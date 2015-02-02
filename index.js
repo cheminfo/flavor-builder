@@ -29,7 +29,6 @@ var toCopy = [
     {src: './static', dest: path.join(config.dir, './static')}
 ];
 
-
 function getFlavors() {
     return new Promise(function (resolve, reject) {
         couchdb.view('flavor', 'list', {key: config.couchUsername}, function(err, body) {

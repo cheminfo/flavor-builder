@@ -16,7 +16,11 @@
 {% block content %}{% endblock %}
 
 {% block couchStatic %}
+{% if meta.static.type == 'text' %}
+{{ meta.static.value }}
+{% elseif meta.static.type == 'html' %}
 {{ meta.static.value|safe }}
+{% endif %}
 {% endblock %}
 
 {% block visualizer %}
