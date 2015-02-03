@@ -1,10 +1,20 @@
 <script>
-
+    function checkVersion(versions, version) {
+        var idx = versions.indexOf('v' + version);
+        if (idx > -1) {
+            version = versions[idx];
+        }
+        else {
+            version = 'HEAD';
+        }
+        return version;
+    }
     window.onload = function () {
         $.getJSON('http://www.lactame.com/visualizer/versions.php').then(function(versions) {
             var url;
             var div = document.getElementById('errorMessage');
-
+            var uri = new URI(window.location.href);
+            var search = uri.search(true);
             url = '{{ viewURL }}';
             if(!url) {
                 div.innerHTML = 'No view URL specified';
@@ -12,14 +22,11 @@
             }
             $.getJSON(url).then(function (view) {
                 var version = 'latest';
-                if (view.version) {
-                    var idx = versions.indexOf('v' + view.version);
-                    if (idx > -1) {
-                        version = versions[idx];
-                    }
-                    else {
-                        version = 'HEAD';
-                    }
+                if(search.v) {
+                    version = checkVersion(versions, search.v);
+                }
+                else if (view.version) {
+                    version = checkVersion(versions, view.version);
                 }
 
                 var visualizer = document.createElement('script');
