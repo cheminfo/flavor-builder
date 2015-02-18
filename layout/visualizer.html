@@ -30,7 +30,7 @@
                 }
 
                 var visualizer = document.createElement('script');
-                var prefix = 'http://www.lactame.com/visualizer/';
+                var prefix = 'http://' + (search.direct ? 'direct' : 'www') + '.lactame.com/visualizer/';
                 visualizer.setAttribute('data-main', prefix + version + '/init');
                 visualizer.setAttribute('src', prefix + version + '/components/requirejs/require.js');
                 document.head.appendChild(visualizer);
