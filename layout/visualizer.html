@@ -1,6 +1,7 @@
 <script>
     function checkVersion(versions, version) {
-        var idx = versions.indexOf('v' + version);
+	if (version.indexOf("v")!=0) version="v"+version;
+        var idx = versions.indexOf(version);
         if (idx > -1) {
             version = versions[idx];
         }
