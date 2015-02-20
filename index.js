@@ -26,8 +26,7 @@ for(var key in args) {
 var toCopy = [
     {src: './visualizer/config.json', dest: path.join(config.dir, 'config.json')},
     {src: './lib', dest: path.join(config.dir, './lib')},
-    {src: './themes', dest: path.join(config.dir, './themes')},
-    {src: './static', dest: path.join(config.dir, './static')}
+    {src: './themes', dest: path.join(config.dir, './themes')}
 ];
 
 function getFlavors() {
