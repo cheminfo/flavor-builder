@@ -31,12 +31,21 @@ var toCopy = [
 
 function getFlavors() {
     return new Promise(function (resolve, reject) {
+	if (config.couchUsername) {	
         couchdb.view('flavor', 'list', {key: config.couchUsername}, function(err, body) {
             if(err) {
                 return reject(err);
             }
             return resolve(body);
         });
+	} else {
+        couchdb.view('flavor', 'list', function(err, body) {
+            if(err) {
+                return reject(err);
+            }
+            return resolve(body);
+        });
+	}
     });
 }
 
@@ -58,7 +67,7 @@ function getFlavorMD5(flavors) {
         return new Promise(function (resolve, reject) {
             var url = config.couchurl + '/' + config.couchDatabase + '/_design/flavor/_list/config/alldocs?key="' + flavors + '"';
             request(url, {
-                auth: {
+                authxxx: {
                     user: config.couchUsername,
                     pass: config.couchPassword,
                     sendImmediately: true
@@ -143,12 +152,21 @@ function handleFlavors(data) {
 
 function getFlavor(flavor) {
     return new Promise(function (resolve, reject) {
-        couchdb.view('flavor', 'docs', {key: [flavor, config.couchUsername]}, function(err, body) {
-            if(err) {
-                return reject(err);
-            }
-            return resolve(body);
-        });
+	if (config.couchUsername) {
+          couchdb.view('flavor', 'docs', {key: [flavor, config.couchUsername]}, function(err, body) {
+       	     if(err) {
+       	         return reject(err);
+       	     }
+       	     return resolve(body);
+       	 });
+	} else {
+          couchdb.view('flavor', 'docs', {key: [flavor]}, function(err, body) {
+       	     if(err) {
+       	         return reject(err);
+       	     }
+       	     return resolve(body);
+       	 });
+	}
     });
 }
 
@@ -261,7 +279,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                 (function(el){
                     var url = config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev;
                     request(url, {
-                        auth: {
+                        authxxx: {
                             user: config.couchUsername,
                             pass: config.couchPassword,
                             sendImmediately: true
@@ -335,8 +353,7 @@ if(config.flavor) {
 }
 
 else {
-    couchAuthenticate()
-        .then(getFlavors)
+    getFlavors()
         .then(processFlavors)
         .then(filterFlavorsByMd5)
         .then(function(flavors) {
