@@ -9,7 +9,12 @@
     {% if meta.description %}
     <meta name="description" content="{{meta.description.value | safe}}">
     {% endif %}
+    {% if meta.description %}
+    <title>{{meta.title.value | safe}}</title>
+    {% else %}
     <title>{% block title %} Visualizer {% endblock %}</title>
+    {% endif %}
+
     <script src="http://www.lactame.com/lib/jquery/2.1.1/jquery.min.js"></script>
     <script src="http://www.lactame.com/lib/uri.js/1.14.1/URI.min.js"></script>
     {% block head %}
@@ -23,10 +28,10 @@
 {% block content %}{% endblock %}
 
 {% block couchStatic %}
-{% if meta.static.type == 'text' %}
-{{ meta.static.value }}
-{% elseif meta.static.type == 'html' %}
-{{ meta.static.value|safe }}
+{% if meta.content.type == 'text' %}
+{{ meta.content.value }}
+{% elseif meta.content.type == 'html' %}
+{{ meta.content.value|safe }}
 {% endif %}
 {% endblock %}
 
