@@ -302,11 +302,11 @@ function generateHtml(rootStructure, structure, currentPath) {
 function doMenu(structure, cpath, html) {
     if(!html) html = '';
     if(structure.__id) {
-        html += '<li><a href="' + path.relative(cpath, structure.__path) + '">' + structure.__name + '</a></li>';
+        if(structure.__name !== config.home)
+            html += '<li><a href="' + path.relative(cpath, structure.__path) + '">' + structure.__name + '</a></li>';
         return html;
     }
     else {
-
         if(structure.__name) html += '<li><a href="#">' + structure.__name  + '</a>';
         html += "<ul>";
         for(var key in structure) {
