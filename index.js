@@ -116,12 +116,15 @@ function getStructure(flavors, current, row) {
         current.__meta = row.meta;
         current.__id = row._id;
         current.__rev = row._rev;
+        current.filename = current.__name.trim().replace(/[^A-Za-z0-9.-]/g, '_') + '.html';
         return;
     }
 
     var flavor = flavors.shift();
     if(!current[flavor])
-        current[flavor]={__name: flavor};
+        current[flavor]={
+            __name: flavor
+        };
     getStructure(flavors, current[flavor], row);
 }
 
@@ -148,8 +151,8 @@ function addPath(structure, currentPath) {
         var el = structure[key];
         if(el.__id) {
             var name = el.__name || '';
-            el.__url = encodeURI(config.urlPrefix + '/' + path.join(currentPath, name.trim()+'.html'));
-            el.__path = path.join(currentPath, name.trim() + '.html');
+            el.__url = encodeURI(config.urlPrefix + '/' + path.join(currentPath, el.filename));
+            el.__path = path.join(currentPath, el.filename);
         }
         else {
             addPath(structure[key], path.join(currentPath, el.__name));
@@ -195,25 +198,27 @@ function generateHtml(rootStructure, structure, currentPath) {
 
             // If couch has meta.json, we make a request to get that file first
             if(el.__meta) {
-                var url = config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev;
-                request(url, {
-                    auth: {
-                        user: config.couchUsername,
-                        pass: config.couchPassword,
-                        sendImmediately: true
-                    }
-                }, function(error, response, body) {
-                    if(!error && response.statusCode === 200) {
-                        data.meta = JSON.parse(body);
-                        writeFile('./layout/' + config.layoutFile , path.join(currentPath, name.trim()) + '.html', data);
-                        if(homeData) {
-                            writeFile('./layout/' + config.layoutFile, path.join(flavorDir, 'index.html'), homeData);
+                (function(el){
+                    var url = config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev;
+                    request(url, {
+                        auth: {
+                            user: config.couchUsername,
+                            pass: config.couchPassword,
+                            sendImmediately: true
                         }
-                    }
-                });
+                    }, function(error, response, body) {
+                        if(!error && response.statusCode === 200) {
+                            data.meta = JSON.parse(body);
+                            writeFile('./layout/' + config.layoutFile , path.join(currentPath, el.filename), data);
+                            if(homeData) {
+                                writeFile('./layout/' + config.layoutFile, path.join(flavorDir, 'index.html'), homeData);
+                            }
+                        }
+                    });
+                })(el);
             }
             else {
-                writeFile('./layout/' + config.layoutFile , path.join(currentPath, name.trim()) + '.html', data);
+                writeFile('./layout/' + config.layoutFile , path.join(currentPath,  el.filename), data);
                 if(homeData) {
                     writeFile('./layout/' + config.layoutFile, path.join(flavorDir, 'index.html'), homeData);
                 }
