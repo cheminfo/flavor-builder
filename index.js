@@ -31,21 +31,12 @@ var toCopy = [
 
 function getFlavors() {
     return new Promise(function (resolve, reject) {
-	if (config.couchUsername) {	
-        couchdb.view('flavor', 'list', {key: config.couchUsername}, function(err, body) {
+        couchdb.view('flavor', 'list', {key: config.flavorUsername}, function(err, body) {
             if(err) {
                 return reject(err);
             }
             return resolve(body);
         });
-	} else {
-        couchdb.view('flavor', 'list', function(err, body) {
-            if(err) {
-                return reject(err);
-            }
-            return resolve(body);
-        });
-	}
     });
 }
 
@@ -152,21 +143,12 @@ function handleFlavors(data) {
 
 function getFlavor(flavor) {
     return new Promise(function (resolve, reject) {
-	if (config.couchUsername) {
-          couchdb.view('flavor', 'docs', {key: [flavor, config.couchUsername]}, function(err, body) {
+         couchdb.view('flavor', 'docs', {key: [flavor, config.flavorUsername]}, function(err, body) {
        	     if(err) {
        	         return reject(err);
        	     }
        	     return resolve(body);
        	 });
-	} else {
-          couchdb.view('flavor', 'docs', {key: [flavor]}, function(err, body) {
-       	     if(err) {
-       	         return reject(err);
-       	     }
-       	     return resolve(body);
-       	 });
-	}
     });
 }
 
@@ -341,7 +323,6 @@ function copyFiles() {
         fs.copySync(toCopy[i].src, toCopy[i].dest);
     }
 }
-
 if(config.flavor) {
     couchAuthenticate()
     .then(getFlavors)
