@@ -32,16 +32,13 @@ var toCopy = [
 function getFlavors() {
     return new Promise(function (resolve, reject) {
         couchdb.view('flavor', 'list', {key: config.couchUsername}, function(err, body) {
-            console.log(err ,body);
             if(err) {
                 return reject(err);
             }
             return resolve(body);
         });
     });
-
 }
-
 
 function couchAuthenticate() {
     return new Promise(function (resolve, reject) {
@@ -62,7 +59,7 @@ function couchAuthenticate() {
     });
 }
 
-function processViewResult(data) {
+function processFlavors(data) {
     var result;
     if(data && data.rows && !_.isUndefined(data.rows.length)) {
         result = _.flatten(data.rows);
@@ -72,7 +69,7 @@ function processViewResult(data) {
 }
 
 function handleFlavors(data) {
-    var flavors = processViewResult(data);
+    var flavors = processFlavors(data);
 
     if(!flavors) {
         throw new Error('No flavors exist');
@@ -81,12 +78,12 @@ function handleFlavors(data) {
     if(flavorIdx === -1) {
         throw new Error('Flavor does not exist for couch user: ' + config.couchUsername);
     }
+    return config.flavor;
 }
 
-function getFlavor() {
-    var flavor = config.flavor;
+function getFlavor(flavor) {
     return new Promise(function (resolve, reject) {
-        couchdb.view('flavor', 'docs', {key: [config.flavor, config.couchUsername]}, function(err, body) {
+        couchdb.view('flavor', 'docs', {key: [flavor, config.couchUsername]}, function(err, body) {
             if(err) {
                 return reject(err);
             }
@@ -95,16 +92,20 @@ function getFlavor() {
     });
 }
 
-function handleFlavor(data) {
-    var row, structure = {};
-    for(var i=0; i<data.rows.length; i++){
-        row = data.rows[i];
-        var flavors = row.value.flavors;
-        getStructure(flavors, structure, row.value);
+function handleFlavor(dir) {
+    if(!dir) dir = config.dir;
+    return function(data) {
+        var row, structure = {};
+        for(var i=0; i<data.rows.length; i++){
+            row = data.rows[i];
+            var flavors = row.value.flavors;
+            getStructure(flavors, structure, row.value);
+        }
+        addPath(structure, dir);
+        generateHtml(structure, structure, dir);
+        copyFiles();
     }
-    addPath(structure, config.dir);
-    generateHtml(structure, structure, config.dir);
-    copyFiles();
+
 }
 
 function getStructure(flavors, current, row) {
@@ -160,6 +161,8 @@ function generateHtml(rootStructure, structure, currentPath) {
     for(var key in structure) {
         if(key === '__name') continue;
         var el = structure[key];
+        var flavorName;
+        var flavorDir;
         if(el.__id) {
             var name = el.__name || '';
             var data = {
@@ -173,13 +176,24 @@ function generateHtml(rootStructure, structure, currentPath) {
             };
 
             var homeData;
-            console.log(currentPath);
+            //console.log(currentPath);
             if(el.__name === config.home) {
+                debugger;
+                flavorName = /\/flavor\/([^\/]+)/.exec(currentPath);
+                if(flavorName && flavorName[1]) {
+                    flavorName = flavorName[1];
+                    flavorDir = path.join(config.dir, 'flavor', flavorName);
+                }
+                else {
+                    flavorDir = config.dir;
+                }
                 homeData = _.cloneDeep(data);
-                homeData.menuHtml = doMenu(rootStructure, config.dir);
-                homeData.reldir = '.';
+                homeData.menuHtml = doMenu(rootStructure, flavorDir);
+                homeData.reldir = path.relative(flavorDir, config.dir);
+                if(homeData.reldir === '') homeData.reldir = '.';
             }
 
+            // If couch has meta.json, we make a request to get that file first
             if(el.__meta) {
                 var url = config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev;
                 request(url, {
@@ -193,23 +207,23 @@ function generateHtml(rootStructure, structure, currentPath) {
                         data.meta = JSON.parse(body);
                         writeFile('./layout/' + config.layoutFile , path.join(currentPath, name.trim()) + '.html', data);
                         if(homeData) {
-                            writeFile('./layout/' + config.layoutFile, path.join(config.dir, 'index.html'), homeData);
+                            writeFile('./layout/' + config.layoutFile, path.join(flavorDir, 'index.html'), homeData);
                         }
-                        return
                     }
-                    console.log('could not get meta');
                 });
             }
             else {
                 writeFile('./layout/' + config.layoutFile , path.join(currentPath, name.trim()) + '.html', data);
-                writeFile('./layout/' + config.layoutFile, path.join(config.dir, 'index.html'), homeData);
+                if(homeData) {
+                    writeFile('./layout/' + config.layoutFile, path.join(flavorDir, 'index.html'), homeData);
+                }
             }
 
 
 
         }
         else {
-            generateHtml(rootStructure, el, path.join(currentPath, el.__name))
+            generateHtml(rootStructure, el, path.join(currentPath, el.__name));
         }
     }
 }
@@ -218,7 +232,6 @@ function generateHtml(rootStructure, structure, currentPath) {
 function doMenu(structure, cpath, html) {
     if(!html) html = '';
     if(structure.__id) {
-        debugger;
         html += '<li><a href="' + path.relative(cpath, structure.__path) + '">' + structure.__name + '</a></li>';
         return html;
     }
@@ -241,10 +254,34 @@ function copyFiles() {
     }
 }
 
-
-couchAuthenticate()
+if(config.flavor) {
+    couchAuthenticate()
     .then(getFlavors)
     .then(handleFlavors)
     .then(getFlavor)
-    .then(handleFlavor)
+    .then(handleFlavor(config.dir))
     .catch(handleError);
+
+}
+
+else {
+    couchAuthenticate()
+        .then(getFlavors)
+        .then(processFlavors)
+        .then(function(flavors) {
+            var prom = [];
+            for(var i=0; i<flavors.length; i++) {
+                var flavordir;
+                if(flavors[i] === 'default') {
+                    flavordir = config.dir;
+                }
+                else {
+                    flavordir = path.join(config.dir, 'flavor', flavors[i]);
+                }
+                fs.mkdirp(flavordir);
+                prom.push(getFlavor(flavors[i]).then(handleFlavor(flavordir)));
+            }
+            return Promise.all(prom);
+        })
+        .catch(handleError);
+}
