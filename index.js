@@ -11,6 +11,7 @@ var parseArgs = require('minimist'),
     fs = require('fs-extra'),
     path = require('path'),
     request = require('request'),
+    crypto = require('crypto'),
     auth = '';
 
 config.couchurl = config.couchurl.replace(/\/$/, '');
@@ -37,6 +38,66 @@ function getFlavors() {
             }
             return resolve(body);
         });
+    });
+}
+
+function getFlavorMD5(flavors) {
+    if(flavors instanceof Array) {
+        var prom = [];
+        for(var i=0; i<flavors.length; i++) {
+            prom.push(getFlavorMD5(flavors[i]));
+        }
+        return Promise.all(prom).then(function(md5s) {
+            var result = {};
+            for(var j=0 ;j<md5s.length; j++) {
+                result[flavors[j]] = md5s[j];
+            }
+            return result;
+        });
+    }
+    else {
+        return new Promise(function (resolve, reject) {
+            var url = config.couchurl + '/' + config.couchDatabase + '/_design/flavor/_list/config/alldocs?key="' + flavors + '"';
+            request(url, {
+                auth: {
+                    user: config.couchUsername,
+                    pass: config.couchPassword,
+                    sendImmediately: true
+                }
+            }, function(error, response, body) {
+                var md5 = crypto.createHash('md5').update(body).digest('hex');
+                return resolve(md5);
+            });
+        });
+    }
+}
+
+function filterFlavorsByMd5(flavors) {
+    return getFlavorMD5(flavors).then(function(result) {
+        if(config.forceUpdate) {
+            return Object.keys(result);
+        }
+        var exists = fs.existsSync('./md5s.json');
+        if(!exists) {
+            fs.writeJSONFileSync('./md5s.json', result);
+            return Object.keys(result);
+        }
+        var md5 = fs.readJSONFileSync('./md5s.json');
+        var keys = [];
+        for(var key in result) {
+            if(result[key] !== md5[key]) {
+                keys.push(key);
+            }
+        }
+        fs.writeJSONFileSync('./md5s.json', result);
+        return keys;
+    });
+}
+
+function filterFlavorByMD5(flavor) {
+    return filterFlavorsByMd5([flavor]).then(function(flavors) {
+        if(flavors.length) return flavors[0];
+        return null;
     });
 }
 
@@ -166,6 +227,14 @@ function generateHtml(rootStructure, structure, currentPath) {
         var el = structure[key];
         var flavorName;
         var flavorDir;
+        flavorName = /\/flavor\/([^\/]+)/.exec(currentPath);
+        if(flavorName && flavorName[1]) {
+            flavorName = flavorName[1];
+            flavorDir = path.join(config.dir, 'flavor', flavorName);
+        }
+        else {
+            flavorDir = config.dir;
+        }
         if(el.__id) {
             var name = el.__name || '';
             var data = {
@@ -175,21 +244,13 @@ function generateHtml(rootStructure, structure, currentPath) {
                 config: config,
                 menuHtml: doMenu(rootStructure, currentPath),
                 reldir: path.relative(currentPath, config.dir) === '' ? '.' : path.relative(currentPath, config.dir),
-                title: el.__name
+                title: el.__name,
+                home: path.relative(currentPath, flavorDir)
             };
 
             var homeData;
             //console.log(currentPath);
             if(el.__name === config.home) {
-                debugger;
-                flavorName = /\/flavor\/([^\/]+)/.exec(currentPath);
-                if(flavorName && flavorName[1]) {
-                    flavorName = flavorName[1];
-                    flavorDir = path.join(config.dir, 'flavor', flavorName);
-                }
-                else {
-                    flavorDir = config.dir;
-                }
                 homeData = _.cloneDeep(data);
                 homeData.menuHtml = doMenu(rootStructure, flavorDir);
                 homeData.reldir = path.relative(flavorDir, config.dir);
@@ -209,18 +270,22 @@ function generateHtml(rootStructure, structure, currentPath) {
                     }, function(error, response, body) {
                         if(!error && response.statusCode === 200) {
                             data.meta = JSON.parse(body);
-                            writeFile('./layout/' + config.layoutFile , path.join(currentPath, el.filename), data);
                             if(homeData) {
                                 writeFile('./layout/' + config.layoutFile, path.join(flavorDir, 'index.html'), homeData);
+                            }
+                            else {
+                                writeFile('./layout/' + config.layoutFile , path.join(currentPath, el.filename), data);
                             }
                         }
                     });
                 })(el);
             }
             else {
-                writeFile('./layout/' + config.layoutFile , path.join(currentPath,  el.filename), data);
                 if(homeData) {
                     writeFile('./layout/' + config.layoutFile, path.join(flavorDir, 'index.html'), homeData);
+                }
+                else {
+                    writeFile('./layout/' + config.layoutFile , path.join(currentPath,  el.filename), data);
                 }
             }
 
@@ -241,6 +306,7 @@ function doMenu(structure, cpath, html) {
         return html;
     }
     else {
+
         if(structure.__name) html += '<li><a href="#">' + structure.__name  + '</a>';
         html += "<ul>";
         for(var key in structure) {
@@ -273,7 +339,9 @@ else {
     couchAuthenticate()
         .then(getFlavors)
         .then(processFlavors)
+        .then(filterFlavorsByMd5)
         .then(function(flavors) {
+            console.log('Processing ' + flavors.length + ' flavors');
             var prom = [];
             for(var i=0; i<flavors.length; i++) {
                 var flavordir;
