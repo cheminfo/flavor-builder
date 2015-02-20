@@ -1,5 +1,5 @@
 # flavor-builder
-Visualize website generator
+Visualizer website generator
 
 ## Config
 ```json

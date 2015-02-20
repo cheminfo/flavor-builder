@@ -39,12 +39,20 @@
 </script>
 {% endblock %}
 
+<!-- override menu block -->
 {% block menu %}
-<nav class="navbar flexible-navbar">
-    <div class="container">
+<div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" style="margin: 0 10px 0 10px; background-size: 105px 46px; width: 105px; height: 46px; background: url({{reldir}}/themes/bootstrap/img/logo.png);" href="#"></a>
+</div>
+<nav id="navbar" class="navbar flexible-navbar">
         <div class="navbar-collapse collapse">
             {{ menuHtml|safe }}
-        </div>
     </div>
 </nav>
 
