@@ -17,6 +17,9 @@
             var uri = new URI(window.location.href);
             var search = uri.search(true);
             url = '{{ viewURL }}';
+            if(search.viewURL) {
+                url = search.viewURL;
+            }
             if(!url) {
                 div.innerHTML = 'No view URL specified';
                 return;
