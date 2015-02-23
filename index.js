@@ -248,8 +248,8 @@ function generateHtml(rootStructure, structure, currentPath) {
             };
 
             var homeData;
-            //console.log(currentPath);
             if(el.__name === config.home) {
+                console.log('found home', flavorDir);
                 homeData = _.cloneDeep(data);
                 homeData.menuHtml = doMenu(rootStructure, flavorDir);
                 homeData.reldir = path.relative(flavorDir, config.dir);
@@ -258,6 +258,7 @@ function generateHtml(rootStructure, structure, currentPath) {
 
             // If couch has meta.json, we make a request to get that file first
             if(el.__meta) {
+                console.log('meta defined', el.__name, flavorDir);
                 (function(el){
                     var url = config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev;
                     request(url, {
@@ -269,7 +270,9 @@ function generateHtml(rootStructure, structure, currentPath) {
                     }, function(error, response, body) {
                         if(!error && response.statusCode === 200) {
                             data.meta = JSON.parse(body);
+                            console.log(data.meta.content);
                             if(homeData) {
+                                homeData.meta = data.meta;
                                 writeFile('./layout/' + config.layoutFile, path.join(flavorDir, 'index.html'), homeData);
                             }
                             else {

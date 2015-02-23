@@ -1,5 +1,5 @@
 {
-  "lockView": false,
+  "lockView": true,
   "usrDir": "usr",
   "debugLevel": -1,
   "contextMenu": ["fullscreen", "move", "export", "print", "tofront", "toback"],
