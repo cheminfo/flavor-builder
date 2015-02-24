@@ -28,11 +28,13 @@
 {% block content %}{% endblock %}
 
 {% block couchStatic %}
+<div class="general">
 {% if meta.content.type == 'text' %}
 {{ meta.content.value }}
 {% elseif meta.content.type == 'html' %}
 {{ meta.content.value|safe }}
 {% endif %}
+</div>
 {% endblock %}
 
 {% block visualizer %}
