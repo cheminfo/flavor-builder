@@ -223,7 +223,7 @@ function addPath(structure, currentPath) {
 function generateHtml(rootStructure, structure, currentPath) {
     for(var key in structure) {
         if(key === '__name') continue;
-        var el = structure[key];
+        let el = structure[key];
         var flavorName;
         var flavorDir;
         flavorName = /\/flavor\/([^\/]+)/.exec(currentPath);
@@ -235,8 +235,7 @@ function generateHtml(rootStructure, structure, currentPath) {
             flavorDir = config.dir;
         }
         if(el.__id) {
-            var name = el.__name || '';
-            var data = {
+            let data = {
                 viewURL: el.__view ? config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev : undefined,
                 dataURL: el.__data ? config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev : undefined,
                 structure: rootStructure,
@@ -257,27 +256,25 @@ function generateHtml(rootStructure, structure, currentPath) {
 
             // If couch has meta.json, we make a request to get that file first
             if(el.__meta) {
-                (function(el){
-                    var url = config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev;
-                    request(url, {
-                        authxxx: {
-                            user: config.couchUsername,
-                            pass: config.couchPassword,
-                            sendImmediately: true
+                var url = config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev;
+                request(url, {
+                    authxxx: {
+                        user: config.couchUsername,
+                        pass: config.couchPassword,
+                        sendImmediately: true
+                    }
+                }, function(error, response, body) {
+                    if(!error && response.statusCode === 200) {
+                        data.meta = JSON.parse(body);
+                        if(homeData) {
+                            homeData.meta = data.meta;
+                            writeFile('./layout/' + config.layoutFile, path.join(flavorDir, 'index.html'), homeData);
                         }
-                    }, function(error, response, body) {
-                        if(!error && response.statusCode === 200) {
-                            data.meta = JSON.parse(body);
-                            if(homeData) {
-                                homeData.meta = data.meta;
-                                writeFile('./layout/' + config.layoutFile, path.join(flavorDir, 'index.html'), homeData);
-                            }
-                            else {
-                                writeFile('./layout/' + config.layoutFile , path.join(currentPath, el.filename), data);
-                            }
+                        else {
+                            writeFile('./layout/' + config.layoutFile , path.join(currentPath, el.filename), data);
                         }
-                    });
-                })(el);
+                    }
+                });
             }
             else {
                 if(homeData) {
