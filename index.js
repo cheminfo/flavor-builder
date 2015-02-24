@@ -220,6 +220,7 @@ function addPath(structure, currentPath) {
     }
 }
 
+
 function generateHtml(rootStructure, structure, currentPath) {
     for(var key in structure) {
         if(key === '__name') continue;
@@ -294,12 +295,26 @@ function generateHtml(rootStructure, structure, currentPath) {
     }
 }
 
+function buildQueryString(el) {
+    var result = '?';
+    if(el.__view) {
+        result += 'viewURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev);
+    }
+    if(el.__data) {
+        if(result !== '?') result += '&';
+        result += 'dataURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev);
+    }
+
+    if(result === '?') return '';
+    return result;
+}
+
 
 function doMenu(structure, cpath, html) {
     if(!html) html = '';
     if(structure.__id) {
         if(structure.__name !== config.home)
-            html += '<li><a href="' + path.relative(cpath, structure.__path) + '">' + structure.__name + '</a></li>';
+            html += '<li><a href="' + path.relative(cpath, structure.__path) + buildQueryString(structure) + '">' + structure.__name + '</a></li>';
         return html;
     }
     else {
