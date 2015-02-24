@@ -13,12 +13,13 @@
   "author": "Daniel Kostro",
   "license": "MIT",
   "dependencies": {
-    "nano": "~6.0.2",
-    "minimist": "~1.1.0",
     "bluebird": "~2.9.3",
-    "lodash": "~3.0.0",
-    "swig": "~1.4.2",
+    "co": "^4.4.0",
     "fs-extra": "~0.16.0",
-    "request": "~2.52.0"
+    "lodash": "~3.0.0",
+    "minimist": "~1.1.0",
+    "nano": "~6.0.2",
+    "request": "~2.52.0",
+    "swig": "~1.4.2"
   }
 }

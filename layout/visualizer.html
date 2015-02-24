@@ -1,4 +1,5 @@
 <script>
+    'use strict';
     function checkVersion(versions, version) {
 	if (version.indexOf("v")!=0) version="v"+version;
         var idx = versions.indexOf(version);
@@ -6,7 +7,7 @@
             version = versions[idx];
         }
         else {
-            version = 'HEAD';
+            return null;
         }
         return version;
     }
@@ -17,6 +18,8 @@
             var uri = new URI(window.location.href);
             var search = uri.search(true);
             url = '{{ viewURL }}';
+            var fallbackVersion = '{{ version }}';
+            var version;
             if(search.viewURL) {
                 url = search.viewURL;
             }
@@ -24,24 +27,25 @@
                 div.innerHTML = 'No view URL specified';
                 return;
             }
-            $.getJSON(url).then(function (view) {
-                var version = 'latest';
-                if(search.v) {
-                    version = checkVersion(versions, search.v);
-                }
-                else if (view.version) {
-                    version = checkVersion(versions, view.version);
-                }
-
-                var visualizer = document.createElement('script');
-                var prefix = 'http://' + (search.direct ? 'direct' : 'www') + '.lactame.com/visualizer/';
-                visualizer.setAttribute('data-main', prefix + version + '/init');
-                visualizer.setAttribute('src', prefix + version + '/components/requirejs/require.js');
-                document.head.appendChild(visualizer);
-            }, function () {
-                div.innerHTML = 'view at <a href="' + url + '" target="_blank">' + url + '</a> could not be loaded';
-            });
+            if(search.v) {
+                version = checkVersion(versions, search.v);
+            }
+            if(!version) {
+                version = checkVersion(versions, fallbackVersion);
+            }
+            if(!version) {
+                version = 'HEAD';
+            }
+            addVisualizer(version, search);
         });
+
+        function addVisualizer(version, search) {
+            var visualizer = document.createElement('script');
+            var prefix = 'http://' + (search.direct ? 'direct' : 'www') + '.lactame.com/visualizer/';
+            visualizer.setAttribute('data-main', prefix + version + '/init');
+            visualizer.setAttribute('src', prefix + version + '/components/requirejs/require.js');
+            document.head.appendChild(visualizer);
+        }
     }
 </script>
 <div id="errorMessage"></div>
