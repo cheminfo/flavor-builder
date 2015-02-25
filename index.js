@@ -371,7 +371,6 @@ function generateHtml(rootStructure, structure, currentPath) {
             prom.push(metaProm);
             metaProm.then(function() {
                 if(homeData) {
-                    console.log(flavorDir, homeData.meta)
                     writeFile('./layout/' + config.layoutFile, path.join(flavorDir, 'index.html'), homeData);
                 }
                 else {
@@ -398,9 +397,6 @@ function buildQueryString(el) {
     if(el.version) {
         if(result !== '?') result += '&';
         result += 'v=' + encodeURIComponent(el.version);
-    }
-    else {
-        console.log('no version...');
     }
 
     if(result === '?') return '';
