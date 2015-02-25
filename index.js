@@ -226,6 +226,8 @@ function handleFlavor(dir) {
     if(!dir) dir = config.dir;
     return function(data) {
         var row, structure = {};
+        Object.defineProperty(structure, '__root', {enumerable: false, writable: true});
+        structure.__root = true;
         var prom = Promise.resolve();
         for(let i=0; i<data.rows.length; i++){
             row = data.rows[i];
@@ -297,7 +299,7 @@ function addPath(structure, currentPath) {
             el.__url = encodeURI(config.urlPrefix + '/' + path.join(currentPath, el.filename));
             el.__path = path.join(currentPath, el.filename);
         }
-        else {
+        else if(key !== '__root'){
             addPath(structure[key], path.join(currentPath, el.__name));
         }
     }
@@ -342,7 +344,7 @@ function generateHtml(rootStructure, structure, currentPath) {
 
 
             // If couch has meta.json, we make a request to get that file first
-            var metaProm = Promise.resolve();
+            let metaProm = Promise.resolve();
             if(el.__meta) {
                 metaProm = metaProm.then(function() {
                     return new Promise(function (resolve, reject) {
@@ -356,6 +358,9 @@ function generateHtml(rootStructure, structure, currentPath) {
                         } : {}, function(error, response, body) {
                             if(!error && response.statusCode === 200) {
                                 data.meta = JSON.parse(body);
+                                if(homeData){
+                                    homeData.meta = data.meta;
+                                }
                                 return resolve();
                             }
                             return reject();
@@ -366,6 +371,7 @@ function generateHtml(rootStructure, structure, currentPath) {
             prom.push(metaProm);
             metaProm.then(function() {
                 if(homeData) {
+                    console.log(flavorDir, homeData.meta)
                     writeFile('./layout/' + config.layoutFile, path.join(flavorDir, 'index.html'), homeData);
                 }
                 else {
@@ -411,7 +417,7 @@ function doMenu(structure, cpath, html) {
     }
     else {
         if(structure.__name) html += '<li><a href="#">' + structure.__name  + '</a>';
-        html += "<ul>";
+        html += '<ul' + (structure.__root ? ' class="navmenu" style="display:none"' : '') + '>';
         for(var key in structure) {
             if(key === '__name') continue;
             html += doMenu(structure[key], cpath);
