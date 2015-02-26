@@ -79,20 +79,23 @@ function getVersionsRequest() {
     return requestGet('http://www.lactame.com/visualizer/versions.php')
 }
 
-function getViewUrl(el) {
-    return config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev;
+function getViewUrl(el, options) {
+    options = options || {};
+    return el.__view ? (options.absolute ? config.couchurl : '') + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev: undefined;
 }
 
-function getDataUrl(el) {
-    return config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev;
+function getDataUrl(el, options) {
+    options = options || {};
+    return el.__data ? (options.absolute ? config.couchurl : '') + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev : undefined;
 }
 
-function getMetaUrl(el) {
-    return config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev;
+function getMetaUrl(el, options) {
+    options = options || {};
+    return el.__meta ? (options.absolute ? config.couchurl : '') + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev : undefined;
 }
 
 function getVersion(el) {
-    var url = getViewUrl(el);
+    var url = getViewUrl(el, {absolute: true});
     return requestGet(url);
 }
 
@@ -323,8 +326,8 @@ function generateHtml(rootStructure, structure, currentPath) {
         }
         if(el.__id) {
             let data = {
-                viewURL: el.__view ? config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev : undefined,
-                dataURL: el.__data ? config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev : undefined,
+                viewURL: getViewUrl(el, {absolute:true}),
+                dataURL: getDataUrl(el, {absolute:true}),
                 version: el.version,
                 structure: rootStructure,
                 config: config,
@@ -348,7 +351,7 @@ function generateHtml(rootStructure, structure, currentPath) {
             if(el.__meta) {
                 metaProm = metaProm.then(function() {
                     return new Promise(function (resolve, reject) {
-                        var url = getMetaUrl(el);
+                        var url = getMetaUrl(el, {absolute: true});
                         request(url, config.couchPassword ? {
                             authxxx: {
                                 user: config.couchUsername,

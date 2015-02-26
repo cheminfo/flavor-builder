@@ -1,7 +1,8 @@
 <script>
     'use strict';
     function checkVersion(versions, version) {
-	if (version.indexOf("v")!=0) version="v"+version;
+        version = version.toLowerCase();
+	if (version.indexOf("v") != 0 && version !== 'head') version="v"+version;
         var idx = versions.indexOf(version);
         if (idx > -1) {
             version = versions[idx];
