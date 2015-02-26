@@ -1,8 +1,8 @@
 {
-  "lockView": true,
+  "lockView": false,
   "usrDir": "usr",
   "debugLevel": -1,
-  "contextMenu": ["fullscreen", "move", "export", "print", "tofront", "toback"],
+  "contextMenu": ["all"],
   "filters": [
     {
       "file": "usr/filters/doitourl.js",
