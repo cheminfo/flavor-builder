@@ -13,6 +13,7 @@
     }
     window.onload = function () {
         $.getJSON('http://www.lactame.com/visualizer/versions.php').then(function(versions) {
+            versions.push('head');
             var url;
             var div = document.getElementById('errorMessage');
             var uri = new URI(window.location.href);
@@ -22,10 +23,6 @@
             var version;
             if(search.viewURL) {
                 url = search.viewURL;
-            }
-            if(!url) {
-                div.innerHTML = 'No view URL specified';
-                return;
             }
             if(search.v) {
                 version = checkVersion(versions, search.v);
