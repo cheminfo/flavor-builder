@@ -56,11 +56,8 @@
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
-                    //console.log('select2 params: ', params);
                     selectedTerm = getTerm(params.term);
                     term = params.term;
-                    console.log('Selected term: ', selectedTerm);
-                    console.log('data');
 
                     return {
                         startkey: JSON.stringify(selectedTerm),
@@ -71,7 +68,6 @@
                     // parse the results into the format expected by Select2.
                     // since we are using custom formatting functions we do not need to
                     // alter the remote JSON data
-                    console.log('process results');
                     // cache the search result;
                     searchResults[selectedTerm] = data;
 
@@ -96,7 +92,6 @@
             templateSelection: formatViewSelection // omitted for brevity, see the source of this page
         });
         $searchbox.on('select2:select', function(e) {
-            console.log('it changed');
             var data = e.params.data;
             var uri = new URI(window.location.href);
             uri.query('');
@@ -137,26 +132,20 @@
     }
     
     function getChangedIdx(oldarr, newarr) {
-        console.log('old arr', oldarr);
-        console.log('new arr', newarr);
         // We look for what changed in newarr compared to oldarr
         var l = (oldarr.length > newarr.length) ? newarr.length : oldarr.length;
         for(var i=0; i<l; i++) {
             if(oldarr[i] !== newarr[i]) {
-                console.log('found ' + i);
                 return i;
             }
         }
         if(oldarr.length === newarr.length) {
-            console.log('not found');
             return -1;
         }
         else if(oldarr.length < newarr.length) {
-            console.log('newarr bigger');
             return oldarr.length;
         }
         else {
-            console.log('oldarr bigger');
             return newarr.length -1;
         }
     }
