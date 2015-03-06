@@ -1,0 +1,68 @@
+{% extends '../layout.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block head %}
+{% parent %}
+<link rel="stylesheet" href="{{ reldir }}/themes/bootstrap/lib/bootstrap/css/bootstrap.customized.css"  />
+<link rel="stylesheet" href="{{ reldir }}/themes/bootstrap/css/bootstrap-theme.css"  />
+<link rel="stylesheet" href="{{ reldir }}/themes/bootstrap/css/custom.css"/>
+<script src="http://www.lactame.com/lib/jquery/2.1.1/jquery.min.js"></script>
+<script src="{{ reldir }}/themes/bootstrap/lib/bootstrap/js/bootstrap.min.js"></script>
+<script>
+    window.addEventListener('load', function() {
+        var $el = $('body').find('.navbar-collapse');
+        var $ul1 = $el.children('ul');
+        $ul1.addClass('nav navbar-nav');
+
+        var $li1 = $ul1.children('li');
+        $li1.each(function() {
+            var $this = $(this);
+            if($this.children('ul').length > 0) {
+                $this.addClass('dropdown');
+                $this.children('a').append('<b class="caret"></b>');
+            }
+        });
+
+
+        var $ul2 = $ul1.find('ul');
+        $ul2.addClass('dropdown-menu');
+        var $li2 = $li1.find('li');
+        $li2.each(function() {
+            var $this = $(this);
+            if($this.children('ul').length > 0) {
+                $this.addClass('dropdown-submenu').attr('role', 'menu');
+            }
+        });
+        $el.find('li.dropdown > a').addClass('dropdown-toggle').attr('data-toggle', 'dropdown').attr('tabindex', -1);
+    });
+</script>
+{% endblock %}
+
+<!-- override menu block -->
+{% block menu %}
+<nav role="navigation" class="navbar flexible-navbar">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <a href="{{home}}" class="navbar-brand" style="width: 65px; height: 18px; background: url({{reldir}}/themes/bootstrap/img/logo1.png); background-repeat: no-repeat; background-size: contain; background-position: center;"></a>
+    </div>
+
+    <div id="navbar" class="navbar-collapse collapse">
+        {{ menuHtml|safe }}
+        {% include "./searchbox.html" %}
+    </div>
+</nav>
+
+{% endblock %}
+
+{% block content %}
+{% endblock %}
+
+
+
+

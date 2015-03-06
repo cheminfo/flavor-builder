@@ -1,0 +1,155 @@
+<div style="margin-top: 8px;">
+<select style="width: 500px;" class="js-example-basic-single">
+    <option value="AL">Alabama</option>
+    <option value="WY">Wyoming</option>
+</select>
+</div>
+
+<script>
+    function intersectionObjects(array, propertyName) {
+        var slice = Array.prototype.slice; // added this line as a utility
+        var rest;
+        var propName;
+        if(typeof arguments[arguments.length-1] === 'string') {
+            rest = slice.call(arguments, 1, -1);
+            propName = arguments[arguments.length-1];
+        }
+        else {
+            rest = slice.call(arguments, 1);
+        }
+        return _.filter(_.uniq(array), function(item) {
+            return _.every(rest, function(other) {
+                //return _.indexOf(other, item) >= 0;
+                return _.any(other, function(element) { if(!propName){return _.isEqual(element, item);} return _.isEqual(element[propName], item[propName])});
+            });
+        });
+    };
+    var matches = [], term='', selectedTerm='', searchResults = {};
+
+    function formatView(view) {
+        if(!view.value) {
+            return view.text;
+        }
+        var flavors = view.value.flavors;
+        return flavors.join('  \u2192  ');
+    }
+
+    function formatViewSelection(view) {
+        if(!view.value) {
+            return view.text;
+        }
+        var flavors = view.value.flavors;
+        return flavors[flavors.length-1];
+    }
+
+    $(document).ready(function() {
+        var $searchbox = $(".js-example-basic-single");
+        $searchbox.select2({
+            ajax: {
+                url: "http://visualizer.epfl.ch/cheminfo/_design/flavor/_view/searchOne",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    //console.log('select2 params: ', params);
+                    selectedTerm = getTerm(params.term);
+                    term = params.term;
+                    console.log('Selected term: ', selectedTerm);
+                    console.log('data');
+
+                    return {
+                        startkey: JSON.stringify(selectedTerm),
+                        endkey: JSON.stringify(selectedTerm + 'ZZZZZ')
+                    };
+                },
+                processResults: function (data, page) {
+                    // parse the results into the format expected by Select2.
+                    // since we are using custom formatting functions we do not need to
+                    // alter the remote JSON data
+                    console.log('process results');
+                    // cache the search result;
+                    searchResults[selectedTerm] = data;
+
+                    var terms = extractTerms(term);
+                    var args = [];
+                    for(var i=0; i<terms.length; i++) {
+                        if(searchResults[terms[i]]) {
+                            args.push(searchResults[terms[i]].rows);
+                        }
+                    }
+                    args.push('id');
+                    var res = intersectionObjects.apply(null, args);
+                    res = _.uniq(res, function(val) { return val.id});
+                    return {
+                        results: res
+                    };
+                },
+                cache: true
+            },
+            escapeMarkup: function (markup) { return markup; }, // let our custom formatter work
+            templateResult: formatView, // omitted for brevity, see the source of this page
+            templateSelection: formatViewSelection // omitted for brevity, see the source of this page
+        });
+        $searchbox.on('select2:select', function(e) {
+            console.log('it changed');
+            var data = e.params.data;
+            var uri = new URI(window.location.href);
+            uri.query('');
+            if(data.value.view) {
+                uri.addSearch('viewURL', '{{ config.couchurl }}/{{ config.couchDatabase }}/' + data.id + '/view.json');
+            }
+            if(data.value.data) {
+                uri.addSearch('dataURL', '{{ config.couchurl }}/{{ config.couchDatabase}}' + data.id + '/data.json');
+            }
+            window.location = uri.href();
+            debugger;
+
+        });
+    });
+
+    function processResults() {
+        var terms = extractTerms(term);
+        var r = [];
+        for(var i=0; i<terms.length; i++) {
+
+        }
+    }
+
+    function extractTerms(term) {
+        return term.split(/\s+/).filter(function(val) { return val !== ''});
+    }
+    
+    function getTerm(newTerm) {
+        var newTerms = extractTerms(newTerm);
+        var oldTerms = extractTerms(term);
+        var idx = getChangedIdx(oldTerms, newTerms);
+        if(idx > -1) {
+            return newTerms[idx];
+        }
+        return newTerms[0] || null;
+    }
+    
+    function getChangedIdx(oldarr, newarr) {
+        console.log('old arr', oldarr);
+        console.log('new arr', newarr);
+        // We look for what changed in newarr compared to oldarr
+        var l = (oldarr.length > newarr.length) ? newarr.length : oldarr.length;
+        for(var i=0; i<l; i++) {
+            if(oldarr[i] !== newarr[i]) {
+                console.log('found ' + i);
+                return i;
+            }
+        }
+        if(oldarr.length === newarr.length) {
+            console.log('not found');
+            return -1;
+        }
+        else if(oldarr.length < newarr.length) {
+            console.log('newarr bigger');
+            return oldarr.length;
+        }
+        else {
+            console.log('oldarr bigger');
+            return newarr.length -1;
+        }
+    }
+</script>
