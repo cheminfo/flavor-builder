@@ -34,7 +34,21 @@
             if(!version) {
                 version = 'HEAD';
             }
-            addVisualizer(version, search);
+            if(!search.loadversion)
+                addVisualizer(version, search);
+            else {
+                $.ajax({
+                    url: url,
+                    dataType: 'json',
+                    type: 'GET',
+                    success: function(data) {
+                        addVisualizer(checkVersion(versions, data.version), search);
+                    },
+                    error: function(err) {
+                        console.log('error', err);
+                    }
+                })
+            }
         });
 
         function addVisualizer(version, search) {

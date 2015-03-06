@@ -1,7 +1,5 @@
 <div style="margin-top: 8px;">
 <select style="width: 500px;" class="js-example-basic-single">
-    <option value="AL">Alabama</option>
-    <option value="WY">Wyoming</option>
 </select>
 </div>
 
@@ -44,6 +42,14 @@
 
     $(document).ready(function() {
         var $searchbox = $(".js-example-basic-single");
+        var uri = new URI(window.location.href);
+        var search = uri.search(true);
+        if(search.fillsearch) {
+            $searchbox.append('<option>' + search.fillsearch + '</option>');
+        }
+        else {
+            $searchbox.append('<option>{{ title }}</option>');
+        }
         $searchbox.select2({
             ajax: {
                 url: "http://visualizer.epfl.ch/cheminfo/_design/flavor/_view/searchOne",
@@ -95,14 +101,16 @@
             var uri = new URI(window.location.href);
             uri.query('');
             if(data.value.view) {
-                uri.addSearch('viewURL', '{{ config.couchurl }}/{{ config.couchDatabase }}/' + data.id + '/view.json');
+                var viewURL =  '{{ config.couchurl }}/{{ config.couchDatabase }}/' + data.id + '/view.json';
+                uri.addSearch('viewURL', viewURL);
+                if(data.value.data) {
+                    uri.addSearch('dataURL', '{{ config.couchurl }}/{{ config.couchDatabase}}' + data.id + '/data.json');
+                }
+                uri.addSearch('loadversion', true);
+                var flavors = e.params.data.value.flavors;
+                uri.addSearch('fillsearch', flavors[flavors.length-1]);
+                window.location = uri.href();
             }
-            if(data.value.data) {
-                uri.addSearch('dataURL', '{{ config.couchurl }}/{{ config.couchDatabase}}' + data.id + '/data.json');
-            }
-            window.location = uri.href();
-            debugger;
-
         });
     });
 
@@ -115,7 +123,7 @@
     }
 
     function extractTerms(term) {
-        return term.split(/\s+/).filter(function(val) { return val !== ''});
+        return (term || '').split(/\s+/).filter(function(val) { return val !== ''});
     }
     
     function getTerm(newTerm) {
