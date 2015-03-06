@@ -34,8 +34,7 @@ var versions;
 co(function*() {
     versions = yield getVersionsRequest();
     if(config.flavor) {
-        yield couchAuthenticate()
-            .then(getFlavors)
+        yield getFlavors()
             .then(handleFlavors)
             .then(getFlavor)
             .then(handleFlavor(config.dir));
