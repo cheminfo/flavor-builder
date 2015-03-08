@@ -56,6 +56,9 @@
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
+                    if(typeof params.term === 'string') {
+                        params.term = params.term.toLowerCase();
+                    }
                     selectedTerm = getTerm(params.term);
                     term = params.term;
 
@@ -70,7 +73,6 @@
                     // alter the remote JSON data
                     // cache the search result;
                     searchResults[selectedTerm] = data;
-
                     var terms = extractTerms(term);
                     var args = [];
                     for(var i=0; i<terms.length; i++) {
@@ -108,14 +110,6 @@
             }
         });
     });
-
-    function processResults() {
-        var terms = extractTerms(term);
-        var r = [];
-        for(var i=0; i<terms.length; i++) {
-
-        }
-    }
 
     function extractTerms(term) {
         return (term || '').split(/\s+/).filter(function(val) { return val !== ''});
