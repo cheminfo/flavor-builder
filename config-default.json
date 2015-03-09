@@ -8,6 +8,8 @@
   "dir": "",
   "urlPrefix": "",
   "layoutFile": "",
-  "home": "Home"
-
+  "home": "Home",
+  "configUrl": "",
+  "forceUpdate": false,
+  "clp": ""
 }
