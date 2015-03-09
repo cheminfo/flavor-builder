@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head lang='en'>
+    <meta charset='UTF-8'>
+    <title>visualizer.epfl.ch</title>
+    <script src="http://www.lactame.com/lib/jquery/2.1.1/jquery.min.js"></script>
+    <script src="http://www.lactame.com/lib/uri.js/1.14.1/URI.min.js"></script>
+    <style>
+        #ci-visualizer {
+            min-height: 100vh;
+        }
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<div id='ci-visualizer'></div>
+<script>
+    $(document).ready(function () {
+        var $div = $('#ci-visualizer');
+        $div.attr('config', './editconfig.json');
+        var visualizer = document.createElement('script');
+        var uri = new URI(document.location.href);
+        var query = uri.search(true);
+        var version = 'latest';
+        if (query.v) {
+            version = query.v;
+        }
+        var prefix = 'http://' + (query.direct ? 'direct' : 'www') + '.lactame.com/visualizer/';
+        visualizer.setAttribute('data-main', prefix + version + '/init');
+        visualizer.setAttribute('src', prefix + version + '/components/requirejs/require.js');
+        document.head.appendChild(visualizer);
+    });
+</script>
+</body>
+</html>
