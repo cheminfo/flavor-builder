@@ -378,17 +378,19 @@
   "css": [
     "print.less",
     "type.less",
-    "grid.less",
     "forms.less",
+    "buttons.less",
     "responsive-utilities.less",
     "glyphicons.less",
     "navs.less",
     "navbar.less",
     "dropdowns.less",
-    "tooltip.less"
+    "tooltip.less",
+    "modals.less"
   ],
   "js": [
-    "dropdown.js"
+    "dropdown.js",
+    "modal.js"
   ],
-  "customizerUrl": "http://getbootstrap.com/customize/?id=3d57cb3deeaf99566168"
+  "customizerUrl": "http://getbootstrap.com/customize/?id=86973fcd9e85bd14ffe1"
 }
