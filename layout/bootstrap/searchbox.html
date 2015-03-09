@@ -100,7 +100,7 @@
                 var viewURL =  '{{ config.couchurl }}/{{ config.couchDatabase }}/' + data.id + '/view.json';
                 uri.addSearch('viewURL', viewURL);
                 if(data.value.data) {
-                    uri.addSearch('dataURL', '{{ config.couchurl }}/{{ config.couchDatabase}}' + data.id + '/data.json');
+                    uri.addSearch('dataURL', '{{ config.couchurl }}/{{ config.couchDatabase}}/' + data.id + '/data.json');
                 }
                 uri.addSearch('loadversion', true);
                 var flavors = e.params.data.value.flavors;
