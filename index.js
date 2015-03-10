@@ -2,6 +2,7 @@
 
 var parseArgs = require('minimist'),
     config = require('./config.json'),
+    layouts = require('./layouts.json'),
     nano = require('nano')(config.couchurl),
     couchdb = nano.use(config.couchDatabase),
     Promise = require('bluebird'),
@@ -22,6 +23,8 @@ var args = parseArgs(process.argv.slice(2));
 for(var key in args) {
     config[key] = args[key];
 }
+
+config.flavorLayouts = config.flavorLayouts || {};
 
 var toCopy = [
     {src: './visualizer/config.json', dest: path.join(config.dir, 'config.json')},
@@ -374,11 +377,12 @@ function generateHtml(rootStructure, structure, currentPath) {
             }
             prom.push(metaProm);
             metaProm.then(function() {
+                var layoutFile = layouts[config.flavorLayouts[flavorName] || 'default'];
                 if(homeData) {
-                    writeFile('./layout/' + config.layoutFile, path.join(flavorDir, 'index.html'), homeData);
+                    writeFile('./layout/' + layoutFile, path.join(flavorDir, 'index.html'), homeData);
                 }
                 else {
-                    writeFile('./layout/' + config.layoutFile, path.join(currentPath, el.filename), data);
+                    writeFile('./layout/' + layoutFile, path.join(currentPath, el.filename), data);
                 }
             });
         }

@@ -1,3 +1,5 @@
 {
-  "bootstrap": "bootstrap/bootstrap.html"
+  "default": "bootstrap/bootstrap.html",
+  "bootstrap": "bootstrap/bootstrap.html",
+  "cheminformatics": "bootstrap/cheminformatics.html"
 }
