@@ -30,8 +30,14 @@ var toCopy = [
     {src: './visualizer/config.json', dest: path.join(config.dir, 'config.json')},
     {src: './lib', dest: path.join(config.dir, './lib')},
     {src: './themes', dest: path.join(config.dir, './themes')},
-    {src: './static', dest: path.join(config.dir, './static')}
+    {src: './static/index.html', dest: path.join(config.dir, './static/index.html')}
 ];
+
+var toSwig = [
+    {src: './static/editconfig.json', dest: path.join(config.dir, './static/editconfig.json'), data: {config: config}}
+];
+
+
 
 var versions;
 
@@ -245,6 +251,7 @@ function handleFlavor(dir) {
             addPath(structure, dir);
             return generateHtml(structure, structure, dir).then(function() {
                 copyFiles();
+                swigFiles();
             });
         });
     };
@@ -435,5 +442,11 @@ function doMenu(structure, cpath, html) {
 function copyFiles() {
     for(var i=0; i<toCopy.length; i++) {
         fs.copySync(toCopy[i].src, toCopy[i].dest);
+    }
+}
+
+function swigFiles() {
+    for(var i=0; i<toSwig.length; i++) {
+        writeFile(toSwig[i].src, toSwig[i].dest, toSwig[i].data);
     }
 }
