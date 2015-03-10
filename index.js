@@ -126,7 +126,7 @@ function getFlavorMD5(flavors) {
     }
     else {
         return new Promise(function (resolve, reject) {
-            var url = config.couchurl + '/' + config.couchDatabase + '/_design/flavor/_list/config/alldocs?key="' + flavors + '"';
+            var url = config.couchurl + '/' + config.couchDatabase + '/_design/flavor/_list/config/alldocs?key="' + flavors + '"&menu=true' ;
 
             request(url, {
                 authxxx: {
