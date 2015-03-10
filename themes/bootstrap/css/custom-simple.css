@@ -1,0 +1,25 @@
+ul.nav.navbar-nav > li > a {
+    font-size: 16px;
+}
+
+#login-modal * {
+    box-sizing: border-box;
+}
+
+.navbar {
+    margin-bottom:-15px !important;
+}
+
+.navbar-nav > li > a {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+
+}
+
+.nav > li > a{
+    padding: 5px 10px !important;
+}
+
+#ci-visualizer {
+    margin-top: 0 !important;
+}

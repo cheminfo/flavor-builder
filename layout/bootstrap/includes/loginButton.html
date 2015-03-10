@@ -1,10 +1,32 @@
 <!-- Button trigger modal -->
-<div type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#loginModal">
-    Login
+<div id="login-button" type="button" class="btn btn-sm btn-success" data-toggle="modal">
 </div>
 
+<script>
+    // Do request to clp to know is user is logged in
+    $.ajax({
+        url: '{{ config.clp }}/_session',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            var $loginButton = $('#login-button');
+            if(data.userCtx && data.userCtx.name) {
+                // User is connected
+                $loginButton.on('click', function() {
+                    window.location = '/static/index.html';
+                });
+                $loginButton.html('Edit my views');
+            }
+            else {
+                // user is not connected
+                $loginButton.attr('data-target', '#login-modal');
+                $loginButton.html('Login');
+            }
+        }
+    })
+</script>
 <!-- Modal -->
-<div id="loginModal" class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div id="login-modal" class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">

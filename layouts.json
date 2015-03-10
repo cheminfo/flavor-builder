@@ -1,5 +1,6 @@
 {
-  "default": "bootstrap/bootstrap.html",
-  "bootstrap": "bootstrap/bootstrap.html",
-  "cheminformatics": "bootstrap/cheminformatics.html"
+  "default": "bootstrap/endlayouts/bootstrap.html",
+  "bootstrap": "bootstrap/endlayouts/bootstrap.html",
+  "cheminformatics": "bootstrap/endlayouts/cheminformatics.html",
+  "bootstrap-simple": "bootstrap/endlayouts/bootstrap-simple.html"
 }

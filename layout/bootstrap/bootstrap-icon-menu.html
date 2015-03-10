@@ -1,0 +1,18 @@
+{% extends './bootstrapmenu.html' %}
+<!-- override menu block -->
+{% block menu %}
+<nav role="navigation" class="navbar flexible-navbar">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <a href="{{home}}" id="home-icon" class="navbar-brand"></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+        {{ menuHtml|safe }}
+    </div>
+
+</nav>
