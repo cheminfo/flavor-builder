@@ -92,6 +92,35 @@
             templateResult: formatView, // omitted for brevity, see the source of this page
             templateSelection: formatViewSelection // omitted for brevity, see the source of this page
         });
+
+        function ajaxCall(sterm) {
+            $.ajax({
+                url: "http://visualizer.epfl.ch/cheminfo/_design/flavor/_view/searchOne",
+                dataType: 'json',
+                data: {
+                    startkey: JSON.stringify(sterm),
+                    endkey: JSON.stringify(sterm+'ZZZZZ')
+                },
+                cache: true,
+                success: function(data) {
+                    searchResults[sterm] = data;
+                }
+            })
+        }
+        var throttledAjax = _.throttle(ajaxCall, 200);
+
+        $searchbox.on("select2:open", function (e) {
+            var $searchinput = $('.select2-search__field');
+            console.log('open', $searchinput);
+            $searchinput.on('keydown', function(e) {
+                console.log('keydown');
+                var sterm;
+
+                if(String.fromCharCode(e.keyCode).match(/\s/)) {
+                    throttledAjax(selectedTerm);
+                }
+            })
+        });
         $searchbox.on('select2:select', function(e) {
             var data = e.params.data;
             var uri = new URI(window.location.href);
