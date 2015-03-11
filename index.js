@@ -27,14 +27,13 @@ for(var key in args) {
 config.flavorLayouts = config.flavorLayouts || {};
 
 var toCopy = [
-    {src: './visualizer/config.json', dest: path.join(config.dir, 'config.json')},
     {src: './lib', dest: path.join(config.dir, './lib')},
     {src: './themes', dest: path.join(config.dir, './themes')},
-    {src: './static/index.html', dest: path.join(config.dir, './static/index.html')}
+    {src: './static', dest: path.join(config.dir, './static')}
 ];
 
 var toSwig = [
-    {src: './static/editconfig.json', dest: path.join(config.dir, './static/editconfig.json'), data: {config: config}}
+    {src: './static/editConfig.json', dest: path.join(config.dir, './static/editConfig.json'), data: {config: config}}
 ];
 
 
@@ -344,6 +343,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                 config: config,
                 menuHtml: doMenu(rootStructure, currentPath),
                 reldir: path.relative(currentPath, config.dir) === '' ? '.' : path.relative(currentPath, config.dir),
+                readConfig: path.join(path.relative(currentPath, config.dir), config.readConfig),
                 title: el.__name,
                 home: path.relative(currentPath, flavorDir)
             };
