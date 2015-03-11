@@ -9,7 +9,10 @@
   "urlPrefix": "",
   "layoutFile": "",
   "home": "Home",
-  "configUrl": "",
+  "readConfig": "",
   "forceUpdate": false,
-  "clp": ""
+  "clp": "",
+  "flavorLayouts": {
+    "1024": "bootstrap-simple"
+  }
 }
