@@ -14,3 +14,7 @@ ul.nav.navbar-nav > li > a {
     background-size: contain;
     background-position: center;
 }
+
+body {
+    line-height: normal;
+}
