@@ -224,7 +224,7 @@ function handleFlavors(data) {
 
 function getFlavor(flavor) {
     return new Promise(function (resolve, reject) {
-         couchdb.view('flavor', 'docs', {key: [flavor, config.flavorUsername]}, function(err, body) {
+         couchdb.viewWithList('flavor', 'docs', 'sort', {key: [flavor, config.flavorUsername]}, function(err, body) {
        	     if(err) {
        	         return reject(err);
        	     }
@@ -241,8 +241,8 @@ function handleFlavor(dir) {
         Object.defineProperty(structure, '__root', {enumerable: false, writable: true});
         structure.__root = true;
         var prom = Promise.resolve();
-        for(let i=0; i<data.rows.length; i++){
-            row = data.rows[i];
+        for(let i=0; i<data.length; i++){
+            row = data[i];
             var flavors = row.value.flavors;
             prom = prom.then(getStructure(flavors, structure, row.value));
         }
