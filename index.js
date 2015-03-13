@@ -134,8 +134,8 @@ function getFlavorMD5(flavors) {
     }
     else {
         return new Promise(function (resolve, reject) {
-            var url = config.couchurl + '/' + config.couchDatabase + '/_design/flavor/_list/config/alldocs?key="' + flavors + '"&menu=true' ;
-
+            var key = encodeURIComponent(JSON.stringify([flavors, config.flavorUsername]));
+            var url = config.couchurl + '/' + config.couchDatabase + '/_design/flavor/_view/docs?key=' + key ;
             request(url, {
                 authxxx: {
                     user: config.couchUsername,
@@ -143,7 +143,8 @@ function getFlavorMD5(flavors) {
                     sendImmediately: true
                 }
             }, function(error, response, body) {
-                var md5 = crypto.createHash('md5').update(body).digest('hex');
+                var x = JSON.stringify(JSON.parse(body).rows);
+                var md5 = crypto.createHash('md5').update(x).digest('hex');
                 return resolve(md5);
             });
         });
