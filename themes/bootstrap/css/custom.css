@@ -15,6 +15,22 @@ ul.nav.navbar-nav > li > a {
     background-position: center;
 }
 
+.navbar {
+    margin-bottom:-15px !important;
+}
+
+.navbar-nav > li > a {
+    padding-bottom: 6px !important;
+}
+
+.nav > li > a{
+    padding: 12px 15px !important;
+}
+
+#ci-visualizer {
+    margin-top: 0 !important;
+}
+
 body {
     line-height: normal;
 }
