@@ -20,9 +20,19 @@ config.couchurl = config.couchurl.replace(/\/$/, '');
 
 // Overwrite config from command line
 var args = parseArgs(process.argv.slice(2));
+if(args.config) {
+    config = require('./'+ path.join(args.config));
+}
+if(args.layouts) {
+    layouts = require('./' + path.join(args.layouts))
+}
+
 for(var key in args) {
     config[key] = args[key];
 }
+
+console.log(config, layouts);
+
 
 config.flavorLayouts = config.flavorLayouts || {};
 
