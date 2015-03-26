@@ -14,5 +14,6 @@
   "clp": "",
   "flavorLayouts": {
     "1024": "bootstrap-simple"
-  }
+  },
+  "selfContained": false
 }

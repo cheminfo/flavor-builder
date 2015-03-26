@@ -267,7 +267,7 @@ function getStructure(flavors, current, row) {
         current.__meta = row.meta;
         current.__id = row._id;
         current.__rev = row._rev;
-        current.filename = current.__name.trim().replace(/[^A-Za-z0-9.-]/g, '_') + '.html';
+        current.filename = current.__name.trim().replace(/[^A-Za-z0-9.-]/g, '_');
         return getVersion(current).then(function(view) {
             view = JSON.parse(view);
             if(versions.indexOf(view.version) > -1)
@@ -311,7 +311,10 @@ function addPath(structure, currentPath) {
         if(el.__id) {
             var name = el.__name || '';
             el.__url = encodeURI(config.urlPrefix + '/' + path.join(currentPath, el.filename));
-            el.__path = path.join(currentPath, el.filename);
+            if(config.selfContained)
+                el.__path = path.join(currentPath, el.filename, 'index.html');
+            else
+                el.__path = path.join(currentPath, el.filename + '.html');
         }
         else if(key !== '__root'){
             addPath(structure[key], path.join(currentPath, el.__name));
@@ -335,7 +338,16 @@ function generateHtml(rootStructure, structure, currentPath) {
         else {
             flavorDir = config.dir;
         }
+    //flavorDir = flavorDir.replace(/[^A-Za-z0-9.-\/]/g, '_');
         if(el.__id) {
+            let relativePath = '';
+            if(config.selfContained) {
+                relativePath = path.relative(path.join(currentPath, 'dummy'), config.dir);
+            }
+            else {
+                relativePath = path.relative(currentPath, config.dir);
+            }
+            relativePath = relativePath === '' ? '.' : relativePath;
             let data = {
                 viewURL: getViewUrl(el, {absolute:true}),
                 dataURL: getDataUrl(el, {absolute:true}),
@@ -343,14 +355,15 @@ function generateHtml(rootStructure, structure, currentPath) {
                 structure: rootStructure,
                 config: config,
                 menuHtml: doMenu(rootStructure, currentPath),
-                reldir: path.relative(currentPath, config.dir) === '' ? '.' : path.relative(currentPath, config.dir),
-                readConfig: path.join(path.relative(currentPath, config.dir), config.readConfig),
+                reldir: relativePath,
+                readConfig: path.join(relativePath, config.readConfig),
                 title: el.__name,
-                home: path.relative(currentPath, flavorDir)
+                home: path.join(relativePath, path.relative(config.dir, flavorDir))
             };
 
             let homeData;
             if(el.__name === config.home) {
+                data.home = '.';
                 homeData = _.cloneDeep(data);
                 homeData.menuHtml = doMenu(rootStructure, flavorDir);
                 homeData.reldir = path.relative(flavorDir, config.dir);
@@ -390,7 +403,14 @@ function generateHtml(rootStructure, structure, currentPath) {
                     writeFile('./layout/' + layoutFile, path.join(flavorDir, 'index.html'), homeData);
                 }
                 else {
-                    writeFile('./layout/' + layoutFile, path.join(currentPath, el.filename), data);
+                    var pathToFile;
+                    if(config.selfContained) {
+                        pathToFile = path.join(currentPath, el.filename, 'index.html');
+                    }
+                    else {
+                        pathToFile = path.join(currentPath, el.filename + '.html');
+                    }
+                    writeFile('./layout/' + layoutFile, pathToFile, data);
                 }
             });
         }
