@@ -31,8 +31,6 @@ for(var key in args) {
     config[key] = args[key];
 }
 
-console.log(config, layouts);
-
 
 config.flavorLayouts = config.flavorLayouts || {};
 
@@ -366,10 +364,11 @@ function generateHtml(rootStructure, structure, currentPath) {
                 config: config,
                 menuHtml: doMenu(rootStructure, currentPath),
                 reldir: relativePath,
-                readConfig: path.join(relativePath, config.readConfig),
+                readConfig:  path.join(relativePath, config.readConfig),
                 title: el.__name,
                 home: path.join(relativePath, path.relative(config.dir, flavorDir))
             };
+
 
             let homeData;
             if(el.__name === config.home) {
@@ -377,6 +376,10 @@ function generateHtml(rootStructure, structure, currentPath) {
                 homeData = _.cloneDeep(data);
                 homeData.menuHtml = doMenu(rootStructure, flavorDir);
                 homeData.reldir = path.relative(flavorDir, config.dir);
+                homeData.readConfig = path.join(path.relative(flavorDir, config.dir), config.readConfig);
+                console.log('relative path', relativePath);
+                console.log('rel dir', homeData.reldir);
+                console.log('read config', homeData.readConfig);
                 if(homeData.reldir === '') homeData.reldir = '.';
             }
 
