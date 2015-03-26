@@ -17,4 +17,8 @@ Visualizer website generator
 ```
 
 All config options can be overwritten on the commandline:
-``` node index.js --layoutFile="simple/page.html" ```
+```
+ cp config-default.json config.json
+ cp layouts-default.json layouts.json
+ node index.js --layoutFile="simple/page.html"
+```
