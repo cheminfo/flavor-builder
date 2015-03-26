@@ -51,14 +51,16 @@ var versions;
 co(function*() {
     versions = yield getVersionsRequest();
     if(config.flavor) {
-        yield getFlavors()
+        yield couchAuthenticate()
+            .then(getFlavors)
             .then(handleFlavors)
             .then(getFlavor)
             .then(handleFlavor(config.dir));
     }
 
     else {
-        yield getFlavors()
+        yield couchAuthenticate()
+            .then(getFlavors)
             .then(processFlavors)
             .then(filterFlavorsByMd5)
             .then(function(flavors) {
@@ -144,13 +146,14 @@ function getFlavorMD5(flavors) {
         return new Promise(function (resolve, reject) {
             var key = encodeURIComponent(JSON.stringify([flavors, config.flavorUsername]));
             var url = config.couchurl + '/' + config.couchDatabase + '/_design/flavor/_view/docs?key=' + key ;
-            request(url, {
-                authxxx: {
+            var options = config.couchPassword ? {
+                auth: {
                     user: config.couchUsername,
                     pass: config.couchPassword,
                     sendImmediately: true
                 }
-            }, function(error, response, body) {
+            } : {};
+            request(url, options, function(error, response, body) {
                 var x = JSON.stringify(JSON.parse(body).rows);
                 var md5 = crypto.createHash('md5').update(x).digest('hex');
                 return resolve(md5);
@@ -190,6 +193,10 @@ function filterFlavorByMD5(flavor) {
 
 function couchAuthenticate() {
     return new Promise(function (resolve, reject) {
+        if(!config.couchPassword) {
+            // no auth needed
+            resolve();
+        }
         nano.auth(config.couchUsername, config.couchPassword, function (err, body, headers) {
             if (err) {
                 return reject(err);
@@ -202,6 +209,7 @@ function couchAuthenticate() {
                 nano = require('nano')({url: config.couchurl, cookie: auth[0] });
                 couchdb = nano.use(config.couchDatabase);
             }
+            console.log(auth);
             return resolve();
         });
     });
@@ -389,13 +397,14 @@ function generateHtml(rootStructure, structure, currentPath) {
                 metaProm = metaProm.then(function() {
                     return new Promise(function (resolve, reject) {
                         var url = getMetaUrl(el, {absolute: true});
-                        request(url, config.couchPassword ? {
-                            authxxx: {
+                        var options = config.couchPassword ? {
+                            auth: {
                                 user: config.couchUsername,
                                 pass: config.couchPassword,
                                 sendImmediately: true
                             }
-                        } : {}, function(error, response, body) {
+                        } : {};
+                        request(url, options, function(error, response, body) {
                             if(!error && response.statusCode === 200) {
                                 data.meta = JSON.parse(body);
                                 if(homeData){
