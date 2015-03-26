@@ -359,8 +359,8 @@ function generateHtml(rootStructure, structure, currentPath) {
             }
             relativePath = relativePath === '' ? '.' : relativePath;
             let data = {
-                viewURL: getViewUrl(el, {absolute:true}),
-                dataURL: getDataUrl(el, {absolute:true}),
+                viewURL: config.selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, {absolute:true}),
+                dataURL: config.selfContained ? (el.__data ? './data.json' : undefined) : getDataUrl(el, {absolute:true}),
                 version: el.version,
                 structure: rootStructure,
                 config: config,
@@ -379,7 +379,6 @@ function generateHtml(rootStructure, structure, currentPath) {
                 homeData.reldir = path.relative(flavorDir, config.dir);
                 if(homeData.reldir === '') homeData.reldir = '.';
             }
-
 
             // If couch has meta.json, we make a request to get that file first
             let metaProm = Promise.resolve();
@@ -421,6 +420,23 @@ function generateHtml(rootStructure, structure, currentPath) {
                         pathToFile = path.join(currentPath, el.filename + '.html');
                     }
                     writeFile('./layout/' + layoutFile, pathToFile, data);
+                }
+
+                // Now that the file is written the directory exists
+                if(config.selfContained) {
+                    if(homeData) {
+                        if(el.__view)
+                            request(getViewUrl(el, {absolute: true})).pipe(fs.createWriteStream(path.join(currentPath, 'view.json')));
+                        if(el.__data)
+                            request(getDataUrl(el, {absolute: true})).pipe(fs.createWriteStream(path.join(currentPath, 'data.json')));
+                    }
+
+                    else {
+                        if(el.__view)
+                            request(getViewUrl(el, {absolute: true})).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'view.json')));
+                        if(el.__data)
+                            request(getDataUrl(el, {absolute: true})).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'data.json')));
+                    }
                 }
             });
         }
