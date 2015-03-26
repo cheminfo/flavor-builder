@@ -31,8 +31,6 @@ for(var key in args) {
     config[key] = args[key];
 }
 
-console.log(config, layouts);
-
 
 config.flavorLayouts = config.flavorLayouts || {};
 
@@ -53,14 +51,16 @@ var versions;
 co(function*() {
     versions = yield getVersionsRequest();
     if(config.flavor) {
-        yield getFlavors()
+        yield couchAuthenticate()
+            .then(getFlavors)
             .then(handleFlavors)
             .then(getFlavor)
             .then(handleFlavor(config.dir));
     }
 
     else {
-        yield getFlavors()
+        yield couchAuthenticate()
+            .then(getFlavors)
             .then(processFlavors)
             .then(filterFlavorsByMd5)
             .then(function(flavors) {
@@ -146,13 +146,14 @@ function getFlavorMD5(flavors) {
         return new Promise(function (resolve, reject) {
             var key = encodeURIComponent(JSON.stringify([flavors, config.flavorUsername]));
             var url = config.couchurl + '/' + config.couchDatabase + '/_design/flavor/_view/docs?key=' + key ;
-            request(url, {
-                authxxx: {
+            var options = config.couchPassword ? {
+                auth: {
                     user: config.couchUsername,
                     pass: config.couchPassword,
                     sendImmediately: true
                 }
-            }, function(error, response, body) {
+            } : {};
+            request(url, options, function(error, response, body) {
                 var x = JSON.stringify(JSON.parse(body).rows);
                 var md5 = crypto.createHash('md5').update(x).digest('hex');
                 return resolve(md5);
@@ -192,6 +193,10 @@ function filterFlavorByMD5(flavor) {
 
 function couchAuthenticate() {
     return new Promise(function (resolve, reject) {
+        if(!config.couchPassword) {
+            // no auth needed
+            resolve();
+        }
         nano.auth(config.couchUsername, config.couchPassword, function (err, body, headers) {
             if (err) {
                 return reject(err);
@@ -204,6 +209,7 @@ function couchAuthenticate() {
                 nano = require('nano')({url: config.couchurl, cookie: auth[0] });
                 couchdb = nano.use(config.couchDatabase);
             }
+            console.log(auth);
             return resolve();
         });
     });
@@ -359,17 +365,18 @@ function generateHtml(rootStructure, structure, currentPath) {
             }
             relativePath = relativePath === '' ? '.' : relativePath;
             let data = {
-                viewURL: getViewUrl(el, {absolute:true}),
-                dataURL: getDataUrl(el, {absolute:true}),
+                viewURL: config.selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, {absolute:true}),
+                dataURL: config.selfContained ? (el.__data ? './data.json' : undefined) : getDataUrl(el, {absolute:true}),
                 version: el.version,
                 structure: rootStructure,
                 config: config,
                 menuHtml: doMenu(rootStructure, currentPath),
                 reldir: relativePath,
-                readConfig: path.join(relativePath, config.readConfig),
+                readConfig:  path.join(relativePath, config.readConfig),
                 title: el.__name,
                 home: path.join(relativePath, path.relative(config.dir, flavorDir))
             };
+
 
             let homeData;
             if(el.__name === config.home) {
@@ -377,9 +384,12 @@ function generateHtml(rootStructure, structure, currentPath) {
                 homeData = _.cloneDeep(data);
                 homeData.menuHtml = doMenu(rootStructure, flavorDir);
                 homeData.reldir = path.relative(flavorDir, config.dir);
+                homeData.readConfig = path.join(path.relative(flavorDir, config.dir), config.readConfig);
+                console.log('relative path', relativePath);
+                console.log('rel dir', homeData.reldir);
+                console.log('read config', homeData.readConfig);
                 if(homeData.reldir === '') homeData.reldir = '.';
             }
-
 
             // If couch has meta.json, we make a request to get that file first
             let metaProm = Promise.resolve();
@@ -387,13 +397,14 @@ function generateHtml(rootStructure, structure, currentPath) {
                 metaProm = metaProm.then(function() {
                     return new Promise(function (resolve, reject) {
                         var url = getMetaUrl(el, {absolute: true});
-                        request(url, config.couchPassword ? {
-                            authxxx: {
+                        var options = config.couchPassword ? {
+                            auth: {
                                 user: config.couchUsername,
                                 pass: config.couchPassword,
                                 sendImmediately: true
                             }
-                        } : {}, function(error, response, body) {
+                        } : {};
+                        request(url, options, function(error, response, body) {
                             if(!error && response.statusCode === 200) {
                                 data.meta = JSON.parse(body);
                                 if(homeData){
@@ -421,6 +432,23 @@ function generateHtml(rootStructure, structure, currentPath) {
                         pathToFile = path.join(currentPath, el.filename + '.html');
                     }
                     writeFile('./layout/' + layoutFile, pathToFile, data);
+                }
+
+                // Now that the file is written the directory exists
+                if(config.selfContained) {
+                    if(homeData) {
+                        if(el.__view)
+                            request(getViewUrl(el, {absolute: true})).pipe(fs.createWriteStream(path.join(currentPath, 'view.json')));
+                        if(el.__data)
+                            request(getDataUrl(el, {absolute: true})).pipe(fs.createWriteStream(path.join(currentPath, 'data.json')));
+                    }
+
+                    else {
+                        if(el.__view)
+                            request(getViewUrl(el, {absolute: true})).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'view.json')));
+                        if(el.__data)
+                            request(getDataUrl(el, {absolute: true})).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'data.json')));
+                    }
                 }
             });
         }
