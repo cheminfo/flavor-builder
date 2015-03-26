@@ -1,0 +1,20 @@
+ul.nav.navbar-nav > li > a {
+    font-size: 16px;
+}
+
+#login-modal * {
+    box-sizing: border-box;
+}
+
+#home-icon {
+    width: 65px;
+    height: 50px;
+    background: url(../img/logo1.png);
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+}
+
+body {
+    line-height: normal;
+}
