@@ -1,3 +1,4 @@
-./build
-./config.json
+build
+config.json
+layouts.json
 node_modules
