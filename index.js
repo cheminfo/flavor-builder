@@ -382,12 +382,9 @@ function generateHtml(rootStructure, structure, currentPath) {
             if(el.__name === config.home) {
                 data.home = '.';
                 homeData = _.cloneDeep(data);
-                homeData.menuHtml = doMenu(rootStructure, flavorDir);
+                homeData.menuHtml = doMenu(rootStructure, flavorDir, true);
                 homeData.reldir = path.relative(flavorDir, config.dir);
                 homeData.readConfig = path.join(path.relative(flavorDir, config.dir), config.readConfig);
-                console.log('relative path', relativePath);
-                console.log('rel dir', homeData.reldir);
-                console.log('read config', homeData.readConfig);
                 if(homeData.reldir === '') homeData.reldir = '.';
             }
 
@@ -462,11 +459,17 @@ function generateHtml(rootStructure, structure, currentPath) {
 function buildQueryString(el) {
     var result = '?';
     if(el.__view) {
-        result += 'viewURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev);
+        if(config.selfContained)
+            result += 'viewURL=' + encodeURIComponent('./view.json');
+        else
+            result += 'viewURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev);
     }
     if(el.__data) {
         if(result !== '?') result += '&';
-        result += 'dataURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev);
+        if(config.selfContained)
+            result += 'dataURL=' + encodeURIComponent('./data.json');
+        else
+            result += 'dataURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev);
     }
     if(el.version) {
         if(result !== '?') result += '&';
@@ -478,11 +481,17 @@ function buildQueryString(el) {
 }
 
 
-function doMenu(structure, cpath, html) {
-    if(!html) html = '';
+function doMenu(structure, cpath, isHome) {
+    var html = '';
     if(structure.__id) {
-        if(structure.__name !== config.home)
-            html += '<li><a href="' + path.relative(cpath, structure.__path) + buildQueryString(structure) + '">' + structure.__name + '</a></li>';
+        if(structure.__name !== config.home) {
+            if (!isHome) {
+                html += '<li><a href="' + path.relative((config.selfContained ? path.join(cpath, 'dummy') : cpath), structure.__path) + buildQueryString(structure) + '">' + structure.__name + '</a></li>';
+            }
+
+            else
+                html += '<li><a href="' + path.relative(cpath, structure.__path) + buildQueryString(structure) + '">' + structure.__name + '</a></li>';
+        }
         return html;
     }
     else {
@@ -490,7 +499,7 @@ function doMenu(structure, cpath, html) {
         html += '<ul' + (structure.__root ? ' class="navmenu" style="display:none"' : '') + '>';
         for(var key in structure) {
             if(key === '__name') continue;
-            html += doMenu(structure[key], cpath);
+            html += doMenu(structure[key], cpath, isHome);
         }
         html += '</ul>';
         if(structure.__name) html += '</li>';
