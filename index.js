@@ -45,7 +45,6 @@ var toSwig = [
 ];
 
 
-
 var versions;
 
 co(function*() {
