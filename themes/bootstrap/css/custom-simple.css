@@ -23,6 +23,10 @@ ul.nav.navbar-nav > li > a {
     margin-top: 0 !important;
 }
 
+div.general {
+    clear: both;
+}
+
 body {
     line-height: normal;
 }
