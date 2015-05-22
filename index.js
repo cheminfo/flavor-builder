@@ -377,9 +377,6 @@ function generateHtml(rootStructure, structure, currentPath) {
                 home: path.join(relativePath, path.relative(config.dir, flavorDir)),
             };
 
-            console.log('query string', buildQueryString(el));
-
-
             let homeData;
             if(el.__name === config.home) {
                 data.home = '.';
