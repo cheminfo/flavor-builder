@@ -366,7 +366,7 @@ function generateHtml(rootStructure, structure, currentPath) {
             let data = {
                 viewURL: config.selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, {absolute:true}),
                 dataURL: config.selfContained ? (el.__data ? './data.json' : undefined) : getDataUrl(el, {absolute:true}),
-                queryString: buildQueryString(el),
+                queryString: buildQueryString(el, {noVersion: true}),
                 version: el.version,
                 structure: rootStructure,
                 config: config,
@@ -455,7 +455,7 @@ function generateHtml(rootStructure, structure, currentPath) {
     return Promise.all(prom);
 }
 
-function buildQueryString(el) {
+function buildQueryString(el, options) {
     var result = '?';
     if(el.__view) {
         if(config.selfContained)
@@ -470,9 +470,9 @@ function buildQueryString(el) {
         else
             result += 'dataURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev);
     }
-    if(el.version) {
+    if(el.version && !options.noVersion) {
         if(result !== '?') result += '&';
-        result += 'v=v' + encodeURIComponent(el.version);
+        result += (el.version.toLowerCase() === 'head' ? 'v=HEAD' : 'v=v' + encodeURIComponent(el.version));
     }
 
     if(result === '?') return '';
