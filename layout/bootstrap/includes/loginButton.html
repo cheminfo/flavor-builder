@@ -13,7 +13,7 @@
             if(data.userCtx && data.userCtx.name) {
                 // User is connected
                 $loginButton.on('click', function() {
-                    window.location = '{{ reldir }}/static/index.html{{ queryString }}';
+                    window.location = '{{ reldir }}/static/index.html{{ queryString|raw }}';
                 });
                 $loginButton.html('Edit my views');
             }
@@ -34,13 +34,13 @@
                 <h4 class="modal-title" id="myModalLabel">Login and create your own views!</h4>
             </div>
             <div class="modal-body">
-                    <a class="btn btn-block btn-social btn-facebook" href="{{ config.clp }}/auth/facebook{{ queryString }}">
+                    <a class="btn btn-block btn-social btn-facebook" href="{{ config.clp }}/auth/facebook{{ queryString|raw }}">
                         <i class="fa fa-facebook"></i> Sign in with Facebook
                     </a>
-                    <a class="btn btn-block btn-social btn-google-plus" href="{{ config.clp }}/auth/google{{ queryString }}">
+                    <a class="btn btn-block btn-social btn-google-plus" href="{{ config.clp }}/auth/google{{ queryString|raw }}">
                         <i class="fa fa-google"></i> Sign in with Google
                     </a>
-                    <a class="btn btn-block btn-social btn-github" href="{{ config.clp }}/auth/github{{ queryString }}">
+                    <a class="btn btn-block btn-social btn-github" href="{{ config.clp }}/auth/github{{ queryString|raw }}">
                         <i class="fa fa-github"></i> Sign in with Github
                     </a>
             </div>
