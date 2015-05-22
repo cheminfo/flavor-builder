@@ -456,6 +456,7 @@ function generateHtml(rootStructure, structure, currentPath) {
 }
 
 function buildQueryString(el, options) {
+    options = options || {};
     var result = '?';
     if(el.__view) {
         if(config.selfContained)
