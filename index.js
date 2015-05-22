@@ -366,6 +366,7 @@ function generateHtml(rootStructure, structure, currentPath) {
             let data = {
                 viewURL: config.selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, {absolute:true}),
                 dataURL: config.selfContained ? (el.__data ? './data.json' : undefined) : getDataUrl(el, {absolute:true}),
+                queryString: buildQueryString(el),
                 version: el.version,
                 structure: rootStructure,
                 config: config,
@@ -373,8 +374,10 @@ function generateHtml(rootStructure, structure, currentPath) {
                 reldir: relativePath,
                 readConfig:  path.join(relativePath, config.readConfig),
                 title: el.__name,
-                home: path.join(relativePath, path.relative(config.dir, flavorDir))
+                home: path.join(relativePath, path.relative(config.dir, flavorDir)),
             };
+
+            console.log('query string', buildQueryString(el));
 
 
             let homeData;
@@ -472,7 +475,7 @@ function buildQueryString(el) {
     }
     if(el.version) {
         if(result !== '?') result += '&';
-        result += 'v=' + encodeURIComponent(el.version);
+        result += 'v=v' + encodeURIComponent(el.version);
     }
 
     if(result === '?') return '';
