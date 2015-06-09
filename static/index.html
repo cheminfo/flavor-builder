@@ -23,6 +23,9 @@
         var visualizer = document.createElement('script');
         var uri = new URI(document.location.href);
         var query = uri.search(true);
+        if(query.close) {
+            window.close();
+        }
         var version = 'latest';
         if (query.v) {
             version = query.v;
