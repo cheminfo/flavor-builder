@@ -3,7 +3,7 @@
 var parseArgs = require('minimist'),
     config = require('./config.json'),
     layouts = require('./layouts.json'),
-    nano = require('nano')(config.couchurl),
+    nano = require('nano')(config.couchLocalUrl || config.couchurl),
     couchdb = nano.use(config.couchDatabase),
     Promise = require('bluebird'),
     url = require('url'),
@@ -18,7 +18,9 @@ var parseArgs = require('minimist'),
 
 var DEFAULT_FLAVOR = 'default';
 config.couchurl = config.couchurl.replace(/\/$/, '');
+if(config.couchLocalUrl) config.couchLocalUrl = config.couchLocalUrl.replace(/\/$/, '');
 
+config.requrl = config.couchLocalUrl || config.couchurl;
 // Overwrite config from command line
 var args = parseArgs(process.argv.slice(2));
 if(args.config) {
@@ -99,21 +101,21 @@ function getVersionsRequest() {
 
 function getViewUrl(el, options) {
     options = options || {};
-    return el.__view ? (options.absolute ? config.couchurl : '') + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev: undefined;
+    return el.__view ? (options.absolute ? options.couchurl : '') + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev: undefined;
 }
 
 function getDataUrl(el, options) {
     options = options || {};
-    return el.__data ? (options.absolute ? config.couchurl : '') + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev : undefined;
+    return el.__data ? (options.absolute ? options.couchurl : '') + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev : undefined;
 }
 
 function getMetaUrl(el, options) {
     options = options || {};
-    return el.__meta ? (options.absolute ? config.couchurl : '') + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev : undefined;
+    return el.__meta ? (options.absolute ? options.couchurl : '') + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev : undefined;
 }
 
 function getVersion(el) {
-    var url = getViewUrl(el, {absolute: true});
+    var url = getViewUrl(el, {absolute: true, couchurl: config.requrl});
     return requestGet(url);
 }
 
@@ -145,7 +147,7 @@ function getFlavorMD5(flavors) {
     else {
         return new Promise(function (resolve, reject) {
             var key = encodeURIComponent(JSON.stringify([flavors, config.flavorUsername]));
-            var url = config.couchurl + '/' + config.couchDatabase + '/_design/flavor/_view/docs?key=' + key ;
+            var url = config.requrl + '/' + config.couchDatabase + '/_design/flavor/_view/docs?key=' + key ;
             var options = config.couchPassword ? {
                 auth: {
                     user: config.couchUsername,
@@ -206,7 +208,7 @@ function couchAuthenticate() {
                 auth = headers['set-cookie'];
 
                 //cookies[config.couchUsername] = headers['set-cookie'];
-                nano = require('nano')({url: config.couchurl, cookie: auth[0] });
+                nano = require('nano')({url: config.requrl, cookie: auth[0] });
                 couchdb = nano.use(config.couchDatabase);
             }
             console.log(auth);
@@ -365,8 +367,8 @@ function generateHtml(rootStructure, structure, currentPath) {
             }
             relativePath = relativePath === '' ? '.' : relativePath;
             let data = {
-                viewURL: config.selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, {absolute:true}),
-                dataURL: config.selfContained ? (el.__data ? './data.json' : undefined) : getDataUrl(el, {absolute:true}),
+                viewURL: config.selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, {absolute:true, couchurl: config.couchurl}),
+                dataURL: config.selfContained ? (el.__data ? './data.json' : undefined) : getDataUrl(el, {absolute:true, couchurl: config.couchurl}),
                 queryString: buildQueryString(el, {noVersion: true}),
                 version: el.version,
                 structure: rootStructure,
@@ -394,7 +396,7 @@ function generateHtml(rootStructure, structure, currentPath) {
             if(el.__meta) {
                 metaProm = metaProm.then(function() {
                     return new Promise(function (resolve, reject) {
-                        var url = getMetaUrl(el, {absolute: true});
+                        var url = getMetaUrl(el, {absolute: true, couchurl: config.requrl});
                         var options = config.couchPassword ? {
                             auth: {
                                 user: config.couchUsername,
@@ -436,16 +438,16 @@ function generateHtml(rootStructure, structure, currentPath) {
                 if(config.selfContained) {
                     if(homeData) {
                         if(el.__view)
-                            request(getViewUrl(el, {absolute: true})).pipe(fs.createWriteStream(path.join(currentPath, 'view.json')));
+                            request(getViewUrl(el, {absolute: true, couchurl: config.requrl})).pipe(fs.createWriteStream(path.join(currentPath, 'view.json')));
                         if(el.__data)
-                            request(getDataUrl(el, {absolute: true})).pipe(fs.createWriteStream(path.join(currentPath, 'data.json')));
+                            request(getDataUrl(el, {absolute: true, couchurl: config.requrl})).pipe(fs.createWriteStream(path.join(currentPath, 'data.json')));
                     }
 
                     else {
                         if(el.__view)
-                            request(getViewUrl(el, {absolute: true})).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'view.json')));
+                            request(getViewUrl(el, {absolute: true, couchurl: config.requrl})).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'view.json')));
                         if(el.__data)
-                            request(getDataUrl(el, {absolute: true})).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'data.json')));
+                            request(getDataUrl(el, {absolute: true, couchurl: config.requrl})).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'data.json')));
                     }
                 }
             });
