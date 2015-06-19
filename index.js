@@ -16,6 +16,7 @@ var parseArgs = require('minimist'),
     co = require('co'),
     auth = '';
 
+var DEFAULT_FLAVOR = 'default';
 config.couchurl = config.couchurl.replace(/\/$/, '');
 
 // Overwrite config from command line
@@ -67,7 +68,7 @@ co(function*() {
                 var prom = [];
                 for(var i=0; i<flavors.length; i++) {
                     let flavordir;
-                    if(flavors[i] === 'default') {
+                    if(flavors[i] === DEFAULT_FLAVOR) {
                         flavordir = config.dir;
                     }
                     else {
@@ -375,6 +376,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                 readConfig:  path.join(relativePath, config.readConfig),
                 title: el.__name,
                 home: path.join(relativePath, path.relative(config.dir, flavorDir)),
+                flavor: flavorName || DEFAULT_FLAVOR
             };
 
             let homeData;
@@ -415,7 +417,7 @@ function generateHtml(rootStructure, structure, currentPath) {
             }
             prom.push(metaProm);
             metaProm.then(function() {
-                var layoutFile = layouts[config.flavorLayouts[flavorName] || 'default'];
+                var layoutFile = layouts[config.flavorLayouts[flavorName] || DEFAULT_FLAVOR];
                 if(homeData) {
                     writeFile('./layout/' + layoutFile, path.join(flavorDir, 'index.html'), homeData);
                 }

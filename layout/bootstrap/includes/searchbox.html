@@ -81,7 +81,10 @@
                     }
                     args.push('id');
                     var res = intersectionObjects.apply(null, args);
-                    res = _.uniq(res, function(val) { return val.id});
+                    res = _.filter(res, function(val) { return val.id});
+                    res.sort(function(a, b) {
+                        return a.flavor !== '{{flavor}}' && b.flavor !== '{{flavor}}';
+                    });
                     return {
                         results: res
                     };
