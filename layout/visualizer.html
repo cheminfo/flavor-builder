@@ -13,7 +13,7 @@
         return version;
     }
     window.onload = function () {
-        $.getJSON('http://www.lactame.com/visualizer/versions.php').then(function(versions) {
+        $.getJSON('https://www.lactame.com/visualizer/versions.php').then(function(versions) {
             versions.push('head');
             var url;
             var div = document.getElementById('errorMessage');
@@ -53,7 +53,7 @@
 
         function addVisualizer(version, search) {
             var visualizer = document.createElement('script');
-            var prefix = 'http://' + (search.direct ? 'direct' : 'www') + '.lactame.com/visualizer/';
+            var prefix = 'https://' + (search.direct ? 'direct' : 'www') + '.lactame.com/visualizer/';
             visualizer.setAttribute('data-main', prefix + version + '/init');
             visualizer.setAttribute('src', prefix + version + '/components/requirejs/require.js');
             document.head.appendChild(visualizer);
