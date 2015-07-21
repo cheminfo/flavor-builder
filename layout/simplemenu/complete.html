@@ -1,0 +1,21 @@
+{% extends './simple-menu.html' %}
+
+{% block menu %}
+<div>
+    <!-- override menu block -->
+    <div class="header-element">
+        {% include "../includes/icon.html" %}
+    </div>
+    <div class="header-element">
+        <div id="cssmenu">
+            {{ menuHtml|safe }}
+        </div>
+    </div>
+    <div class="header-element">
+        {% include "../includes/searchbox.html" %}
+    </div>
+    <div class="header-element" ">
+        {% include "../includes/loginButton.html" %}
+    </div>
+</div>
+{% endblock menu %}

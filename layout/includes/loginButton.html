@@ -1,0 +1,59 @@
+<!-- Button trigger modal -->
+<input type="button" id="login-button"> </input>
+
+<script>
+    function getRedirect(redirect) {
+        var uri = new URI(window.location.href);
+        var search = uri.search(true);
+        if(search.viewURL) {
+            redirect.addSearch('viewURL', search.viewURL);
+            if(search.dataURL) {
+                redirect.addSearch('dataURL', search.dataURL);
+            }
+            redirect = redirect.href();
+        }
+        else {
+            redirect = redirect.href() + '{{ queryString|raw }}';
+        }
+        return redirect;
+    }
+    function getEditRedirect() {
+        var redirect = new URI('{{ reldir }}/static/index.html');
+        return getRedirect(redirect);
+    }
+
+    function getAuthRedirect(method) {
+        var redirect = new URI('{{ config.clp }}/auth/' + method );
+        return getRedirect(redirect);
+    }
+
+
+
+    // Do request to clp to know is user is logged in
+    var $loginButton = $('#login-button');
+    $.ajax({
+        url: '{{ config.clp }}/_session',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+
+            if(data.userCtx && data.userCtx.name) {
+                // User is already connected
+                $loginButton.val('Edit my views');
+            }
+            else {
+                // user is not connected
+                $loginButton.val('Login');
+            }
+            $loginButton.on('click', function() {
+                window.location = getEditRedirect();
+            });
+        },
+        error: function() {
+            $loginButton.on('click', function() {
+                window.location = getEditRedirect();
+            });
+            $loginButton.val('Fork view');
+        }
+    })
+</script>

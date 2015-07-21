@@ -490,11 +490,11 @@ function doMenu(structure, cpath, isHome) {
     if(structure.__id) {
         if(structure.__name !== config.home) {
             if (!isHome) {
-                html += '<li><a href="' + path.relative((config.selfContained ? path.join(cpath, 'dummy') : cpath), structure.__path) + buildQueryString(structure) + '">' + structure.__name + '</a></li>';
+                html += '<li><a href="' + path.relative((config.selfContained ? path.join(cpath, 'dummy') : cpath), structure.__path) + buildQueryString(structure) + '"><span>' + structure.__name + '</span></a></li>';
             }
 
             else
-                html += '<li><a href="' + path.relative(cpath, structure.__path) + buildQueryString(structure) + '">' + structure.__name + '</a></li>';
+                html += '<li><a href="' + path.relative(cpath, structure.__path) + buildQueryString(structure) + '"><span>' + structure.__name + '</span></a></li>';
         }
         return html;
     }
