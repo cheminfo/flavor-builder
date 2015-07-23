@@ -8,10 +8,11 @@ body {
     display:inline-block;
     vertical-align: top;
     position: relative;
+    height: 30px;
 }
 
 #ci-visualizer {
-    margin-top: -9px !important;
+    margin-top: 0px;
 }
 
 /* =========== Search box ===================== */
