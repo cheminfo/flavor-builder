@@ -1,8 +1,14 @@
 'use strict';
 
-var parseArgs = require('minimist'),
-    config = require('./config.json'),
-    layouts = require('./layouts.json'),
+var args = require('minimist')(process.argv.slice(2));
+try {
+    var config = args.config ? require(args.config) : require('./config.json');
+} catch(e) {
+    console.error(e);
+    console.error('Error reading the configuration file. Exit.');
+    process.exit(1);
+}
+var layouts = require('./layouts.json'),
     nano = require('nano')(config.couchLocalUrl || config.couchurl),
     couchdb = nano.use(config.couchDatabase),
     Promise = require('bluebird'),
@@ -22,7 +28,6 @@ if (config.couchLocalUrl) config.couchLocalUrl = config.couchLocalUrl.replace(/\
 
 config.requrl = config.couchLocalUrl || config.couchurl;
 // Overwrite config from command line
-var args = parseArgs(process.argv.slice(2));
 if (args.config) {
     config = require('./' + path.join(args.config));
 }
