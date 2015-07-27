@@ -9,6 +9,8 @@
         $( document ).ready(function() {
             var $cssmenu = $('#cssmenu');
 
+            $cssmenu.find('ul').first().prepend('<li class="last"><a href="{{home}}" >Home</a></li>')
+
             $cssmenu.find('ul>li').each(function() {
                 var $this = $(this);
                 if($this.children('ul').length > 0) {
