@@ -2,5 +2,6 @@
   "default": "bootstrap/endlayouts/bootstrap.html",
   "bootstrap": "bootstrap/endlayouts/bootstrap.html",
   "cheminformatics": "bootstrap/endlayouts/cheminformatics.html",
-  "bootstrap-simple": "bootstrap/endlayouts/bootstrap-simple.html"
+  "bootstrap-simple": "bootstrap/endlayouts/bootstrap-simple.html",
+  "chromeapp": "bootstrap/endlayouts/chromeapp.html"
 }
