@@ -7,15 +7,13 @@
 
 <script>
 
-console.log("In iframe");
 
 var messages={};
 var messageID=0;
 
 var appWindow, appOrigin;
 
-
-function postMessage(action, data, callback) {
+function postChromeMessage(action, data, callback) {
     if (!appWindow || !appOrigin) {
         console.log('Don\'t know where to send messages to, app hasn\'t initialized us yet.');
         return;
@@ -39,20 +37,22 @@ function postMessage(action, data, callback) {
 window.addEventListener("message", receiveMessage, false);
 
 function receiveMessage(event) {
+    console.log("Receiving event: ",event);
     if (!appWindow || !appOrigin) {
         appWindow = event.source;
         appOrigin = event.origin;
     }
     var messageID=event.data.messageID;
-    if (messages[messageID] && messages[messageID].callback) {
-        console.log("In call back");
-        messages[messageID].callback(event);
-        delete messages[messageID];
-    } else {
+    var message=messages[messageID];
+
+    if (message && message.callback) {
+        message.callback(event.data);
+	if (event.data.status==="success" || event.data.status==="error") {
+	        delete messages[messageID];
+	}
 
     }
 }
-
 </script>
 
 {% endblock head %}
