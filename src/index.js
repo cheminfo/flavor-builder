@@ -1,14 +1,10 @@
 'use strict';
 
-var args = require('minimist')(process.argv.slice(2));
-try {
-    var config = args.config ? require(args.config) : require('./config.json');
-} catch(e) {
-    console.error(e);
-    console.error('Error reading the configuration file. Exit.');
-    process.exit(1);
-}
-var layouts = require('./layouts.json'),
+const DEFAULT_FLAVOR = 'default';
+
+var config = require('./config'),
+    layouts = require('./layouts'),
+    filters = require('./filters'),
     nano = require('nano')(config.couchLocalUrl || config.couchurl),
     couchdb = nano.use(config.couchDatabase),
     Promise = require('bluebird'),
@@ -22,25 +18,9 @@ var layouts = require('./layouts.json'),
     co = require('co'),
     auth = '';
 
-var DEFAULT_FLAVOR = 'default';
-config.couchurl = config.couchurl.replace(/\/$/, '');
-if (config.couchLocalUrl) config.couchLocalUrl = config.couchLocalUrl.replace(/\/$/, '');
-
-config.requrl = config.couchLocalUrl || config.couchurl;
-// Overwrite config from command line
-if (args.config) {
-    config = require('./' + path.join(args.config));
+for (var key in filters) {
+    swig.setFilter(key, filters[key]);
 }
-if (args.layouts) {
-    layouts = require('./' + path.join(args.layouts))
-}
-
-// Config given in the command line takes precendence
-for (var key in args) {
-    config[key] = args[key];
-}
-
-config.flavorLayouts = config.flavorLayouts || {};
 
 var toCopy = [
     {src: './lib', dest: path.join(config.dir, './lib')},
@@ -49,7 +29,8 @@ var toCopy = [
 ];
 
 var toSwig = [
-    {src: './static/editConfig.json', dest: path.join(config.dir, './static/editConfig.json'), data: {config: config}}
+    {src: './static/editConfig.json', dest: path.join(config.dir, './static/editConfig.json'), data: {config: config}},
+    {src: './static/index.html', dest: path.join(config.dir, './static/index.html'), data: {config: config}}
 ];
 
 
@@ -216,7 +197,6 @@ function couchAuthenticate() {
                 nano = require('nano')({url: config.requrl, cookie: auth[0]});
                 couchdb = nano.use(config.couchDatabase);
             }
-            console.log(auth);
             return resolve();
         });
     });
@@ -277,7 +257,6 @@ function handleFlavor(dir) {
             });
         });
     };
-
 }
 
 function getStructure(flavors, current, row) {
@@ -295,7 +274,9 @@ function getStructure(flavors, current, row) {
                 if (versions.indexOf(view.version) > -1)
                     current.version = view.version;
                 else {
-                    current.version = 'HEAD';
+                    // Fallback version is HEAD-min!
+                    // See https://github.com/cheminfo/flavor-builder/issues/9
+                    current.version = 'HEAD-min';
                 }
             });
         }
@@ -379,7 +360,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                     absolute: true,
                     couchurl: config.couchurl
                 }),
-                queryString: buildQueryString(el, {noVersion: true}),
+                queryString: buildQueryString(el),
                 version: el.version,
                 structure: rootStructure,
                 config: config,
@@ -447,11 +428,20 @@ function generateHtml(rootStructure, structure, currentPath) {
                 // Now that the file is written the directory exists
                 if (config.selfContained) {
                     if (homeData) {
-                        if (el.__view)
-                            request(getViewUrl(el, {
+                        if (el.__view) {
+                            var read = request(getViewUrl(el, {
                                 absolute: true,
                                 couchurl: config.requrl
-                            })).pipe(fs.createWriteStream(path.join(currentPath, 'view.json')));
+                            }));
+                            var viewPath = path.join(currentPath, 'view.json');
+                            var write = fs.createWriteStream(viewPath);
+                            read.pipe(write);
+                            write.on('finish', function () {
+                                if (config.selfContained) {
+                                    processViewForLibraries(viewPath, data.reldir);
+                                }
+                            });
+                        }
                         if (el.__data)
                             request(getDataUrl(el, {
                                 absolute: true,
@@ -460,11 +450,18 @@ function generateHtml(rootStructure, structure, currentPath) {
                     }
 
                     else {
-                        if (el.__view)
-                            request(getViewUrl(el, {
+                        if (el.__view) {
+                            var read = request(getViewUrl(el, {
                                 absolute: true,
                                 couchurl: config.requrl
-                            })).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'view.json')));
+                            }));
+                            var viewPath = path.join(currentPath, el.filename, 'view.json');
+                            var write = fs.createWriteStream(viewPath);
+                            read.pipe(write);
+                            write.on('finish', function() {
+                                processViewForLibraries(viewPath, data.reldir);
+                            });
+                        }
                         if (el.__data)
                             request(getDataUrl(el, {
                                 absolute: true,
@@ -487,6 +484,70 @@ function generateHtml(rootStructure, structure, currentPath) {
     return Promise.all(prom);
 }
 
+function processViewForLibraries(viewPath, reldir) {
+    var view = fs.readJsonSync(viewPath);
+    var changed = false;
+    eachModule(view, function (module) {
+        try {
+            var libs = module.configuration.groups.libs[0];
+            for(var i=0; i<libs.length; i++) {
+                if(libraryNeedsProcess(libs[i].lib)) {
+                    changed = true;
+                    libs[i].lib = filters.processUrl(libs[i].lib, reldir);
+                }
+            }
+
+        } catch (e) {
+            console.error('Error  while processing view to change libraries', e)
+        }
+    }, ['filter_editor', 'code_executor']);
+
+    try {
+        if(!view.aliases) return;
+        for(var i=0; i<view.aliases.length; i++) {
+            let lib = view.aliases[i].path;
+            if(libraryNeedsProcess(lib)) {
+                changed = true;
+                view.aliases[i].path = filters.processUrl(lib, reldir);
+            }
+        }
+    } catch(e) {
+        console.error('Error while processing view to change library urls (general preferences)', e);
+    }
+    fs.writeJsonSync(viewPath, view);
+}
+
+function libraryNeedsProcess(url) {
+    return /^https?:\/\/|^\.|^\/\//.test(url);
+}
+
+function eachModule(view, callback, moduleNames) {
+    if (view.modules) {
+        if (typeof(moduleNames) === 'string') {
+            moduleNames = [moduleNames];
+        } else if (!Array.isArray(moduleNames)) {
+            moduleNames = [''];
+        }
+        var i = 0, ii = view.modules.length, module, url;
+        var j, jj = moduleNames.length;
+        for (; i < ii; i++) {
+            module = view.modules[i];
+
+            url = module.url;
+            if (url) {
+                for (j = 0; j < jj; j++) {
+
+                    if (String(url).indexOf(moduleNames[j]) >= 0) {
+                        callback(module);
+                        break;
+                    }
+                }
+            }
+
+        }
+    }
+}
+
 function buildQueryString(el, options) {
     options = options || {};
     var result = '?';
@@ -502,10 +563,6 @@ function buildQueryString(el, options) {
             result += 'dataURL=' + encodeURIComponent('./data.json');
         else
             result += 'dataURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev);
-    }
-    if (el.version && !options.noVersion) {
-        if (result !== '?') result += '&';
-        result += (el.version.toLowerCase() === 'head' ? 'v=HEAD' : 'v=v' + encodeURIComponent(el.version));
     }
 
     if (result === '?') return '';

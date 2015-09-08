@@ -22,3 +22,4 @@ All config options can be overwritten on the commandline:
  cp layouts-default.json layouts.json
  node index.js --layoutFile="simple/page.html"
 ```
+

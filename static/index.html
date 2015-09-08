@@ -3,8 +3,8 @@
 <head lang='en'>
     <meta charset='UTF-8'>
     <title>visualizer.epfl.ch</title>
-    <script src="https://www.lactame.com/lib/jquery/2.1.1/jquery.min.js"></script>
-    <script src="https://www.lactame.com/lib/uri.js/1.14.1/URI.min.js"></script>
+    <script src="{{ config.cdn | concat('/lib/jquery/2.1.1/jquery.min.js') | processUrl('..') }}"></script>
+    <script src="{{ config.cdn | concat('/lib/uri.js/1.14.1/URI.min.js') | processUrl('..') }}"></script>
     <style>
         #ci-visualizer {
             min-height: 100vh;
@@ -26,7 +26,7 @@
         if(query.close) {
             window.close();
         }
-        var version = 'latest';
+        var version = 'HEAD-min';
         if (query.v) {
             version = query.v;
         }

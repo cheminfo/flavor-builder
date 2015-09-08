@@ -15,5 +15,7 @@
   "flavorLayouts": {
     "1024": "bootstrap-simple"
   },
-  "selfContained": false
+  "selfContained": false,
+  "cdn": "",
+  "direct": ""
 }

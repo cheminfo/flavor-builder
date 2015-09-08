@@ -37,7 +37,7 @@
       {
         "type": "versionselector",
         "label": "Switch version",
-        "url": "//www.lactame.com/visualizer/versions.json"
+        "url": "{{ config.cdn |  concat('/visualizer/versions.json') | processUrl('..') }}"
       },
       {
         "type": "couchdb2",

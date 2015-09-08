@@ -5,7 +5,7 @@
 {% block head %}
 {% parent %}
 <!--Base libraries-->
-<script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/3.4.0/lodash.js"></script>
+<script src="{{ config.cdn | concat('/lib/lodash/3.4.0/lodash.min.js') | processUrl(reldir) }}"></script>
 {% endblock %}
 
 {% block content %}
