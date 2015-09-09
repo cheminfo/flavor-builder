@@ -18,7 +18,7 @@ function concat(a, b) {
 function processUrl(url, reldir) {
     url = url.replace(/^\/\//, 'https://');
     var parsedUrl = urlLib.parse(url);
-    var p = path.join('lib', parsedUrl.hostname, parsedUrl.path);
+    var p = path.join(config.libFolder, parsedUrl.hostname, parsedUrl.path);
     var loc = path.join(reldir, p);
     var writePath = path.join(config.dir, p);
     if (config.selfContained) {
@@ -35,9 +35,13 @@ function processUrl(url, reldir) {
 
 function cdnVisualizer(version, reldir) {
     if (version && version[0] >= '0' && version[0] <= '9' && !version.startsWith('v')) version = 'v' + version;
-    var loc = path.join(reldir, 'visualizer', version);
-    var prefix = path.join(config.dir, 'visualizer');
-    var versionDir = path.join(config.dir, 'visualizer', version);
+    var visualizerUrl = config.cdn + '/visualizer';
+    visualizerUrl = visualizerUrl.replace(/^\/\//, 'https://');
+    var url = visualizerUrl + '/' + version + '.tar.gz';
+    var parsedUrl = urlLib.parse(visualizerUrl);
+    var loc = path.join(reldir, config.libFolder, parsedUrl.hostname, parsedUrl.path, version);
+    var prefix = path.join(config.dir, config.libFolder, parsedUrl.hostname, parsedUrl.path);
+    var versionDir = path.join(prefix, version);
     if(!versions[version]) {
         try {
             fs.lstatSync(versionDir);
@@ -45,7 +49,7 @@ function cdnVisualizer(version, reldir) {
             fs.mkdirpSync(versionDir);
             console.log('copying visualizer', version);
             versions[version] = true;
-            var url = config.cdn + '/visualizer/' + version + '.tar.gz';
+
 
 
             var read = request.get(url);

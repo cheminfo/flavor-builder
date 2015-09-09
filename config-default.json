@@ -17,5 +17,6 @@
   },
   "selfContained": false,
   "cdn": "",
-  "direct": ""
+  "direct": "",
+  "libFolder": ""
 }
