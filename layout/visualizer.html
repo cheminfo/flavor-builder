@@ -60,10 +60,10 @@
             var selfContained = '{{config.selfContained}}';
             var visualizer = document.createElement('script');
             var baseUrl;
-            if(!selfContained) {
+            if(!selfContained || selfContained === 'false') {
                 baseUrl = (search.direct ? direct : cdn) + '/visualizer/' + version;
             } else {
-                baseUrl = '{{ version | cdnVisualizer(reldir) }}';
+                baseUrl = '{{ version | copyVisualizer(reldir) }}';
             }
 
             visualizer.setAttribute('data-main', baseUrl+ '/init');

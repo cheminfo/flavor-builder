@@ -33,7 +33,8 @@ function processUrl(url, reldir) {
     }
 }
 
-function cdnVisualizer(version, reldir) {
+function copyVisualizer(version, reldir) {
+    if(!config.selfContained) return;
     if (version && version[0] >= '0' && version[0] <= '9' && !version.startsWith('v')) version = 'v' + version;
     var visualizerUrl = config.cdn + '/visualizer';
     visualizerUrl = visualizerUrl.replace(/^\/\//, 'https://');
@@ -84,5 +85,5 @@ function cdnVisualizer(version, reldir) {
 exports = module.exports = {
     concat: concat,
     processUrl: processUrl,
-    cdnVisualizer: cdnVisualizer
+    copyVisualizer: copyVisualizer
 };
