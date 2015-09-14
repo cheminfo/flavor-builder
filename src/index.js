@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 'use strict';
 
 const DEFAULT_FLAVOR = 'default';
@@ -427,12 +429,20 @@ function generateHtml(rootStructure, structure, currentPath) {
 
                 // Now that the file is written the directory exists
                 if (config.selfContained) {
+                    var reqOptions = config.couchPassword ? {
+                        auth: {
+                            user: config.couchUsername,
+                            pass: config.couchPassword,
+                            sendImmediately: true
+                        }
+                    } : {};
                     if (homeData) {
                         if (el.__view) {
+                            // Add couch auth
                             var read = request(getViewUrl(el, {
                                 absolute: true,
                                 couchurl: config.requrl
-                            }));
+                            }), reqOptions);
                             var viewPath = path.join(currentPath, 'view.json');
                             var write = fs.createWriteStream(viewPath);
                             read.pipe(write);
@@ -446,7 +456,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                             request(getDataUrl(el, {
                                 absolute: true,
                                 couchurl: config.requrl
-                            })).pipe(fs.createWriteStream(path.join(currentPath, 'data.json')));
+                            }), reqOptions).pipe(fs.createWriteStream(path.join(currentPath, 'data.json')));
                     }
 
                     else {
@@ -454,11 +464,11 @@ function generateHtml(rootStructure, structure, currentPath) {
                             var read = request(getViewUrl(el, {
                                 absolute: true,
                                 couchurl: config.requrl
-                            }));
+                            }), reqOptions);
                             var viewPath = path.join(currentPath, el.filename, 'view.json');
                             var write = fs.createWriteStream(viewPath);
                             read.pipe(write);
-                            write.on('finish', function() {
+                            write.on('finish', function () {
                                 processViewForLibraries(viewPath, data.reldir);
                             });
                         }
@@ -466,7 +476,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                             request(getDataUrl(el, {
                                 absolute: true,
                                 couchurl: config.requrl
-                            })).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'data.json')));
+                            }), reqOptions).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'data.json')));
                     }
                     fs.mkdirpSync(path.join(currentPath, el.filename));
                     fs.writeJsonSync(path.join(currentPath, el.filename, 'couch.json'), {
@@ -490,8 +500,8 @@ function processViewForLibraries(viewPath, reldir) {
     eachModule(view, function (module) {
         try {
             var libs = module.configuration.groups.libs[0];
-            for(var i=0; i<libs.length; i++) {
-                if(libraryNeedsProcess(libs[i].lib)) {
+            for (var i = 0; i < libs.length; i++) {
+                if (libraryNeedsProcess(libs[i].lib)) {
                     changed = true;
                     libs[i].lib = filters.processUrl(libs[i].lib, reldir);
                 }
@@ -503,15 +513,15 @@ function processViewForLibraries(viewPath, reldir) {
     }, ['filter_editor', 'code_executor']);
 
     try {
-        if(!view.aliases) return;
-        for(var i=0; i<view.aliases.length; i++) {
+        if (!view.aliases) return;
+        for (var i = 0; i < view.aliases.length; i++) {
             let lib = view.aliases[i].path;
-            if(libraryNeedsProcess(lib)) {
+            if (libraryNeedsProcess(lib)) {
                 changed = true;
                 view.aliases[i].path = filters.processUrl(lib, reldir);
             }
         }
-    } catch(e) {
+    } catch (e) {
         console.error('Error while processing view to change library urls (general preferences)', e);
     }
     fs.writeJsonSync(viewPath, view);

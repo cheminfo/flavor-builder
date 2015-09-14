@@ -1,9 +1,11 @@
 'use strict';
 
 var args = require('minimist')(process.argv.slice(2));
+var path = require('path');
 
 try {
-    var config = args.config ? require(args.config) : require('./../config.json');
+    var configFile = path.resolve(args.config || 'config.json');
+    var config = require(configFile);
 } catch(e) {
     console.error(e);
     console.error('Error reading the configuration file. Exit.');

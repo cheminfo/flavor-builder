@@ -15,14 +15,21 @@ function concat(a, b) {
     return a + b;
 }
 
-function processUrl(url, reldir) {
+function processUrl(url, reldir, isCouch) {
+    var options = (isCouch && config.couchPassword) ? {
+        auth: {
+            user: config.couchUsername,
+            pass: config.couchPassword,
+            sendImmediately: true
+        }
+    } : {};
     url = url.replace(/^\/\//, 'https://');
     var parsedUrl = urlLib.parse(url);
     var p = path.join(config.libFolder, parsedUrl.hostname, parsedUrl.path);
     var loc = path.join(reldir, p);
     var writePath = path.join(config.dir, p);
     if (config.selfContained) {
-        writeFile(url, writePath).catch(function(err) {
+        writeFile(url, writePath, options).catch(function(err) {
             console.error('error copying file', err.stack);
         });
         // We return the relative path;
