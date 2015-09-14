@@ -35,6 +35,14 @@ var toSwig = [
     {src: './static/index.html', dest: path.join(config.dir, './static/index.html'), data: {config: config}}
 ];
 
+var couchReqOptions = config.couchPassword ? {
+    auth: {
+        user: config.couchUsername,
+        pass: config.couchPassword,
+        sendImmediately: true
+    }
+} : {};
+
 
 var versions;
 
@@ -72,9 +80,10 @@ co(function*() {
     }
 }).catch(handleError);
 
-function requestGet(url) {
+function requestGet(url, options) {
+    options = options || {};
     return new Promise(function (resolve, reject) {
-        request(url, function (err, response, body) {
+        request(url, options, function (err, response, body) {
             if (err) {
                 return reject(err);
             }
@@ -104,7 +113,7 @@ function getMetaUrl(el, options) {
 
 function getVersion(el) {
     var url = getViewUrl(el, {absolute: true, couchurl: config.requrl});
-    return requestGet(url);
+    return requestGet(url, couchReqOptions);
 }
 
 function getFlavors() {
@@ -136,14 +145,7 @@ function getFlavorMD5(flavors) {
         return new Promise(function (resolve, reject) {
             var key = encodeURIComponent(JSON.stringify([flavors, config.flavorUsername]));
             var url = config.requrl + '/' + config.couchDatabase + '/_design/flavor/_view/docs?key=' + key;
-            var options = config.couchPassword ? {
-                auth: {
-                    user: config.couchUsername,
-                    pass: config.couchPassword,
-                    sendImmediately: true
-                }
-            } : {};
-            request(url, options, function (error, response, body) {
+            request(url, couchReqOptions, function (error, response, body) {
                 var x = JSON.stringify(JSON.parse(body).rows);
                 var md5 = crypto.createHash('md5').update(x).digest('hex');
                 return resolve(md5);
@@ -390,14 +392,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                 metaProm = metaProm.then(function () {
                     return new Promise(function (resolve, reject) {
                         var url = getMetaUrl(el, {absolute: true, couchurl: config.requrl});
-                        var options = config.couchPassword ? {
-                            auth: {
-                                user: config.couchUsername,
-                                pass: config.couchPassword,
-                                sendImmediately: true
-                            }
-                        } : {};
-                        request(url, options, function (error, response, body) {
+                        request(url, couchReqOptions, function (error, response, body) {
                             if (!error && response.statusCode === 200) {
                                 data.meta = JSON.parse(body);
                                 if (homeData) {
@@ -429,20 +424,13 @@ function generateHtml(rootStructure, structure, currentPath) {
 
                 // Now that the file is written the directory exists
                 if (config.selfContained) {
-                    var reqOptions = config.couchPassword ? {
-                        auth: {
-                            user: config.couchUsername,
-                            pass: config.couchPassword,
-                            sendImmediately: true
-                        }
-                    } : {};
                     if (homeData) {
                         if (el.__view) {
                             // Add couch auth
                             var read = request(getViewUrl(el, {
                                 absolute: true,
                                 couchurl: config.requrl
-                            }), reqOptions);
+                            }), couchReqOptions);
                             var viewPath = path.join(currentPath, 'view.json');
                             var write = fs.createWriteStream(viewPath);
                             read.pipe(write);
@@ -456,7 +444,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                             request(getDataUrl(el, {
                                 absolute: true,
                                 couchurl: config.requrl
-                            }), reqOptions).pipe(fs.createWriteStream(path.join(currentPath, 'data.json')));
+                            }), couchReqOptions).pipe(fs.createWriteStream(path.join(currentPath, 'data.json')));
                     }
 
                     else {
@@ -464,7 +452,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                             var read = request(getViewUrl(el, {
                                 absolute: true,
                                 couchurl: config.requrl
-                            }), reqOptions);
+                            }), couchReqOptions);
                             var viewPath = path.join(currentPath, el.filename, 'view.json');
                             var write = fs.createWriteStream(viewPath);
                             read.pipe(write);
@@ -476,7 +464,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                             request(getDataUrl(el, {
                                 absolute: true,
                                 couchurl: config.requrl
-                            }), reqOptions).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'data.json')));
+                            }), couchReqOptions).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'data.json')));
                     }
                     fs.mkdirpSync(path.join(currentPath, el.filename));
                     fs.writeJsonSync(path.join(currentPath, el.filename, 'couch.json'), {
