@@ -22,7 +22,7 @@ function processUrl(url, reldir) {
     var parsedUrl = urlLib.parse(url);
 
     // Add authentification if necessary
-    options = checkAuth(options, url);
+    checkAuth(options, url);
 
     var p = path.join(config.libFolder, parsedUrl.hostname, parsedUrl.path);
     var loc = path.join(reldir, p);
@@ -48,6 +48,7 @@ function checkAuth(options, url) {
             sendImmediately: true
         }
     }
+    return options;
 }
 
 function copyVisualizer(version, reldir) {
