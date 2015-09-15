@@ -18,5 +18,11 @@
   "selfContained": false,
   "cdn": "",
   "direct": "",
-  "libFolder": ""
+  "libFolder": "",
+  "httpAuth": {
+    "domain.example.com": {
+      "user": "",
+      "pass": ""
+    }
+  }
 }

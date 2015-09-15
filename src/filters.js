@@ -11,25 +11,24 @@ var targz = require('tar.gz');
 var versions = {};
 
 function concat(a, b) {
-    if(b === undefined) return a;
+    if (b === undefined) return a;
     return a + b;
 }
 
-function processUrl(url, reldir, isCouch) {
-    var options = (isCouch && config.couchPassword) ? {
-        auth: {
-            user: config.couchUsername,
-            pass: config.couchPassword,
-            sendImmediately: true
-        }
-    } : {};
+function processUrl(url, reldir) {
+    var options = {};
+
     url = url.replace(/^\/\//, 'https://');
     var parsedUrl = urlLib.parse(url);
+
+    // Add authentification if necessary
+    options = checkAuth(options, url);
+
     var p = path.join(config.libFolder, parsedUrl.hostname, parsedUrl.path);
     var loc = path.join(reldir, p);
     var writePath = path.join(config.dir, p);
     if (config.selfContained) {
-        writeFile(url, writePath, options).catch(function(err) {
+        writeFile(url, writePath, options).catch(function (err) {
             console.error('error copying file', err.stack);
         });
         // We return the relative path;
@@ -40,8 +39,19 @@ function processUrl(url, reldir, isCouch) {
     }
 }
 
+function checkAuth(options, url) {
+    var parsedUrl = urlLib.parse(url);
+    if (config.httpAuth && config.httpAuth[parsedUrl.hostname]) {
+        options.auth = {
+            user: httpAuth[parsedUrl.hostname].user,
+            pass: httpAuth[parsedUrl.hostname].pass,
+            sendImmediately: true
+        }
+    }
+}
+
 function copyVisualizer(version, reldir) {
-    if(!config.selfContained) return;
+    if (!config.selfContained) return;
     if (version && version[0] >= '0' && version[0] <= '9' && !version.startsWith('v')) version = 'v' + version;
     var visualizerUrl = config.cdn + '/visualizer';
     visualizerUrl = visualizerUrl.replace(/^\/\//, 'https://');
@@ -50,17 +60,18 @@ function copyVisualizer(version, reldir) {
     var loc = path.join(reldir, config.libFolder, parsedUrl.hostname, parsedUrl.path, version);
     var prefix = path.join(config.dir, config.libFolder, parsedUrl.hostname, parsedUrl.path);
     var versionDir = path.join(prefix, version);
-    if(!versions[version]) {
+    if (!versions[version]) {
         try {
             fs.lstatSync(versionDir);
-        } catch(e) {
+        } catch (e) {
             fs.mkdirpSync(versionDir);
             console.log('copying visualizer', version);
             versions[version] = true;
+            var reqOptions = {};
 
+            checkAuth(reqOptions, url);
 
-
-            var read = request.get(url);
+            var read = request.get(url, reqOptions);
             var parse = targz().createParseStream();
 
 
