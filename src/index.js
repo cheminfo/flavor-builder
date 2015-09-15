@@ -93,7 +93,7 @@ function requestGet(url, options) {
 }
 
 function getVersionsRequest() {
-    return requestGet('http://www.lactame.com/visualizer/versions.php')
+    return requestGet('http://www.lactame.com/visualizer/versions.json')
 }
 
 function getViewUrl(el, options) {

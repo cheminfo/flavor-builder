@@ -19,7 +19,7 @@
         if (selfContained) {
             prom = Promise.resolve([]);
         } else {
-            prom = Promise.resolve($.getJSON('{{ config.cdn }}/visualizer/versions.php'));
+            prom = Promise.resolve($.getJSON('{{ config.cdn }}/visualizer/versions.json'));
         }
         prom.then(function (versions) {
             var url;
