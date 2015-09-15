@@ -43,8 +43,8 @@ function checkAuth(options, url) {
     var parsedUrl = urlLib.parse(url);
     if (config.httpAuth && config.httpAuth[parsedUrl.hostname]) {
         options.auth = {
-            user: httpAuth[parsedUrl.hostname].user,
-            pass: httpAuth[parsedUrl.hostname].pass,
+            user: config.httpAuth[parsedUrl.hostname].user,
+            pass: config.httpAuth[parsedUrl.hostname].pass,
             sendImmediately: true
         }
     }
