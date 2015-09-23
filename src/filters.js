@@ -9,6 +9,15 @@ var writeFile = require('./writeFile');
 var targz = require('tar.gz');
 
 var versions = {};
+var config;
+function filters(configArg) {
+    config = configArg;
+    return {
+        concat: concat,
+        processUrl: processUrl,
+        copyVisualizer: copyVisualizer
+    };
+}
 
 function concat(a, b) {
     if (b === undefined) return a;
@@ -101,8 +110,4 @@ function copyVisualizer(version, reldir) {
     return loc;
 }
 
-exports = module.exports = {
-    concat: concat,
-    processUrl: processUrl,
-    copyVisualizer: copyVisualizer
-};
+exports = module.exports = filters;

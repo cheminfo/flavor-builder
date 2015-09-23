@@ -1,14 +1,8 @@
-#!/usr/bin/env node
-
 'use strict';
 
 const DEFAULT_FLAVOR = 'default';
 
-var config = require('./config'),
-    layouts = require('./layouts'),
-    filters = require('./filters'),
-    nano = require('nano')(config.couchLocalUrl || config.couchurl),
-    couchdb = nano.use(config.couchDatabase),
+var layouts = require('./layouts'),
     Promise = require('bluebird'),
     url = require('url'),
     _ = require('lodash'),
@@ -20,65 +14,185 @@ var config = require('./config'),
     co = require('co'),
     auth = '';
 
-for (var key in filters) {
-    swig.setFilter(key, filters[key]);
+
+var config, toCopy, toSwig, nano, couchdb, versions, filters;
+
+var queue = Promise.resolve();
+
+function init(configArg) {
+    config = require('./config')(configArg);
+    nano = require('nano')(config.couchLocalUrl || config.couchurl);
+    couchdb = nano.use(config.couchDatabase);
+    filters = require('./filters')(config);
 }
 
-var toCopy = [
-    {src: './lib', dest: path.join(config.dir, './lib')},
-    {src: './themes', dest: path.join(config.dir, './themes')},
-    {src: './static', dest: path.join(config.dir, './static')}
-];
+function build(configArg) {
+    init(configArg);
 
-var toSwig = [
-    {src: './static/editConfig.json', dest: path.join(config.dir, './static/editConfig.json'), data: {config: config}},
-    {src: './static/index.html', dest: path.join(config.dir, './static/index.html'), data: {config: config}}
-];
+    toCopy = [
+        {src: './lib', dest: path.join(config.dir, './lib')},
+        {src: './themes', dest: path.join(config.dir, './themes')},
+        {src: './static', dest: path.join(config.dir, './static')}
+    ];
 
-var couchReqOptions = config.couchPassword ? {
-    auth: {
-        user: config.couchUsername,
-        pass: config.couchPassword,
-        sendImmediately: true
-    }
-} : {};
+    toSwig = [
+        {src: './static/editConfig.json', dest: path.join(config.dir, './static/editConfig.json'), data: {config: config}},
+        {src: './static/index.html', dest: path.join(config.dir, './static/index.html'), data: {config: config}}
+    ];
 
-
-var versions;
-
-co(function*() {
-    versions = yield getVersionsRequest();
-    if (config.flavor) {
-        yield couchAuthenticate()
-            .then(getFlavors)
-            .then(handleFlavors)
-            .then(getFlavor)
-            .then(handleFlavor(config.dir));
+    for (var key in filters) {
+        swig.setFilter(key, filters[key]);
     }
 
+
+    return co(function*() {
+        versions = yield getVersionsRequest();
+        if (config.flavor) {
+            return yield couchAuthenticate()
+                .then(getFlavors)
+                .then(handleFlavors)
+                .then(getFlavor)
+                .then(handleFlavor(config.dir));
+        }
+
+        else {
+            return yield couchAuthenticate()
+                .then(getFlavors)
+                .then(processFlavors)
+                .then(filterFlavorsByMd5)
+                .then(function (flavors) {
+                    console.log('Processing ' + flavors.length + ' flavors');
+                    var prom = [];
+                    for (var i = 0; i < flavors.length; i++) {
+                        let flavordir;
+                        if (flavors[i] === DEFAULT_FLAVOR) {
+                            flavordir = config.dir;
+                        }
+                        else {
+                            flavordir = path.join(config.dir, 'flavor', flavors[i]);
+                        }
+                        fs.mkdirp(flavordir);
+                        prom.push(getFlavor(flavors[i]).then(handleFlavor(flavordir)));
+                    }
+                    return Promise.all(prom);
+                });
+        }
+    }).catch(handleError);
+}
+
+function couchAuthenticate() {
+    return new Promise(function (resolve, reject) {
+        if (!config.couchPassword) {
+            // no auth needed
+            resolve();
+        }
+        nano.auth(config.couchUsername, config.couchPassword, function (err, body, headers) {
+            if (err) {
+                return reject(err);
+            }
+
+            if (headers && headers['set-cookie']) {
+                auth = headers['set-cookie'];
+                nano = require('nano')({url: config.couchLocalUrl, cookie: auth[0]});
+                couchdb = nano.use(config.couchDatabase);
+            }
+            return resolve();
+        });
+    });
+}
+
+// returns an array of flavors for which the md5 has changed
+function filterFlavorsByMd5(flavors) {
+    return getFlavorMD5(flavors).then(function (result) {
+        if (config.forceUpdate) {
+            return Object.keys(result);
+        }
+        var exists = fs.existsSync('./md5s.json');
+        if (!exists) {
+            fs.writeJSONFileSync('./md5s.json', result);
+            return Object.keys(result);
+        }
+        var md5 = fs.readJSONFileSync('./md5s.json');
+        var keys = [];
+        for (var key in result) {
+            if (result[key] !== md5[key]) {
+                keys.push(key);
+            }
+        }
+        fs.writeJSONFileSync('./md5s.json', result);
+        return keys;
+    });
+}
+
+function filterFlavorByMD5(flavor) {
+    return filterFlavorsByMd5([flavor]).then(function (flavors) {
+        if (flavors.length) return flavors[0];
+        return null;
+    });
+}
+
+function getFlavors() {
+    return new Promise(function (resolve, reject) {
+        couchdb.view('flavor', 'list', {key: config.flavorUsername}, function (err, body) {
+            if (err) {
+                return reject(err);
+            }
+            return resolve(body);
+        });
+    });
+}
+
+function getFlavorMD5(flavors) {
+    if (flavors instanceof Array) {
+        var prom = [];
+        for (var i = 0; i < flavors.length; i++) {
+            prom.push(getFlavorMD5(flavors[i]));
+        }
+        return Promise.all(prom).then(function (md5s) {
+            var result = {};
+            for (var j = 0; j < md5s.length; j++) {
+                result[flavors[j]] = md5s[j];
+            }
+            return result;
+        });
+    }
     else {
-        yield couchAuthenticate()
-            .then(getFlavors)
-            .then(processFlavors)
-            .then(filterFlavorsByMd5)
-            .then(function (flavors) {
-                console.log('Processing ' + flavors.length + ' flavors');
-                var prom = [];
-                for (var i = 0; i < flavors.length; i++) {
-                    let flavordir;
-                    if (flavors[i] === DEFAULT_FLAVOR) {
-                        flavordir = config.dir;
-                    }
-                    else {
-                        flavordir = path.join(config.dir, 'flavor', flavors[i]);
-                    }
-                    fs.mkdirp(flavordir);
-                    prom.push(getFlavor(flavors[i]).then(handleFlavor(flavordir)));
+        return new Promise(function (resolve, reject) {
+            var key = encodeURIComponent(JSON.stringify([flavors, config.flavorUsername]));
+            var url = config.couchLocalUrl + '/' + config.couchDatabase + '/_design/flavor/_view/docs?key=' + key;
+            request(url, config.couchReqOptions, function (error, response, body) {
+                if(error) {
+                    return reject(error);
                 }
-                return Promise.all(prom);
+                var x = JSON.stringify(JSON.parse(body).rows);
+                var md5 = crypto.createHash('md5').update(x).digest('hex');
+                return resolve(md5);
             });
+        });
     }
-}).catch(handleError);
+}
+
+
+
+function processFlavors(data) {
+    var result;
+    if (data && data.rows && !_.isUndefined(data.rows.length)) {
+        result = _.flatten(data.rows);
+        result = _(result).pluck('value').flatten().value();
+    }
+    return result;
+}
+
+function getFlavor(flavor) {
+    return new Promise(function (resolve, reject) {
+        couchdb.viewWithList('flavor', 'docs', 'sort', {key: [flavor, config.flavorUsername]}, function (err, body) {
+            if (err) {
+                return reject(err);
+            }
+            return resolve(body);
+        });
+    });
+}
 
 function requestGet(url, options) {
     options = options || {};
@@ -112,107 +226,8 @@ function getMetaUrl(el, options) {
 }
 
 function getVersion(el) {
-    var url = getViewUrl(el, {absolute: true, couchurl: config.requrl});
-    return requestGet(url, couchReqOptions);
-}
-
-function getFlavors() {
-    return new Promise(function (resolve, reject) {
-        couchdb.view('flavor', 'list', {key: config.flavorUsername}, function (err, body) {
-            if (err) {
-                return reject(err);
-            }
-            return resolve(body);
-        });
-    });
-}
-
-function getFlavorMD5(flavors) {
-    if (flavors instanceof Array) {
-        var prom = [];
-        for (var i = 0; i < flavors.length; i++) {
-            prom.push(getFlavorMD5(flavors[i]));
-        }
-        return Promise.all(prom).then(function (md5s) {
-            var result = {};
-            for (var j = 0; j < md5s.length; j++) {
-                result[flavors[j]] = md5s[j];
-            }
-            return result;
-        });
-    }
-    else {
-        return new Promise(function (resolve, reject) {
-            var key = encodeURIComponent(JSON.stringify([flavors, config.flavorUsername]));
-            var url = config.requrl + '/' + config.couchDatabase + '/_design/flavor/_view/docs?key=' + key;
-            request(url, couchReqOptions, function (error, response, body) {
-                var x = JSON.stringify(JSON.parse(body).rows);
-                var md5 = crypto.createHash('md5').update(x).digest('hex');
-                return resolve(md5);
-            });
-        });
-    }
-}
-
-function filterFlavorsByMd5(flavors) {
-    return getFlavorMD5(flavors).then(function (result) {
-        if (config.forceUpdate) {
-            return Object.keys(result);
-        }
-        var exists = fs.existsSync('./md5s.json');
-        if (!exists) {
-            fs.writeJSONFileSync('./md5s.json', result);
-            return Object.keys(result);
-        }
-        var md5 = fs.readJSONFileSync('./md5s.json');
-        var keys = [];
-        for (var key in result) {
-            if (result[key] !== md5[key]) {
-                keys.push(key);
-            }
-        }
-        fs.writeJSONFileSync('./md5s.json', result);
-        return keys;
-    });
-}
-
-function filterFlavorByMD5(flavor) {
-    return filterFlavorsByMd5([flavor]).then(function (flavors) {
-        if (flavors.length) return flavors[0];
-        return null;
-    });
-}
-
-function couchAuthenticate() {
-    return new Promise(function (resolve, reject) {
-        if (!config.couchPassword) {
-            // no auth needed
-            resolve();
-        }
-        nano.auth(config.couchUsername, config.couchPassword, function (err, body, headers) {
-            if (err) {
-                return reject(err);
-            }
-
-            if (headers && headers['set-cookie']) {
-                auth = headers['set-cookie'];
-
-                //cookies[config.couchUsername] = headers['set-cookie'];
-                nano = require('nano')({url: config.requrl, cookie: auth[0]});
-                couchdb = nano.use(config.couchDatabase);
-            }
-            return resolve();
-        });
-    });
-}
-
-function processFlavors(data) {
-    var result;
-    if (data && data.rows && !_.isUndefined(data.rows.length)) {
-        result = _.flatten(data.rows);
-        result = _(result).pluck('value').flatten().value();
-    }
-    return result;
+    var url = getViewUrl(el, {absolute: true, couchurl: config.couchLocalUrl});
+    return requestGet(url, config.couchReqOptions);
 }
 
 
@@ -228,18 +243,6 @@ function handleFlavors(data) {
     }
     return config.flavor;
 }
-
-function getFlavor(flavor) {
-    return new Promise(function (resolve, reject) {
-        couchdb.viewWithList('flavor', 'docs', 'sort', {key: [flavor, config.flavorUsername]}, function (err, body) {
-            if (err) {
-                return reject(err);
-            }
-            return resolve(body);
-        });
-    });
-}
-
 
 function handleFlavor(dir) {
     if (!dir) dir = config.dir;
@@ -391,8 +394,8 @@ function generateHtml(rootStructure, structure, currentPath) {
             if (el.__meta) {
                 metaProm = metaProm.then(function () {
                     return new Promise(function (resolve, reject) {
-                        var url = getMetaUrl(el, {absolute: true, couchurl: config.requrl});
-                        request(url, couchReqOptions, function (error, response, body) {
+                        var url = getMetaUrl(el, {absolute: true, couchurl: config.couchLocalUrl});
+                        request(url, config.couchReqOptions, function (error, response, body) {
                             if (!error && response.statusCode === 200) {
                                 data.meta = JSON.parse(body);
                                 if (homeData) {
@@ -429,8 +432,8 @@ function generateHtml(rootStructure, structure, currentPath) {
                             // Add couch auth
                             var read = request(getViewUrl(el, {
                                 absolute: true,
-                                couchurl: config.requrl
-                            }), couchReqOptions);
+                                couchurl: config.couchLocalUrl
+                            }), config.couchReqOptions);
                             var viewPath = path.join(currentPath, 'view.json');
                             var write = fs.createWriteStream(viewPath);
                             read.pipe(write);
@@ -443,16 +446,16 @@ function generateHtml(rootStructure, structure, currentPath) {
                         if (el.__data)
                             request(getDataUrl(el, {
                                 absolute: true,
-                                couchurl: config.requrl
-                            }), couchReqOptions).pipe(fs.createWriteStream(path.join(currentPath, 'data.json')));
+                                couchurl: config.couchLocalUrl
+                            }), config.couchReqOptions).pipe(fs.createWriteStream(path.join(currentPath, 'data.json')));
                     }
 
                     else {
                         if (el.__view) {
                             var read = request(getViewUrl(el, {
                                 absolute: true,
-                                couchurl: config.requrl
-                            }), couchReqOptions);
+                                couchurl: config.couchLocalUrl
+                            }), config.couchReqOptions);
                             var viewPath = path.join(currentPath, el.filename, 'view.json');
                             var write = fs.createWriteStream(viewPath);
                             read.pipe(write);
@@ -463,8 +466,8 @@ function generateHtml(rootStructure, structure, currentPath) {
                         if (el.__data)
                             request(getDataUrl(el, {
                                 absolute: true,
-                                couchurl: config.requrl
-                            }), couchReqOptions).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'data.json')));
+                                couchurl: config.couchLocalUrl
+                            }), config.couchReqOptions).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'data.json')));
                     }
                     fs.mkdirpSync(path.join(currentPath, el.filename));
                     fs.writeJsonSync(path.join(currentPath, el.filename, 'couch.json'), {
@@ -605,3 +608,24 @@ function swigFiles() {
         writeFile(toSwig[i].src, toSwig[i].dest, toSwig[i].data);
     }
 }
+
+function addToQueue(fn) {
+    return function() {
+        var _args = arguments;
+        return queue.then(function() {
+            return fn.apply(this, _args);
+        });
+    };
+}
+
+exports = module.exports = {
+    build: addToQueue(build),
+    getFlavors: addToQueue(function(configArg) {
+        init(configArg);
+        return co(function*() {
+            return yield couchAuthenticate()
+                .then(getFlavors)
+                .then(processFlavors)
+        });
+    })
+};
