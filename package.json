@@ -3,9 +3,6 @@
   "version": "0.3.0",
   "description": "Make an indexable website from a flavor (a bunch of views in the visualizer)",
   "main": "src/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "bin": "bin/flavor-builder.js",
   "keywords": [
     "visualizer",
