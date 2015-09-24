@@ -31,14 +31,14 @@ function build(configArg) {
     init(configArg);
 
     toCopy = [
-        {src: './lib', dest: path.join(config.dir, './lib')},
-        {src: './themes', dest: path.join(config.dir, './themes')},
-        {src: './static', dest: path.join(config.dir, './static')}
+        {src: path.join(__dirname, '../lib'), dest: path.join(config.dir, './lib')},
+        {src: path.join(__dirname, '../themes'), dest: path.join(config.dir, './themes')},
+        {src: path.join(__dirname, '../static'), dest: path.join(config.dir, './static')}
     ];
 
     toSwig = [
-        {src: './static/editConfig.json', dest: path.join(config.dir, './static/editConfig.json'), data: {config: config}},
-        {src: './static/index.html', dest: path.join(config.dir, './static/index.html'), data: {config: config}}
+        {src: path.join(__dirname, '../static/editConfig.json'), dest: path.join(config.dir, './static/editConfig.json'), data: {config: config}},
+        {src: path.join(__dirname, '../static/index.html'), dest: path.join(config.dir, './static/index.html'), data: {config: config}}
     ];
 
     for (var key in filters) {
