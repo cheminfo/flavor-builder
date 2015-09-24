@@ -2,8 +2,7 @@
 
 const DEFAULT_FLAVOR = 'default';
 
-var layouts = require('./layouts'),
-    Promise = require('bluebird'),
+var Promise = require('bluebird'),
     url = require('url'),
     _ = require('lodash'),
     swig = require('swig'),
@@ -15,7 +14,7 @@ var layouts = require('./layouts'),
     auth = '';
 
 
-var config, toCopy, toSwig, nano, couchdb, versions, filters;
+var config, layouts, toCopy, toSwig, nano, couchdb, versions, filters;
 
 var queue = Promise.resolve();
 
@@ -24,6 +23,7 @@ function init(configArg) {
     nano = require('nano')(config.couchLocalUrl || config.couchurl);
     couchdb = nano.use(config.couchDatabase);
     filters = require('./filters')(config);
+    layouts = config.layouts;
 }
 
 function build(configArg) {
