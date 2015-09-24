@@ -36,7 +36,6 @@ exports = module.exports = function (configArg) {
 
     config.couchurl = config.couchurl.replace(/\/$/, '');
     if (config.couchLocalUrl) config.couchLocalUrl = config.couchLocalUrl.replace(/\/$/, '');
-    config.readConfig = path.resolve(config.readConfig || 'static/readConfig.json');
     config.dir = path.resolve(config.dir);
     config.flavorLayouts = config.flavorLayouts || {};
     if(config.layouts) {

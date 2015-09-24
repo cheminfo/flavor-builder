@@ -1,6 +1,7 @@
 'use strict';
 
 const DEFAULT_FLAVOR = 'default';
+const READ_CONFIG = './static/readConfig.json';
 
 var Promise = require('bluebird'),
     url = require('url'),
@@ -372,7 +373,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                 config: config,
                 menuHtml: doMenu(rootStructure, currentPath),
                 reldir: relativePath,
-                readConfig: path.join(relativePath, config.readConfig),
+                readConfig: path.join(relativePath, READ_CONFIG),
                 title: el.__name,
                 home: path.join(relativePath, path.relative(config.dir, flavorDir)),
                 flavor: flavorName || DEFAULT_FLAVOR
@@ -384,7 +385,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                 homeData = _.cloneDeep(data);
                 homeData.menuHtml = doMenu(rootStructure, flavorDir, true);
                 homeData.reldir = path.relative(flavorDir, config.dir);
-                homeData.readConfig = path.join(path.relative(flavorDir, config.dir), config.readConfig);
+                homeData.readConfig = path.join(path.relative(flavorDir, config.dir), READ_CONFIG);
                 if (homeData.reldir === '') homeData.reldir = '.';
             }
 
