@@ -319,7 +319,6 @@ function addPath(structure, currentPath) {
         if (key === '__name') continue;
         var el = structure[key];
         if (el.__id) {
-            var name = el.__name || '';
             el.__url = encodeURI(config.urlPrefix + '/' + path.join(currentPath, el.filename));
             if (config.selfContained)
                 el.__path = path.join(currentPath, el.filename, 'index.html');
@@ -412,7 +411,7 @@ function generateHtml(rootStructure, structure, currentPath) {
             metaProm.then(function () {
                 var layoutFile = layouts[config.flavorLayouts[flavorName] || DEFAULT_FLAVOR];
                 if (homeData) {
-                    writeFile('./layout/' + layoutFile, path.join(flavorDir, 'index.html'), homeData);
+                    writeFile(layoutFile, path.join(flavorDir, 'index.html'), homeData);
                 }
                 else {
                     var pathToFile;
@@ -422,7 +421,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                     else {
                         pathToFile = path.join(currentPath, el.filename + '.html');
                     }
-                    writeFile('./layout/' + layoutFile, pathToFile, data);
+                    writeFile(layoutFile, pathToFile, data);
                 }
 
                 // Now that the file is written the directory exists

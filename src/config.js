@@ -39,6 +39,11 @@ exports = module.exports = function (configArg) {
     config.readConfig = path.resolve(config.readConfig || 'static/readConfig.json');
     config.dir = path.resolve(config.dir);
     config.flavorLayouts = config.flavorLayouts || {};
+    if(config.layouts) {
+        for(var key in config.layouts) {
+            config.layouts[key] = path.join(__dirname, '../layout', config.layouts[key]);
+        }
+    }
 
     return config;
 };
