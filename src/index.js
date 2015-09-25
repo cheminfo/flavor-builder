@@ -338,8 +338,9 @@ function generateHtml(rootStructure, structure, currentPath) {
     for (var key in structure) {
         if (key === '__name') continue;
         let el = structure[key];
-        var flavorName;
-        var flavorDir;
+        let flavorName;
+        let flavorDir;
+        let isHome = el.__id && el.__name === config.home;
         flavorName = /\/flavor\/([^\/]+)/.exec(currentPath);
         if (flavorName && flavorName[1]) {
             flavorName = flavorName[1];
@@ -351,10 +352,17 @@ function generateHtml(rootStructure, structure, currentPath) {
         //flavorDir = flavorDir.replace(/[^A-Za-z0-9.-\/]/g, '_');
         if (el.__id) {
             let relativePath = '';
+            let menuPath = '';
             if (config.selfContained) {
-                relativePath = path.relative(path.join(currentPath, 'dummy'), config.dir);
-            }
-            else {
+                if(isHome) {
+                    menuPath = currentPath;
+                    relativePath = path.relative(currentPath, config.dir);
+                } else {
+                    menuPath = path.join(currentPath, 'dummy');
+                    relativePath = path.relative(path.join(currentPath, 'dummy'), config.dir);
+                }
+            } else {
+                menuPath = currentPath;
                 relativePath = path.relative(currentPath, config.dir);
             }
             relativePath = relativePath === '' ? '.' : relativePath;
@@ -371,7 +379,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                 version: el.version,
                 structure: rootStructure,
                 config: config,
-                menuHtml: doMenu(rootStructure, currentPath),
+                menuHtml: doMenu(rootStructure, menuPath),
                 reldir: relativePath,
                 readConfig: path.join(relativePath, READ_CONFIG),
                 title: el.__name,
@@ -380,7 +388,7 @@ function generateHtml(rootStructure, structure, currentPath) {
             };
 
             let homeData;
-            if (el.__name === config.home) {
+            if (isHome && flavorDir === currentPath) {
                 data.home = '.';
                 homeData = _.cloneDeep(data);
                 homeData.menuHtml = doMenu(rootStructure, flavorDir, true);
@@ -417,10 +425,10 @@ function generateHtml(rootStructure, structure, currentPath) {
                 else {
                     var pathToFile;
                     if (config.selfContained) {
-                        pathToFile = path.join(currentPath, el.filename, 'index.html');
+                        pathToFile = path.join(currentPath, el.filename, (isHome ? '../index.html' : 'index.html'));
                     }
                     else {
-                        pathToFile = path.join(currentPath, el.filename + '.html');
+                        pathToFile = path.join(currentPath, isHome ? 'index.html' : el.filename + '.html');
                     }
                     writeFile(layoutFile, pathToFile, data);
                 }
@@ -456,7 +464,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                                 absolute: true,
                                 couchurl: config.couchLocalUrl
                             }), config.couchReqOptions);
-                            var viewPath = path.join(currentPath, el.filename, 'view.json');
+                            var viewPath = path.join(currentPath, el.filename, isHome ? '../view.json': 'view.json');
                             var write = fs.createWriteStream(viewPath);
                             read.pipe(write);
                             write.on('finish', function () {
@@ -467,10 +475,10 @@ function generateHtml(rootStructure, structure, currentPath) {
                             request(getDataUrl(el, {
                                 absolute: true,
                                 couchurl: config.couchLocalUrl
-                            }), config.couchReqOptions).pipe(fs.createWriteStream(path.join(currentPath, el.filename, 'data.json')));
+                            }), config.couchReqOptions).pipe(fs.createWriteStream(path.join(currentPath, el.filename, isHome ? '../data.json' : 'data.json')));
                     }
                     fs.mkdirpSync(path.join(currentPath, el.filename));
-                    fs.writeJsonSync(path.join(currentPath, el.filename, 'couch.json'), {
+                    fs.writeJsonSync(path.join(currentPath, el.filename, isHome ? '../couch.json' : 'couch.json'), {
                         id: el.__id,
                         rev: el.__rev,
                         database: config.couchurl + '/' + config.couchDatabase
@@ -478,7 +486,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                 }
             });
         }
-        else {
+        else { // No __id = it's a directory
             prom.push(generateHtml(rootStructure, el, path.join(currentPath, el.__name)));
         }
     }
@@ -576,11 +584,13 @@ function doMenu(structure, cpath, isHome) {
     if (structure.__id) {
         if (structure.__name !== config.home) {
             if (!isHome) {
-                html += '<li><a href="' + path.relative((config.selfContained ? path.join(cpath, 'dummy') : cpath), structure.__path) + buildQueryString(structure) + '"><span>' + structure.__name + '</span></a></li>';
-            }
-
-            else
                 html += '<li><a href="' + path.relative(cpath, structure.__path) + buildQueryString(structure) + '"><span>' + structure.__name + '</span></a></li>';
+            }
+            else {
+                html += '<li><a href="' + path.relative(cpath, structure.__path) + buildQueryString(structure) + '"><span>' + structure.__name + '</span></a></li>';
+            }
+        } else {
+            console.log(structure);
         }
         return html;
     }
