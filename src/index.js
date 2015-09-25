@@ -316,18 +316,22 @@ function handleError(err) {
 }
 
 function addPath(structure, currentPath) {
-    for (var key in structure) {
+    for (let key in structure) {
         if (key === '__name') continue;
-        var el = structure[key];
+        let el = structure[key];
         if (el.__id) {
-            el.__url = encodeURI(config.urlPrefix + '/' + path.join(currentPath, el.filename));
-            if (config.selfContained)
+            if(el.__name === config.home) {
+                el.__path = path.join(currentPath, 'index.html');
+            } else if (config.selfContained)
                 el.__path = path.join(currentPath, el.filename, 'index.html');
             else
                 el.__path = path.join(currentPath, el.filename + '.html');
+            if(el.__name === config.home) {
+                structure.homeChild = el;
+            }
         }
         else if (key !== '__root') {
-            addPath(structure[key], path.join(currentPath, el.__name));
+            addPath(el, path.join(currentPath, el.__name));
         }
     }
 }
@@ -588,7 +592,10 @@ function doMenu(structure, cpath) {
         return html;
     }
     else {
-        if (structure.__name) html += '<li><a href="#">' + structure.__name + '</a>';
+        var link = structure.homeChild ? path.relative(cpath, structure.homeChild.__path) + buildQueryString(structure.homeChild) : '#';
+        //if(structure.homeChild) console.log(link, structure.__name);
+
+        if (structure.__name) html += '<li><a href="' + link + '">' + structure.__name + '</a>';
         html += '<ul' + (structure.__root ? ' class="navmenu" style="display:none"' : '') + '>';
         for (var key in structure) {
             if (key === '__name') continue;
