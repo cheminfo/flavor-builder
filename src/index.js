@@ -391,7 +391,7 @@ function generateHtml(rootStructure, structure, currentPath) {
             if (isHome && flavorDir === currentPath) {
                 data.home = '.';
                 homeData = _.cloneDeep(data);
-                homeData.menuHtml = doMenu(rootStructure, flavorDir, true);
+                homeData.menuHtml = doMenu(rootStructure, flavorDir);
                 homeData.reldir = path.relative(flavorDir, config.dir);
                 homeData.readConfig = path.join(path.relative(flavorDir, config.dir), READ_CONFIG);
                 if (homeData.reldir === '') homeData.reldir = '.';
@@ -579,19 +579,12 @@ function buildQueryString(el, options) {
 }
 
 
-function doMenu(structure, cpath, isHome) {
+function doMenu(structure, cpath) {
     var html = '';
     if (structure.__id) {
         if (structure.__name !== config.home) {
-            if (!isHome) {
                 html += '<li><a href="' + path.relative(cpath, structure.__path) + buildQueryString(structure) + '"><span>' + structure.__name + '</span></a></li>';
-            }
-            else {
-                html += '<li><a href="' + path.relative(cpath, structure.__path) + buildQueryString(structure) + '"><span>' + structure.__name + '</span></a></li>';
-            }
-        } else {
-            console.log(structure);
-        }
+        } // No leaf for home elements
         return html;
     }
     else {
@@ -599,7 +592,7 @@ function doMenu(structure, cpath, isHome) {
         html += '<ul' + (structure.__root ? ' class="navmenu" style="display:none"' : '') + '>';
         for (var key in structure) {
             if (key === '__name') continue;
-            html += doMenu(structure[key], cpath, isHome);
+            html += doMenu(structure[key], cpath);
         }
         html += '</ul>';
         if (structure.__name) html += '</li>';
