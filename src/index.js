@@ -124,8 +124,7 @@ function filterFlavorsByMd5(flavors) {
         }
         var md5 = fs.readJSONFileSync('./md5s.json');
         var keys = [];
-        for (var key in result) {
-            if (result[key] !== md5[key]) {
+        for (var key in result) {            if (result[key] !== md5[key]) {
                 keys.push(key);
             }
         }
@@ -253,9 +252,8 @@ function handleFlavors(data) {
 function handleFlavor(dir) {
     if (!dir) dir = config.dir;
     return function (data) {
-        var row, structure = {};
-        Object.defineProperty(structure, '__root', {enumerable: false, writable: true});
-        structure.__root = true;
+        let row, structure = {};
+        Object.defineProperty(structure, '__root', {enumerable: false, writable: true, value: true});
         var prom = Promise.resolve();
         for (let i = 0; i < data.length; i++) {
             row = data[i];
@@ -275,7 +273,6 @@ function handleFlavor(dir) {
 function getStructure(flavors, current, row) {
     return function () {
         if (!flavors.length) {
-            current.__end = true;
             current.__data = row.data;
             current.__view = row.view;
             current.__meta = row.meta;
@@ -324,18 +321,15 @@ function addPath(structure, currentPath) {
     for (let key in structure) {
         if (key === '__name') continue;
         let el = structure[key];
-        if (el.__id) {
+        if (el.__id) { // Element is a view
             if (el.__name === config.home) {
                 el.__path = path.join(currentPath, 'index.html');
+                structure.homeChild = el;
             } else if (config.selfContained)
                 el.__path = path.join(currentPath, el.filename, 'index.html');
             else
                 el.__path = path.join(currentPath, el.filename + '.html');
-            if (el.__name === config.home) {
-                structure.homeChild = el;
-            }
-        }
-        else if (key !== '__root') {
+        } else if (key !== '__root') { // Element is a directory
             addPath(el, path.join(currentPath, el.__name));
         }
     }
