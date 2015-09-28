@@ -21,6 +21,7 @@ var queue = Promise.resolve();
 
 function init(configArg) {
     config = require('./config')(configArg);
+    console.log(config);
     nano = require('nano')(config.couchLocalUrl || config.couchurl);
     couchdb = nano.use(config.couchDatabase);
     filters = require('./filters')(config);
@@ -37,8 +38,16 @@ function build(configArg) {
     ];
 
     toSwig = [
-        {src: path.join(__dirname, '../static/editConfig.json'), dest: path.join(config.dir, './static/editConfig.json'), data: {config: config}},
-        {src: path.join(__dirname, '../static/index.html'), dest: path.join(config.dir, './static/index.html'), data: {config: config}}
+        {
+            src: path.join(__dirname, '../static/editConfig.json'),
+            dest: path.join(config.dir, './static/editConfig.json'),
+            data: {config: config}
+        },
+        {
+            src: path.join(__dirname, '../static/index.html'),
+            dest: path.join(config.dir, './static/index.html'),
+            data: {config: config}
+        }
     ];
 
     for (var key in filters) {
@@ -162,7 +171,7 @@ function getFlavorMD5(flavors) {
             var key = encodeURIComponent(JSON.stringify([flavors, config.flavorUsername]));
             var url = config.couchLocalUrl + '/' + config.couchDatabase + '/_design/flavor/_view/docs?key=' + key;
             request(url, config.couchReqOptions, function (error, response, body) {
-                if(error) {
+                if (error) {
                     return reject(error);
                 }
                 var x = JSON.stringify(JSON.parse(body).rows);
@@ -172,7 +181,6 @@ function getFlavorMD5(flavors) {
         });
     }
 }
-
 
 
 function processFlavors(data) {
@@ -211,23 +219,20 @@ function getVersionsRequest() {
     return requestGet('http://www.lactame.com/visualizer/versions.json')
 }
 
-function getViewUrl(el, options) {
-    options = options || {};
-    return el.__view ? (options.absolute ? options.couchurl : '') + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev : undefined;
+function getViewUrl(el, couchurl) {
+    return el.__view ? couchurl + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev : undefined;
 }
 
-function getDataUrl(el, options) {
-    options = options || {};
-    return el.__data ? (options.absolute ? options.couchurl : '') + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev : undefined;
+function getDataUrl(el, couchurl) {
+    return el.__data ? couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev : undefined;
 }
 
-function getMetaUrl(el, options) {
-    options = options || {};
-    return el.__meta ? (options.absolute ? options.couchurl : '') + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev : undefined;
+function getMetaUrl(el, couchurl) {
+    return el.__meta ? couchurl + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev : undefined;
 }
 
 function getVersion(el) {
-    var url = getViewUrl(el, {absolute: true, couchurl: config.couchLocalUrl});
+    var url = getViewUrl(el, config.couchLocalUrl);
     return requestGet(url, config.couchReqOptions);
 }
 
@@ -320,13 +325,13 @@ function addPath(structure, currentPath) {
         if (key === '__name') continue;
         let el = structure[key];
         if (el.__id) {
-            if(el.__name === config.home) {
+            if (el.__name === config.home) {
                 el.__path = path.join(currentPath, 'index.html');
             } else if (config.selfContained)
                 el.__path = path.join(currentPath, el.filename, 'index.html');
             else
                 el.__path = path.join(currentPath, el.filename + '.html');
-            if(el.__name === config.home) {
+            if (el.__name === config.home) {
                 structure.homeChild = el;
             }
         }
@@ -358,7 +363,7 @@ function generateHtml(rootStructure, structure, currentPath) {
             let relativePath = '';
             let menuPath = '';
             if (config.selfContained) {
-                if(isHome) {
+                if (isHome) {
                     menuPath = currentPath;
                     relativePath = path.relative(currentPath, config.dir);
                 } else {
@@ -371,14 +376,8 @@ function generateHtml(rootStructure, structure, currentPath) {
             }
             relativePath = relativePath === '' ? '.' : relativePath;
             let data = {
-                viewURL: config.selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, {
-                    absolute: true,
-                    couchurl: config.couchurl
-                }),
-                dataURL: config.selfContained ? (el.__data ? './data.json' : undefined) : getDataUrl(el, {
-                    absolute: true,
-                    couchurl: config.couchurl
-                }),
+                viewURL: config.selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, config.couchurl),
+                dataURL: config.selfContained ? (el.__data ? './data.json' : undefined) : getDataUrl(el, config.couchurl),
                 queryString: buildQueryString(el),
                 version: el.version,
                 structure: rootStructure,
@@ -406,7 +405,7 @@ function generateHtml(rootStructure, structure, currentPath) {
             if (el.__meta) {
                 metaProm = metaProm.then(function () {
                     return new Promise(function (resolve, reject) {
-                        var url = getMetaUrl(el, {absolute: true, couchurl: config.couchLocalUrl});
+                        var url = getMetaUrl(el, config.couchLocalUrl);
                         request(url, config.couchReqOptions, function (error, response, body) {
                             if (!error && response.statusCode === 200) {
                                 data.meta = JSON.parse(body);
@@ -442,10 +441,7 @@ function generateHtml(rootStructure, structure, currentPath) {
                     if (homeData) {
                         if (el.__view) {
                             // Add couch auth
-                            var read = request(getViewUrl(el, {
-                                absolute: true,
-                                couchurl: config.couchLocalUrl
-                            }), config.couchReqOptions);
+                            var read = request(getViewUrl(el, config.couchLocalUrl), config.couchReqOptions);
                             var viewPath = path.join(currentPath, 'view.json');
                             var write = fs.createWriteStream(viewPath);
                             read.pipe(write);
@@ -456,19 +452,14 @@ function generateHtml(rootStructure, structure, currentPath) {
                             });
                         }
                         if (el.__data)
-                            request(getDataUrl(el, {
-                                absolute: true,
-                                couchurl: config.couchLocalUrl
-                            }), config.couchReqOptions).pipe(fs.createWriteStream(path.join(currentPath, 'data.json')));
+                            request(getDataUrl(el, config.couchLocalUrl), config.couchReqOptions)
+                                .pipe(fs.createWriteStream(path.join(currentPath, 'data.json')));
                     }
 
                     else {
                         if (el.__view) {
-                            var read = request(getViewUrl(el, {
-                                absolute: true,
-                                couchurl: config.couchLocalUrl
-                            }), config.couchReqOptions);
-                            var viewPath = path.join(currentPath, el.filename, isHome ? '../view.json': 'view.json');
+                            var read = request(getViewUrl(el, config.couchLocalUrl), config.couchReqOptions);
+                            var viewPath = path.join(currentPath, el.filename, isHome ? '../view.json' : 'view.json');
                             var write = fs.createWriteStream(viewPath);
                             read.pipe(write);
                             write.on('finish', function () {
@@ -476,10 +467,8 @@ function generateHtml(rootStructure, structure, currentPath) {
                             });
                         }
                         if (el.__data)
-                            request(getDataUrl(el, {
-                                absolute: true,
-                                couchurl: config.couchLocalUrl
-                            }), config.couchReqOptions).pipe(fs.createWriteStream(path.join(currentPath, el.filename, isHome ? '../data.json' : 'data.json')));
+                            request(getDataUrl(el, config.couchLocalUrl), config.couchReqOptions)
+                                .pipe(fs.createWriteStream(path.join(currentPath, el.filename, isHome ? '../data.json' : 'data.json')));
                     }
                     fs.mkdirpSync(path.join(currentPath, el.filename));
                     fs.writeJsonSync(path.join(currentPath, el.filename, isHome ? '../couch.json' : 'couch.json'), {
@@ -587,7 +576,7 @@ function doMenu(structure, cpath) {
     var html = '';
     if (structure.__id) {
         if (structure.__name !== config.home) {
-                html += '<li><a href="' + path.relative(cpath, structure.__path) + buildQueryString(structure) + '"><span>' + structure.__name + '</span></a></li>';
+            html += '<li><a href="' + path.relative(cpath, structure.__path) + buildQueryString(structure) + '"><span>' + structure.__name + '</span></a></li>';
         } // No leaf for home elements
         return html;
     }
@@ -620,9 +609,9 @@ function swigFiles() {
 }
 
 function addToQueue(fn) {
-    return function() {
+    return function () {
         var _args = arguments;
-        return queue.then(function() {
+        return queue.then(function () {
             return fn.apply(this, _args);
         });
     };
@@ -630,7 +619,7 @@ function addToQueue(fn) {
 
 exports = module.exports = {
     build: addToQueue(build),
-    getFlavors: addToQueue(function(configArg) {
+    getFlavors: addToQueue(function (configArg) {
         init(configArg);
         return co(function*() {
             return yield couchAuthenticate()
