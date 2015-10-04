@@ -272,7 +272,7 @@ function generateHtml(rootStructure) {
         else {
             flavorDir = config.dir;
         }
-        let relativePath = path.relative(basePath, config.dir);
+        let relativePath = path.relative(basePath, config.dir) || '.';
 
         let data = {
             viewURL: config.selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, config.couchurl),
