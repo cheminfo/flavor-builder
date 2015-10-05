@@ -4,7 +4,7 @@ const DEFAULT_FLAVOR = 'default';
 const READ_CONFIG = './static/readConfig.json';
 
 var Promise = require('bluebird'),
-    url = require('url'),
+    urlLib = require('url'),
     _ = require('lodash'),
     swig = require('swig'),
     fs = require('fs-extra'),
@@ -13,6 +13,9 @@ var Promise = require('bluebird'),
     crypto = require('crypto'),
     co = require('co'),
     flavorUtils = require('flavor-utils'),
+    utils = require('./utils'),
+    wf = require('./writeFile'),
+    targz = require('tar.gz'),
     auth = '';
 
 var config, layouts, toCopy, toSwig, nano, couchdb, versions, filters;
@@ -63,7 +66,6 @@ function build(configArg) {
                 console.log('Flavor not found');
                 return;
             }
-            console.log('versions', versions);
             let flavor = yield getFlavor(config.flavor);
             return yield handleFlavor(config.dir, flavor);
         }
@@ -253,8 +255,24 @@ function*handleFlavor(dir, data) {
     yield flavorUtils.traverseTree(structure, doPath(dir));
     yield flavorUtils.traverseTree(structure, setVersion);
     yield flavorUtils.traverseTree(structure, generateHtml(structure));
+    if(config.selfContained) {
+        let versions = yield getVersionsFromTree(structure);
+        for(let i=0; i<versions.length; i++) {
+            yield copyVisualizer(versions[i]);
+        }
+    }
     copyFiles();
     swigFiles();
+}
+
+function*getVersionsFromTree(tree) {
+    let versions = [];
+    yield flavorUtils.traverseTree(tree, function(el) {
+        if(el.__version !== undefined) {
+            versions.push(el.__version);
+        }
+    });
+    return _.uniq(versions);
 }
 
 var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
@@ -347,7 +365,6 @@ function generateHtml(rootStructure) {
 
                         var read = request(getViewUrl(el, config.couchLocalUrl), config.couchReqOptions);
                         var viewPath = path.join(basePath, 'view.json');
-                        console.log('view !!', viewPath);
                         var write = fs.createWriteStream(viewPath);
                         read.pipe(write);
                         write.on('finish', function () {
@@ -574,6 +591,32 @@ function addToQueue(fn) {
             return fn.apply(this, _args);
         });
     };
+}
+
+function copyVisualizer(version) {
+    version = utils.checkVersion(version);
+    let visualizerUrl = (config.cdn + '/visualizer').replace(/^\/\//, 'https://');
+    let parsedUrl = urlLib.parse(visualizerUrl);
+    let file = version + '.tar.gz';
+    let url = visualizerUrl + '/' + file;
+    let extractDir = path.join(config.dir, config.libFolder, parsedUrl.hostname, parsedUrl.path);
+
+    // Check if already exists
+    try {
+        fs.statSync(path.join(extractDir, version))
+        return Promise.resolve();
+    } catch(e) {
+        console.log('copying visualizer', version);
+        let dlDest = path.join(config.dir, file);
+        var reqOptions = {};
+        utils.checkAuth(config, reqOptions, url);
+        reqOptions.encoding = null;
+        return wf(url, dlDest, reqOptions).then(function () {
+            fs.mkdirpSync(extractDir);
+            return targz().extract(dlDest, extractDir);
+        });
+    }
+
 }
 
 exports = module.exports = {

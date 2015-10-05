@@ -19,7 +19,7 @@ exports = module.exports = function (configArg) {
     }
 
 // Check mandatory parameters
-    var mandatory = ['dir', 'cdn', 'direct', 'home', 'couchurl', 'couchLocalUrl', 'flavorUsername', 'couchDatabase', 'layouts'];
+    var mandatory = ['dir', 'cdn', 'direct', 'home', 'couchurl', 'couchLocalUrl', 'flavorUsername', 'couchDatabase', 'layouts', 'libFolder'];
     for (var i = 0; i < mandatory.length; i++) {
         if (config[mandatory[i]] === undefined) {
             throw new Error(mandatory[i] + ' is mandatory');
