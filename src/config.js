@@ -9,7 +9,10 @@ exports = module.exports = function (configArg) {
         var configFile = path.resolve(configArg);
         var config = require(configFile);
     } else if (typeof configArg === 'object') {
-        config = configArg;
+        // Make sure we have another reference
+        // To avoid the config being changed from
+        // outside during a build
+        config = _.cloneDeep(configArg);
     } else {
         throw new TypeError('Incorrect argument');
     }

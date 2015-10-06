@@ -9,7 +9,6 @@ var writeFile = require('./writeFile');
 var utils = require('./utils');
 
 function filters(config) {
-    var versions = {};
 
     function concat(a, b) {
         if (b === undefined) return a;
@@ -17,32 +16,23 @@ function filters(config) {
     }
 
     function processUrl(url, reldir) {
-        var options = {};
+       if(!config.selfContained) {
+           // We return the original url
+           return url;
+        }
 
         url = url.replace(/^\/\//, 'https://');
         var parsedUrl = urlLib.parse(url);
 
-        // Add authentification if necessary
-        utils.checkAuth(config, options, url);
-
         var p = path.join(config.libFolder, parsedUrl.hostname, parsedUrl.path);
         var loc = path.join(reldir, p);
-        var writePath = path.join(config.dir, p);
-        if (config.selfContained) {
-            writeFile(url, writePath, options).catch(function (err) {
-                console.error('error copying file', err.stack);
-            });
-            // We return the relative path;
-            return loc;
-        } else {
-            // We return an external url
-            return url;
-        }
+        utils.cacheUrl(config, url);
+        return loc;
     }
 
 
 
-    function copyVisualizer(version, reldir) {
+    function visualizer(version, reldir) {
         if (!config.selfContained) return;
         version = utils.checkVersion(version);
         let visualizerUrl = (config.cdn + '/visualizer').replace(/^\/\//, 'https://');
@@ -54,7 +44,7 @@ function filters(config) {
     return {
         concat: concat,
         processUrl: processUrl,
-        copyVisualizer: copyVisualizer
+        visualizer: visualizer
     };
 }
 
