@@ -257,7 +257,7 @@ function build(configArg) {
             let versions = yield getVersionsFromTree(structure);
             let copies = new Array(versions.length);
             for(let i=0; i<versions.length; i++) {
-                yield copies[i] = copyVisualizer(versions[i]);
+                copies[i] = copyVisualizer(versions[i]);
             }
             yield copies;
         }
