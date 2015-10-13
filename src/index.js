@@ -21,7 +21,6 @@ var queue = Promise.resolve();
 
 function init(configArg) {
     config = require('./config')(configArg);
-    console.log(config);
     nano = require('nano')(config.couchLocalUrl || config.couchurl);
     couchdb = nano.use(config.couchDatabase);
     filters = require('./filters')(config);
