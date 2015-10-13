@@ -3,7 +3,6 @@
 'use strict';
 var args = require('minimist')(process.argv.slice(2));
 
-console.log(args);
 var flavorBuilder = require('../src/index');
 
 try {
