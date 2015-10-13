@@ -3,7 +3,7 @@
   "version": "0.5.1",
   "description": "Make an indexable website from a flavor (a bunch of views in the visualizer)",
   "main": "src/index.js",
-  "bin": "bin/flavor-builder.js",
+  "bin": "bin/build.js",
   "keywords": [
     "visualizer",
     "build"
