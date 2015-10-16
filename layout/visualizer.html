@@ -15,12 +15,13 @@
     }
     window.onload = function () {
         var prom;
-        var selfContained = '{{ config.selfContained}}';
-        if (selfContained) {
+        // Weird but will avoid javascript error if this param is not what we expect
+        {% if config.selfContained %}
             prom = Promise.resolve([]);
-        } else {
+        {% else %}
             prom = Promise.resolve($.getJSON('{{ config.cdn }}/visualizer/versions.json'));
-        }
+        {% endif %}
+
         prom.then(function (versions) {
             var url;
             var uri = new URI(window.location.href);
@@ -57,14 +58,14 @@
         function addVisualizer(version, search) {
             var cdn = '{{config.cdn}}';
             var direct = '{{config.direct}}';
-            var selfContained = '{{config.selfContained}}';
             var visualizer = document.createElement('script');
             var baseUrl;
-            if(!selfContained || selfContained === 'false') {
-                baseUrl = (search.direct ? direct : cdn) + '/visualizer/' + version;
-            } else {
+
+            {% if config.selfContained %}
                 baseUrl = '{{ version | visualizer(reldir) }}';
-            }
+            {% else %}
+                baseUrl = (search.direct ? direct : cdn) + '/visualizer/' + version;
+            {% endif %}
 
             visualizer.setAttribute('data-main', baseUrl+ '/init');
             visualizer.setAttribute('src', baseUrl + '/components/requirejs/require.js');
