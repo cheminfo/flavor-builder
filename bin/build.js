@@ -8,7 +8,7 @@ var flavorBuilder = require('../src/index');
 var configs = args.config.split(',');
 var prom = [];
 for (var i = 0; i < configs.length; i++) {
-    prom.push(flavorBuilder(configs[i]));
+    prom.push(flavorBuilder.build(configs[i]));
 }
 
 Promise.all(prom).then(function() {

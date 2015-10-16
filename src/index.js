@@ -18,67 +18,8 @@ var Promise = require('bluebird'),
     targz = require('tar.gz'),
     auth = '';
 
-function build(configArg) {
+function call(f, configArg) {
     var config, layouts, toCopy, toSwig, nano, couchdb, versions, filters;
-
-    init(configArg);
-
-    toCopy = [
-        {src: path.join(__dirname, '../lib'), dest: path.join(config.dir, './lib')},
-        {src: path.join(__dirname, '../themes'), dest: path.join(config.dir, './themes')},
-        {src: path.join(__dirname, '../static'), dest: path.join(config.dir, './static')}
-    ];
-
-    toSwig = [
-        {
-            src: path.join(__dirname, '../static/editConfig.json'),
-            dest: path.join(config.dir, './static/editConfig.json'),
-            data: {config: config}
-        },
-        {
-            src: path.join(__dirname, '../static/index.html'),
-            dest: path.join(config.dir, './static/index.html'),
-            data: {config: config}
-        }
-    ];
-
-    for (var key in filters) {
-        swig.setFilter(key, filters[key]);
-    }
-
-
-    return co(function*() {
-        versions = yield getVersionsRequest();
-        if (config.flavor) {
-            yield couchAuthenticate();
-            let exists = yield hasFlavor(config.flavor);
-            if (!exists) {
-                console.log('Flavor not found');
-                return;
-            }
-            let flavor = yield getFlavor(config.flavor);
-            return yield handleFlavor(config.dir, flavor);
-        }
-
-        else {
-            yield couchAuthenticate();
-            let flavors = yield getFlavors();
-            flavors = yield filterFlavorsByMd5(flavors);
-            console.log('Processing ' + flavors.length + ' flavors');
-            for (let i = 0; i < flavors.length; i++) {
-                let flavorDir;
-                if (flavors[i] === DEFAULT_FLAVOR) {
-                    flavorDir = config.dir;
-                }
-                else {
-                    flavorDir = path.join(config.dir, 'flavor', flavors[i]);
-                }
-                fs.mkdirp(flavorDir);
-                let flavor = yield getFlavor(flavors[i]);
-                yield handleFlavor(flavorDir, flavor);
-            }
-        }
-    });
 
     function init(configArg) {
         config = require('./config')(configArg);
@@ -87,6 +28,71 @@ function build(configArg) {
         filters = require('./filters')(config);
         layouts = config.layouts;
     }
+
+    init(configArg);
+
+    return eval(f + '()');
+
+    function build() {
+        toCopy = [
+            {src: path.join(__dirname, '../lib'), dest: path.join(config.dir, './lib')},
+            {src: path.join(__dirname, '../themes'), dest: path.join(config.dir, './themes')},
+            {src: path.join(__dirname, '../static'), dest: path.join(config.dir, './static')}
+        ];
+
+        toSwig = [
+            {
+                src: path.join(__dirname, '../static/editConfig.json'),
+                dest: path.join(config.dir, './static/editConfig.json'),
+                data: {config: config}
+            },
+            {
+                src: path.join(__dirname, '../static/index.html'),
+                dest: path.join(config.dir, './static/index.html'),
+                data: {config: config}
+            }
+        ];
+
+        for (var key in filters) {
+            swig.setFilter(key, filters[key]);
+        }
+
+
+        return co(function*() {
+            versions = yield getVersionsRequest();
+            if (config.flavor) {
+                yield couchAuthenticate();
+                let exists = yield hasFlavor(config.flavor);
+                if (!exists) {
+                    console.log('Flavor not found');
+                    return;
+                }
+                let flavor = yield getFlavor(config.flavor);
+                return yield handleFlavor(config.dir, flavor);
+            }
+
+            else {
+                yield couchAuthenticate();
+                let flavors = yield getFlavors();
+                flavors = yield filterFlavorsByMd5(flavors);
+                console.log('Processing ' + flavors.length + ' flavors');
+                for (let i = 0; i < flavors.length; i++) {
+                    let flavorDir;
+                    if (flavors[i] === DEFAULT_FLAVOR) {
+                        flavorDir = config.dir;
+                    }
+                    else {
+                        flavorDir = path.join(config.dir, 'flavor', flavors[i]);
+                    }
+                    fs.mkdirp(flavorDir);
+                    let flavor = yield getFlavor(flavors[i]);
+                    yield handleFlavor(flavorDir, flavor);
+                }
+            }
+        });
+    }
+
+
 
     function couchAuthenticate() {
         return new Promise(function (resolve, reject) {
@@ -586,4 +592,11 @@ function build(configArg) {
     }
 }
 
-exports = module.exports = build;
+exports = module.exports = {
+    build: function(config) {
+        return call('build', config);
+    },
+    getFlavors: function(config) {
+        return call('getFlavors', config);
+    }
+};
