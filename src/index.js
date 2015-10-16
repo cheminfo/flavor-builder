@@ -93,7 +93,6 @@ function call(f, configArg) {
     }
 
 
-
     function couchAuthenticate() {
         return new Promise(function (resolve, reject) {
             if (!config.couchPassword) {
@@ -259,10 +258,11 @@ function call(f, configArg) {
         yield flavorUtils.traverseTree(structure, doPath(dir));
         yield flavorUtils.traverseTree(structure, setVersion);
         yield flavorUtils.traverseTree(structure, generateHtml(structure));
-        if(config.selfContained) {
+
+        if (config.selfContained) {
             let versions = yield getVersionsFromTree(structure);
             let copies = new Array(versions.length);
-            for(let i=0; i<versions.length; i++) {
+            for (let i = 0; i < versions.length; i++) {
                 copies[i] = copyVisualizer(versions[i]);
             }
             yield copies;
@@ -273,8 +273,8 @@ function call(f, configArg) {
 
     function*getVersionsFromTree(tree) {
         let versions = [];
-        yield flavorUtils.traverseTree(tree, function(el) {
-            if(el.__version !== undefined) {
+        yield flavorUtils.traverseTree(tree, function (el) {
+            if (el.__version !== undefined) {
                 versions.push(el.__version);
             }
         });
@@ -284,7 +284,7 @@ function call(f, configArg) {
     var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
 
     function generateHtml(rootStructure) {
-        return function(el) {
+        return function (el) {
             let flavorDir;
             let isHome = el.__id && el.__name === config.home;
             let basePath = path.parse(el.__path).dir;
@@ -343,44 +343,55 @@ function call(f, configArg) {
                 });
             }
             metaProm.then(function () {
+                var prom = [];
                 var layoutFile = layouts[config.flavorLayouts[flavorName] || DEFAULT_FLAVOR];
                 writeFile(layoutFile, el.__path, data);
 
                 // Now that the file is written the directory exists
                 if (config.selfContained) {
-                    if (homeData) {
-                        if (el.__view) {
-                            // Add couch auth
-                            var read = request(getViewUrl(el, config.couchLocalUrl), config.couchReqOptions);
-                            var viewPath = path.join(basePath, 'view.json');
-                            var write = fs.createWriteStream(viewPath);
-                            read.pipe(write);
+                    var read, viewPath, write;
+                    if (el.__view) {
+                        prom.push(new Promise(function(resolve, reject) {
+                            read = request(getViewUrl(el, config.couchLocalUrl), config.couchReqOptions);
+                            viewPath = path.join(basePath, 'view.json');
+                            write = fs.createWriteStream(viewPath);
                             write.on('finish', function () {
                                 if (config.selfContained) {
-                                    processViewForLibraries(viewPath, data.reldir);
+                                    processViewForLibraries(viewPath, data.reldir).then(function () {
+                                        return resolve();
+                                    });
                                 }
                             });
-                        }
-                        if (el.__data)
-                            request(getDataUrl(el, config.couchLocalUrl), config.couchReqOptions)
-                                .pipe(fs.createWriteStream(path.join(basePath, 'data.json')));
-                    }
 
-                    else {
-                        if (el.__view) {
-
-                            var read = request(getViewUrl(el, config.couchLocalUrl), config.couchReqOptions);
-                            var viewPath = path.join(basePath, 'view.json');
-                            var write = fs.createWriteStream(viewPath);
-                            read.pipe(write);
-                            write.on('finish', function () {
-                                processViewForLibraries(viewPath, data.reldir);
+                            write.on('error', function() {
+                                return reject();
                             });
-                        }
-                        if (el.__data)
-                            request(getDataUrl(el, config.couchLocalUrl), config.couchReqOptions)
-                                .pipe(fs.createWriteStream(path.join(basePath, 'data.json')));
+
+                            read.on('error', function () {
+                                return reject();
+                            });
+                            read.pipe(write);
+                        }));
                     }
+                    if (el.__data) {
+                        prom.push(new Promise(function(resolve, reject) {
+                            read = request(getDataUrl(el, config.couchLocalUrl), config.couchReqOptions);
+                            viewPath = path.join(basePath, 'data.json');
+                            write = fs.createWriteStream(viewPath);
+                            write.on('finish', function () {
+                                return resolve();
+                            });
+                            write.on('error', function () {
+                                return reject();
+                            });
+                            read.on('error', function () {
+                                return reject();
+                            });
+                            read.pipe(write);
+                        }));
+                    }
+
+
                     fs.mkdirpSync(basePath);
                     fs.writeJsonSync(path.join(basePath, 'couch.json'), {
                         id: el.__id,
@@ -388,7 +399,9 @@ function call(f, configArg) {
                         database: config.couchurl + '/' + config.couchDatabase
                     });
                 }
+                return Promise.all(prom);
             });
+
             return metaProm;
         };
     }
@@ -435,36 +448,38 @@ function call(f, configArg) {
     }
 
     function processViewForLibraries(viewPath, reldir) {
+        var prom = [];
         var view = fs.readJsonSync(viewPath);
-        var changed = false;
         eachModule(view, function (module) {
             try {
                 var libs = module.configuration.groups.libs[0];
                 for (var i = 0; i < libs.length; i++) {
                     if (libraryNeedsProcess(libs[i].lib)) {
-                        changed = true;
-                        libs[i].lib = filters.processUrl(libs[i].lib, reldir);
+                        prom.push(utils.cacheUrl(config, libs[i].lib));
+                        libs[i].lib = filters.getLocalUrl(libs[i].lib, reldir);
                     }
                 }
 
             } catch (e) {
-                console.error('Error  while processing view to change libraries', e)
+                console.error('Error  while processing view to change libraries', e, e.stack)
             }
         }, ['filter_editor', 'code_executor']);
 
         try {
-            if (!view.aliases) return;
-            for (var i = 0; i < view.aliases.length; i++) {
-                let lib = view.aliases[i].path;
-                if (libraryNeedsProcess(lib)) {
-                    changed = true;
-                    view.aliases[i].path = filters.processUrl(lib, reldir);
+            if (view.aliases) {
+                for (var i = 0; i < view.aliases.length; i++) {
+                    let lib = view.aliases[i].path;
+                    if (libraryNeedsProcess(lib)) {
+                        prom.push(utils.cacheUrl(config, lib));
+                        view.aliases[i].path = filters.getLocalUrl(lib, reldir);
+                    }
                 }
             }
         } catch (e) {
-            console.error('Error while processing view to change library urls (general preferences)', e);
+            console.error('Error while processing view to change library urls (general preferences)', e, e.stack);
         }
         fs.writeJsonSync(viewPath, view);
+        return Promise.all(prom);
     }
 
     function libraryNeedsProcess(url) {
@@ -567,8 +582,8 @@ function call(f, configArg) {
         try {
             fs.statSync(extractDir);
             return Promise.resolve();
-        } catch(e) {
-            return new Promise(function(resolve, reject) {
+        } catch (e) {
+            return new Promise(function (resolve, reject) {
                 console.log('copying visualizer', version);
                 fs.mkdirpSync(extractDir);
 
@@ -578,11 +593,11 @@ function call(f, configArg) {
 
                 var read = request.get(url, reqOptions);
                 var write = targz().createWriteStream(extractDir);
-                write.on('finish', function() {
+                write.on('finish', function () {
                     return resolve();
                 });
 
-                write.on('error', function(err) {
+                write.on('error', function (err) {
                     return reject(err);
                 });
 
@@ -593,10 +608,10 @@ function call(f, configArg) {
 }
 
 exports = module.exports = {
-    build: function(config) {
+    build: function (config) {
         return call('build', config);
     },
-    getFlavors: function(config) {
+    getFlavors: function (config) {
         return call('getFlavors', config);
     }
 };

@@ -22,12 +22,16 @@ function filters(config) {
         }
 
         url = url.replace(/^\/\//, 'https://');
+        utils.cacheUrl(config, url);
+        return getLocalUrl(url, reldir);
+    }
+
+    function getLocalUrl(url, reldir) {
+        url = url.replace(/^\/\//, 'https://');
         var parsedUrl = urlLib.parse(url);
 
         var p = path.join(config.libFolder, parsedUrl.hostname, parsedUrl.path);
-        var loc = path.join(reldir, p);
-        utils.cacheUrl(config, url);
-        return loc;
+        return path.join(reldir, p);
     }
 
 
@@ -43,6 +47,7 @@ function filters(config) {
 
     return {
         concat: concat,
+        getLocalUrl: getLocalUrl,
         processUrl: processUrl,
         visualizer: visualizer
     };
