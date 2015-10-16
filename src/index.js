@@ -349,12 +349,11 @@ function call(f, configArg) {
 
                 // Now that the file is written the directory exists
                 if (config.selfContained) {
-                    var read, viewPath, write;
                     if (el.__view) {
                         prom.push(new Promise(function(resolve, reject) {
-                            read = request(getViewUrl(el, config.couchLocalUrl), config.couchReqOptions);
-                            viewPath = path.join(basePath, 'view.json');
-                            write = fs.createWriteStream(viewPath);
+                            var read = request(getViewUrl(el, config.couchLocalUrl), config.couchReqOptions);
+                            var viewPath = path.join(basePath, 'view.json');
+                            var write = fs.createWriteStream(viewPath);
                             write.on('finish', function () {
                                 if (config.selfContained) {
                                     processViewForLibraries(viewPath, data.reldir).then(function () {
@@ -375,9 +374,9 @@ function call(f, configArg) {
                     }
                     if (el.__data) {
                         prom.push(new Promise(function(resolve, reject) {
-                            read = request(getDataUrl(el, config.couchLocalUrl), config.couchReqOptions);
-                            viewPath = path.join(basePath, 'data.json');
-                            write = fs.createWriteStream(viewPath);
+                            var read = request(getDataUrl(el, config.couchLocalUrl), config.couchReqOptions);
+                            var viewPath = path.join(basePath, 'data.json');
+                            var write = fs.createWriteStream(viewPath);
                             write.on('finish', function () {
                                 return resolve();
                             });

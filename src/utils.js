@@ -18,7 +18,7 @@ module.exports.checkAuth = function (config, options, url) {
     return options;
 };
 
-module.exports.checkVersion = function(version) {
+module.exports.checkVersion = function (version) {
     if (version && version[0] >= '0' && version[0] <= '9' && !version.startsWith('v')) version = 'v' + version;
     return version;
 };
@@ -35,9 +35,14 @@ module.exports.cacheUrl = function (config, url) {
     var p = path.join(config.libFolder, parsedUrl.hostname, parsedUrl.path);
     var writePath = path.join(config.dir, p);
     if (config.selfContained) {
-        return writeFile(url, writePath, options).catch(function (err) {
-            console.error('error copying file', err.stack);
-        });
+        return writeFile(url, writePath, options)
+            .then(null, function () {
+                console.log('retry...', url);
+                return writeFile(url + '.js', writePath, options);
+            })
+            .catch(function (err) {
+                console.error('error fetching file', url, err);
+            });
     } else {
         return Promise.resolve();
     }
