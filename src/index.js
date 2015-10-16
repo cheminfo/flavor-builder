@@ -554,21 +554,33 @@ function build(configArg) {
         let parsedUrl = urlLib.parse(visualizerUrl);
         let file = version + '.tar.gz';
         let url = visualizerUrl + '/' + file;
-        let extractDir = path.join(config.dir, config.libFolder, parsedUrl.hostname, parsedUrl.path);
+        let extractDir = path.join(config.dir, config.libFolder, parsedUrl.hostname, parsedUrl.path, version);
+
 
         // Check if already exists
         try {
-            fs.statSync(path.join(extractDir, version));
+            fs.statSync(extractDir);
             return Promise.resolve();
         } catch(e) {
-            console.log('copying visualizer', version);
-            let dlDest = path.join(config.dir, file);
-            var reqOptions = {};
-            utils.checkAuth(config, reqOptions, url);
-            reqOptions.encoding = null;
-            return wf(url, dlDest, reqOptions).then(function () {
+            return new Promise(function(resolve, reject) {
+                console.log('copying visualizer', version);
                 fs.mkdirpSync(extractDir);
-                return targz().extract(dlDest, extractDir);
+
+                var reqOptions = {};
+                utils.checkAuth(config, reqOptions, url);
+                reqOptions.encoding = null;
+
+                var read = request.get(url, reqOptions);
+                var write = targz().createWriteStream(extractDir);
+                write.on('finish', function() {
+                    return resolve();
+                });
+
+                write.on('error', function(err) {
+                    return reject(err);
+                });
+
+                read.pipe(write);
             });
         }
     }
