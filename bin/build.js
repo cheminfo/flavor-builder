@@ -13,6 +13,6 @@ for (var i = 0; i < configs.length; i++) {
 Promise.all(prom).then(function() {
     console.log('done build');
 }).catch(function(e) {
-    console.error('Error building with flavor-builder', e);
+    console.error('Error building with flavor-builder', e, e.stack);
     process.exit(1);
 });
