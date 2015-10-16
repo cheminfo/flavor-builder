@@ -23,11 +23,9 @@ exports = module.exports = function (url, p, options) {
 
         read.on('response', function (res) {
             if (res.statusCode !== 200) {
-                console.log(res.statusCode, url);
                 return reject(new Error('Got an error code !== 200'))
             }
 
-            console.log('pipe', url);
             var write = fs.createWriteStream(p);
             write.on('error', function (e) {
                 reject(e);

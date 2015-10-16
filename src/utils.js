@@ -35,7 +35,6 @@ module.exports.cacheUrl = function (config, url, addExtension) {
     if (config.selfContained) {
         return writeFile(url, writePath, options)
             .then(null, function () {
-                console.log('retry...', url);
                 return writeFile(url + '.js', writePath + '.js', options);
             })
             .catch(function (err) {
