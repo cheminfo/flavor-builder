@@ -8,7 +8,7 @@ var filesWriting = {};
 
 exports = module.exports = function (url, p, options) {
     options = options || {};
-    return (new Promise(function (resolve, reject) {
+    return new Promise(function (resolve, reject) {
         if(filesWriting[p]) {
             return resolve(true);
         }
@@ -44,12 +44,5 @@ exports = module.exports = function (url, p, options) {
         });
 
 
-    })).then(function(keep) {
-            if(!keep) {
-                filesWriting[p] = false;
-            }
-        }, function(err) {
-            filesWriting[p] = false;
-            return Promise.reject(err);
-        });
+    })
 };

@@ -342,7 +342,7 @@ function call(f, configArg) {
                     })
                 });
             }
-            metaProm.then(function () {
+            metaProm = metaProm.then(function () {
                 var prom = [];
                 var layoutFile = layouts[config.flavorLayouts[flavorName] || DEFAULT_FLAVOR];
                 writeFile(layoutFile, el.__path, data);
@@ -454,8 +454,8 @@ function call(f, configArg) {
                 var libs = module.configuration.groups.libs[0];
                 for (var i = 0; i < libs.length; i++) {
                     if (libraryNeedsProcess(libs[i].lib)) {
-                        prom.push(utils.cacheUrl(config, libs[i].lib));
-                        libs[i].lib = filters.getLocalUrl(libs[i].lib, reldir);
+                        prom.push(utils.cacheUrl(config, libs[i].lib, true));
+                        libs[i].lib = utils.getLocalUrl(config, libs[i].lib, reldir, true);
                     }
                 }
 
@@ -469,8 +469,8 @@ function call(f, configArg) {
                 for (var i = 0; i < view.aliases.length; i++) {
                     let lib = view.aliases[i].path;
                     if (libraryNeedsProcess(lib)) {
-                        prom.push(utils.cacheUrl(config, lib));
-                        view.aliases[i].path = filters.getLocalUrl(lib, reldir);
+                        prom.push(utils.cacheUrl(config, lib, true));
+                        view.aliases[i].path = utils.fromVisuLocalUrl(config, lib, false);
                     }
                 }
             }
