@@ -18,6 +18,8 @@ var Promise = require('bluebird'),
     targz = require('tar.gz'),
     auth = '';
 
+var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
+
 function call(f, configArg) {
     var config, layouts, toCopy, toSwig, nano, couchdb, versions, filters;
 
@@ -281,7 +283,6 @@ function call(f, configArg) {
         return _.uniq(versions);
     }
 
-    var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
 
     function generateHtml(rootStructure) {
         return function (el) {
