@@ -4,11 +4,15 @@
 var args = require('minimist')(process.argv.slice(2));
 
 var flavorBuilder = require('../src/index');
-
-try {
-    flavorBuilder.build(args.config);
-} catch(e) {
-    console.error('Error building with flavor-builder', e);
-    process.exit(1);
+var configs = args.config.split(',');
+var prom = [];
+for (var i = 0; i < configs.length; i++) {
+    prom.push(flavorBuilder.build(configs[i]));
 }
 
+Promise.all(prom).then(function() {
+    console.log('done build');
+}).catch(function(e) {
+    console.error('Error building with flavor-builder', e);
+    process.exit(1);
+});

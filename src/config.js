@@ -9,7 +9,10 @@ exports = module.exports = function (configArg) {
         var configFile = path.resolve(configArg);
         var config = require(configFile);
     } else if (typeof configArg === 'object') {
-        config = configArg;
+        // Make sure we have another reference
+        // To avoid the config being changed from
+        // outside during a build
+        config = _.cloneDeep(configArg);
     } else {
         throw new TypeError('Incorrect argument');
     }
@@ -19,7 +22,7 @@ exports = module.exports = function (configArg) {
     }
 
 // Check mandatory parameters
-    var mandatory = ['dir', 'cdn', 'direct', 'home', 'couchurl', 'couchLocalUrl', 'flavorUsername', 'couchDatabase', 'layouts'];
+    var mandatory = ['dir', 'cdn', 'direct', 'home', 'couchurl', 'couchLocalUrl', 'flavorUsername', 'couchDatabase', 'layouts', 'libFolder'];
     for (var i = 0; i < mandatory.length; i++) {
         if (config[mandatory[i]] === undefined) {
             throw new Error(mandatory[i] + ' is mandatory');

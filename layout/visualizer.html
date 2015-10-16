@@ -63,7 +63,7 @@
             if(!selfContained || selfContained === 'false') {
                 baseUrl = (search.direct ? direct : cdn) + '/visualizer/' + version;
             } else {
-                baseUrl = '{{ version | copyVisualizer(reldir) }}';
+                baseUrl = '{{ version | visualizer(reldir) }}';
             }
 
             visualizer.setAttribute('data-main', baseUrl+ '/init');

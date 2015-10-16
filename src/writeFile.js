@@ -18,12 +18,12 @@ exports = module.exports = function (url, p, options) {
 
             read.pipe(write);
 
-            read.on('error', function() {
-                reject();
+            read.on('error', function(e) {
+                reject(e);
             });
 
-            write.on('error', function() {
-                reject();
+            write.on('error', function(e) {
+                reject(e);
             });
 
             write.on('finish', function() {
