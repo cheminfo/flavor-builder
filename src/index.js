@@ -612,6 +612,8 @@ exports = module.exports = {
         return call('build', config);
     },
     getFlavors: function (config) {
-        return call('getFlavors', config);
+        return call('couchAuthenticate', config).then(function() {
+            return call('getFlavors', config);
+        });
     }
 };
