@@ -2,6 +2,7 @@
 
 var args = require('minimist')(process.argv.slice(2));
 var path = require('path');
+var _ = require('lodash');
 
 exports = module.exports = function (configArg) {
     configArg = configArg || 'config.json';
