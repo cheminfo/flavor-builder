@@ -31,7 +31,7 @@ function call(f, configArg) {
         return couchAuthenticate();
     }
 
-    init(configArg).then(function() {
+    return init(configArg).then(function() {
         return eval(f + '()'); 
     });
 
@@ -611,6 +611,6 @@ exports = module.exports = {
         return call('build', config);
     },
     getFlavors: function (config) {
-            return call('getFlavors', config);
+        return call('getFlavors', config);
     }
 };
