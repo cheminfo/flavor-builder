@@ -25,15 +25,15 @@ function call(f, configArg) {
 
     function init(configArg) {
         config = require('./config')(configArg);
-        nano = require('nano')(config.couchLocalUrl || config.couchurl);
-        couchdb = nano.use(config.couchDatabase);
         filters = require('./filters')(config);
         layouts = config.layouts;
+        nano = require('nano')(config.couchLocalUrl || config.couchurl);
+        return couchAuthenticate();
     }
 
-    init(configArg);
-
-    return eval(f + '()');
+    init(configArg).then(function() {
+        return eval(f + '()'); 
+    });
 
     function build() {
         toCopy = [
@@ -63,7 +63,6 @@ function call(f, configArg) {
         return co(function*() {
             versions = yield getVersionsRequest();
             if (config.flavor) {
-                yield couchAuthenticate();
                 let exists = yield hasFlavor(config.flavor);
                 if (!exists) {
                     console.log('Flavor not found');
@@ -74,7 +73,6 @@ function call(f, configArg) {
             }
 
             else {
-                yield couchAuthenticate();
                 let flavors = yield getFlavors();
                 flavors = yield filterFlavorsByMd5(flavors);
                 console.log('Processing ' + flavors.length + ' flavors');
@@ -99,6 +97,7 @@ function call(f, configArg) {
         return new Promise(function (resolve, reject) {
             if (!config.couchPassword) {
                 // no auth needed
+                couchdb = nano.use(config.couchDatabase);
                 resolve();
             }
             nano.auth(config.couchUsername, config.couchPassword, function (err, body, headers) {
@@ -108,7 +107,7 @@ function call(f, configArg) {
 
                 if (headers && headers['set-cookie']) {
                     auth = headers['set-cookie'];
-                    nano = require('nano')({url: config.couchLocalUrl, cookie: auth[0]});
+                    nano = require('nano')({url: config.couchLocalUrl || config.couchurl, cookie: auth[0]});
                     couchdb = nano.use(config.couchDatabase);
                 }
                 return resolve();
@@ -612,8 +611,6 @@ exports = module.exports = {
         return call('build', config);
     },
     getFlavors: function (config) {
-        return call('couchAuthenticate', config).then(function() {
             return call('getFlavors', config);
-        });
     }
 };
