@@ -355,11 +355,12 @@ function call(f, configArg) {
                             var viewPath = path.join(basePath, 'view.json');
                             var write = fs.createWriteStream(viewPath);
                             write.on('finish', function () {
-                                if (config.selfContained) {
-                                    processViewForLibraries(viewPath, data.reldir).then(function () {
-                                        return resolve();
-                                    });
-                                }
+                                var prom = config.flatViews ? processViewForLibraries(viewPath, config.flatViews.reldir, path.join(config.flatViews.outdir, el.__id, 'view.json')) : Promise.resolve();
+                                prom.then(function() {
+                                    return processViewForLibraries(viewPath, data.reldir);
+                                }).then(function() {
+                                    return resolve();
+                                });
                             });
 
                             write.on('error', function() {
@@ -446,7 +447,7 @@ function call(f, configArg) {
         fs.writeFileSync(writepath, htmlcontent);
     }
 
-    function processViewForLibraries(viewPath, reldir) {
+    function processViewForLibraries(viewPath, reldir, out) {
         var prom = [];
         var view = fs.readJsonSync(viewPath);
         eachModule(view, function (module) {
@@ -477,7 +478,9 @@ function call(f, configArg) {
         } catch (e) {
             console.error('Error while processing view to change library urls (general preferences)', e, e.stack);
         }
-        fs.writeJsonSync(viewPath, view);
+        out = out || viewPath;
+        fs.mkdirpSync(path.parse(out).dir);
+        fs.writeJsonSync(out, view);
         return Promise.all(prom);
     }
 
