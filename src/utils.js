@@ -49,7 +49,6 @@ module.exports.getLocalUrl = function (config, url, reldir, addExtension) {
     url = url.replace(/^\/\//, 'https://');
     var parsedUrl = urlLib.parse(url);
     var parsedPath = path.parse(parsedUrl.path);
-    console.log(url);
 
     var p = path.join(config.libFolder, parsedUrl.hostname, parsedUrl.path);
     if(addExtension) {
