@@ -69,7 +69,8 @@ function call(f, configArg) {
                     return;
                 }
                 let flavor = yield getFlavor(config.flavor);
-                return yield handleFlavor(config.dir, flavor);
+                yield handleFlavor(config.dir, flavor);
+                return yield Promise.all(filters.plist);
             }
 
             else {
@@ -87,6 +88,7 @@ function call(f, configArg) {
                     fs.mkdirp(flavorDir);
                     let flavor = yield getFlavor(flavors[i]);
                     yield handleFlavor(flavorDir, flavor);
+                    yield Promise.all(filters.plist);
                 }
             }
         });

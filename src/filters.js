@@ -8,7 +8,10 @@ var fs = require('fs-extra');
 var writeFile = require('./writeFile');
 var utils = require('./utils');
 
+
+
 function filters(config) {
+    var plist = [];
 
     function concat(a, b) {
         if (b === undefined) return a;
@@ -22,7 +25,7 @@ function filters(config) {
         }
 
         url = utils.rewriteUrl(url);
-        utils.cacheUrl(config, url);
+        plist.push(utils.cacheUrl(config, url));
         return utils.getLocalUrl(config, url, reldir);
     }
 
@@ -39,11 +42,17 @@ function filters(config) {
         return path.join(reldir, config.libFolder, parsedUrl.hostname, parsedUrl.path, version);
     }
 
-    return {
+    var r = {
         concat: concat,
         processUrl: processUrl,
         visualizer: visualizer
     };
+
+    Object.defineProperty(r, 'plist',{
+        enumerable: false,
+        value: plist
+    });
+    return r;
 }
 
 exports = module.exports = filters;
