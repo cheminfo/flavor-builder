@@ -355,9 +355,9 @@ function call(f, configArg) {
                             var viewPath = path.join(basePath, 'view.json');
                             var write = fs.createWriteStream(viewPath);
                             write.on('finish', function () {
-                                var prom = config.flatViews ? processViewForLibraries(viewPath, config.flatViews.reldir, path.join(config.flatViews.outdir, el.__id, 'view.json')) : Promise.resolve();
+                                var prom = config.flatViews ? processViewForLibraries(viewPath, path.join(config.flatViews.outdir, el.__id, 'view.json')) : Promise.resolve();
                                 prom.then(function() {
-                                    return processViewForLibraries(viewPath, data.reldir);
+                                    return processViewForLibraries(viewPath);
                                 }).then(function() {
                                     return resolve();
                                 });
@@ -447,7 +447,7 @@ function call(f, configArg) {
         fs.writeFileSync(writepath, htmlcontent);
     }
 
-    function processViewForLibraries(viewPath, reldir, out) {
+    function processViewForLibraries(viewPath, out) {
         var prom = [];
         var view = fs.readJsonSync(viewPath);
         eachModule(view, function (module) {
@@ -456,7 +456,7 @@ function call(f, configArg) {
                 for (var i = 0; i < libs.length; i++) {
                     if (libraryNeedsProcess(libs[i].lib)) {
                         prom.push(utils.cacheUrl(config, libs[i].lib, true));
-                        libs[i].lib = utils.getLocalUrl(config, libs[i].lib, reldir, true);
+                        libs[i].lib = utils.fromVisuLocalUrl(config, libs[i].lib, false);
                     }
                 }
 
