@@ -60,7 +60,7 @@ module.exports.cacheDir = function (config, url, addExtension) {
                 prom = files.map(function (file) {
                     return module.exports.cacheUrl(config, urlLib.resolve(url, file), addExtension);
                 });
-                return Promise.all(prom);
+                return resolve(Promise.all(prom));
             } else {
                 console.error(err);
                 return resolve();
