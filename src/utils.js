@@ -3,6 +3,7 @@
 var urlLib = require('url');
 var writeFile = require('./writeFile');
 var path = require('path');
+var request = require('request');
 
 module.exports = {};
 
@@ -45,13 +46,36 @@ module.exports.cacheUrl = function (config, url, addExtension) {
     }
 };
 
+module.exports.cacheDir = function (config, url, addExtension) {
+    return new Promise(function(resolve) {
+        var prom = [];
+        var options = {};
+        // Add authentification if necessary
+        module.exports.checkAuth(config, options, url);
+        request.get(urlLib.resolve(url, 'files.txt'), options, function (err, res) {
+            if (res && res.statusCode === 200) {
+                let files = res.body.split('\n').filter(function (val) {
+                    return val;
+                });
+                prom = files.map(function (file) {
+                    return module.exports.cacheUrl(config, urlLib.resolve(url, file), addExtension);
+                });
+                return Promise.all(prom);
+            } else {
+                console.error(err);
+                return resolve();
+            }
+        });
+    });
+};
+
 module.exports.getLocalUrl = function (config, url, reldir, addExtension) {
     url = url.replace(/^\/\//, 'https://');
     var parsedUrl = urlLib.parse(url);
     var parsedPath = path.parse(parsedUrl.path);
 
     var p = path.join(config.libFolder, parsedUrl.hostname, parsedUrl.path);
-    if(addExtension) {
+    if (addExtension) {
         p += parsedPath.ext ? '' : '.js';
     }
     return path.join(reldir, p);

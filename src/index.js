@@ -27,7 +27,6 @@ function call(f, configArg) {
         config = require('./config')(configArg);
         filters = require('./filters')(config);
         layouts = config.layouts;
-        console.log(config.couchLocalUrl || config.couchurl);
         nano = require('nano')({
             url: config.couchLocalUrl || config.couchurl,
             parseUrl: false
