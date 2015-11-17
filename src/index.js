@@ -248,10 +248,7 @@ function call(f, configArg) {
             return false;
         }
         var flavorIdx = flavors.indexOf(config.flavor);
-        if (flavorIdx === -1) {
-            return false;
-        }
-        return true;
+        return flavorIdx !== -1;
     }
 
     function*handleFlavor(dir, data) {
@@ -480,6 +477,7 @@ function call(f, configArg) {
         } catch (e) {
             console.error('Error while processing view to change library urls (general preferences)', e, e.stack);
         }
+
         out = out || viewPath;
         fs.mkdirpSync(path.parse(out).dir);
         fs.writeJsonSync(out, view);
@@ -504,6 +502,10 @@ function call(f, configArg) {
 
                 url = module.url;
                 if (url) {
+                    if(!moduleNames) {
+                        callback(module);
+                        continue;
+                    }
                     for (j = 0; j < jj; j++) {
 
                         if (String(url).indexOf(moduleNames[j]) >= 0) {
