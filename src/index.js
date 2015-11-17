@@ -474,6 +474,7 @@ function call(f, configArg) {
         eachModule(view, function(module) {
             if(libraryNeedsProcess(module.url)) {
                 prom.push(utils.cacheDir(config, module.url, true));
+                module.url = utils.fromVisuLocalUrl(config, module.url, false);
             }
         });
 
