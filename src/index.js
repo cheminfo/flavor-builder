@@ -27,7 +27,11 @@ function call(f, configArg) {
         config = require('./config')(configArg);
         filters = require('./filters')(config);
         layouts = config.layouts;
-        nano = require('nano')(config.couchLocalUrl || config.couchurl);
+        console.log(config.couchLocalUrl || config.couchurl);
+        nano = require('nano')({
+            url: config.couchLocalUrl || config.couchurl,
+            parseUrl: false
+        });
         return couchAuthenticate();
     }
 
@@ -109,7 +113,11 @@ function call(f, configArg) {
 
                 if (headers && headers['set-cookie']) {
                     auth = headers['set-cookie'];
-                    nano = require('nano')({url: config.couchLocalUrl || config.couchurl, cookie: auth[0]});
+                    nano = require('nano')({
+                        url: config.couchLocalUrl || config.couchurl,
+                        cookie: auth[0],
+                        parseUrl: false
+                    });
                     couchdb = nano.use(config.couchDatabase);
                 }
                 return resolve();
@@ -463,6 +471,12 @@ function call(f, configArg) {
                 console.error('Error  while processing view to change libraries', e, e.stack)
             }
         }, ['filter_editor', 'code_executor']);
+
+        eachModule(view, function(module) {
+            if(libraryNeedsProcess(module.url)) {
+                prom.push(utils.cacheDir(config, module.url, true));
+            }
+        });
 
         try {
             if (view.aliases) {
