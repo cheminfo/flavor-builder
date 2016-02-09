@@ -12,33 +12,38 @@ var Promise = require('bluebird'),
     request = require('request'),
     crypto = require('crypto'),
     co = require('co'),
-    flavorUtils = require('flavor-utils'),
     utils = require('./utils'),
-    wf = require('./writeFile'),
     targz = require('tar.gz'),
-    auth = '';
+    FlavorUtils = require('flavor-utils'),
+    debug = require('debug')('flavor-builder:main');
 
 var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
 
 function call(f, configArg) {
-    var config, layouts, toCopy, toSwig, nano, couchdb, versions, filters;
+    var config, layouts, toCopy, toSwig, versions, filters, flavorUtils;
+
 
     function init(configArg) {
         config = require('./config')(configArg);
         filters = require('./filters')(config);
         layouts = config.layouts;
-        nano = require('nano')({
-            url: config.couchLocalUrl || config.couchurl,
-            parseUrl: false
+        flavorUtils = new FlavorUtils({
+            username: config.flavorUsername,
+            couchUrl: config.couchLocalUrl,
+            couchDatabase: config.couchDatabase,
+            couchUsername: config.couchUsername,
+            couchPassword: config.couchPassword,
+            designDoc: 'app'
         });
-        return couchAuthenticate();
     }
 
-    return init(configArg).then(function() {
-        return eval(f + '()'); 
+    return Promise.resolve().then(function () {
+        init(configArg);
+        return eval(f + '()');
     });
 
     function build() {
+        debug('start build');
         toCopy = [
             {src: path.join(__dirname, '../lib'), dest: path.join(config.dir, './lib')},
             {src: path.join(__dirname, '../themes'), dest: path.join(config.dir, './themes')},
@@ -64,6 +69,7 @@ function call(f, configArg) {
 
 
         return co(function*() {
+            debug('get versions');
             versions = yield getVersionsRequest();
             if (config.flavor) {
                 let exists = yield hasFlavor(config.flavor);
@@ -71,6 +77,7 @@ function call(f, configArg) {
                     console.log('Flavor not found');
                     return;
                 }
+                debug('get flavor');
                 let flavor = yield getFlavor(config.flavor);
                 yield handleFlavor(config.dir, flavor);
                 return yield Promise.all(filters.plist);
@@ -78,6 +85,7 @@ function call(f, configArg) {
 
             else {
                 let flavors = yield getFlavors();
+                console.log('flavors', flavors);
                 flavors = yield filterFlavorsByMd5(flavors);
                 console.log('Processing ' + flavors.length + ' flavors');
                 for (let i = 0; i < flavors.length; i++) {
@@ -97,35 +105,9 @@ function call(f, configArg) {
         });
     }
 
-
-    function couchAuthenticate() {
-        return new Promise(function (resolve, reject) {
-            if (!config.couchPassword) {
-                // no auth needed
-                couchdb = nano.use(config.couchDatabase);
-                resolve();
-            }
-            nano.auth(config.couchUsername, config.couchPassword, function (err, body, headers) {
-                if (err) {
-                    return reject(err);
-                }
-
-                if (headers && headers['set-cookie']) {
-                    auth = headers['set-cookie'];
-                    nano = require('nano')({
-                        url: config.couchLocalUrl || config.couchurl,
-                        cookie: auth[0],
-                        parseUrl: false
-                    });
-                    couchdb = nano.use(config.couchDatabase);
-                }
-                return resolve();
-            });
-        });
-    }
-
 // returns an array of flavors for which the md5 has changed
     function filterFlavorsByMd5(flavors) {
+        debug('filter flavors by md5');
         return getFlavorMD5(flavors).then(function (result) {
             if (config.forceUpdate) {
                 return Object.keys(result);
@@ -155,13 +137,10 @@ function call(f, configArg) {
     }
 
     function getFlavors() {
-        return new Promise(function (resolve, reject) {
-            couchdb.view('flavor', 'list', {key: config.flavorUsername}, function (err, body) {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve(processFlavors(body));
-            });
+        debug('get list of flavors');
+        return flavorUtils.getFlavors().then(function (flavors) {
+            console.log(flavors);
+            return processFlavors(flavors);
         });
     }
 
@@ -180,17 +159,10 @@ function call(f, configArg) {
             });
         }
         else {
-            return new Promise(function (resolve, reject) {
-                var key = encodeURIComponent(JSON.stringify([flavors, config.flavorUsername]));
-                var url = config.couchLocalUrl + '/' + config.couchDatabase + '/_design/flavor/_view/docs?key=' + key;
-                request(url, config.couchReqOptions, function (error, response, body) {
-                    if (error) {
-                        return reject(error);
-                    }
-                    var x = JSON.stringify(JSON.parse(body).rows);
-                    var md5 = crypto.createHash('md5').update(x).digest('hex');
-                    return resolve(md5);
-                });
+            return flavorUtils.getFlavor({flavor: flavors}, false).then(function (result) {
+                return crypto.createHash('md5').update(JSON.stringify(result.rows)).digest('hex');
+            }, function (err) {
+                throw err;
             });
         }
     }
@@ -206,14 +178,7 @@ function call(f, configArg) {
     }
 
     function getFlavor(flavor) {
-        return new Promise(function (resolve, reject) {
-            couchdb.viewWithList('flavor', 'docs', 'sort', {key: [flavor, config.flavorUsername]}, function (err, body) {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve(body);
-            });
-        });
+        return flavorUtils.getFlavor({flavor: flavor}, true);
     }
 
     function requestGet(url, options) {
@@ -232,21 +197,21 @@ function call(f, configArg) {
         return requestGet('http://www.lactame.com/visualizer/versions.json')
     }
 
-    function getViewUrl(el, couchurl) {
-        return el.__view ? couchurl + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev : undefined;
+    function getViewUrl(el, type) {
+        return el.__view ? getCouchUrlByType(type) + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev : undefined;
     }
 
-    function getDataUrl(el, couchurl) {
-        return el.__data ? couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev : undefined;
+    function getDataUrl(el, type) {
+        return el.__data ? getCouchUrlByType(type) + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev : undefined;
     }
 
-    function getMetaUrl(el, couchurl) {
-        return el.__meta ? couchurl + '/' + config.couchDatabase + '/' + el.__id + '/meta.json?rev=' + el.__rev : undefined;
-    }
-
-    function getVersion(el) {
-        var url = getViewUrl(el, config.couchLocalUrl);
-        return requestGet(url, config.couchReqOptions);
+    function getCouchUrlByType(type) {
+        if(type === 'local') {
+            return config.couchLocalUrl;
+        } else if(type === 'public') {
+            return config.couchurl;
+        }
+        throw new Error('getCouchUrlByType: type must be "local" or "public"');
     }
 
     function*hasFlavor() {
@@ -259,11 +224,12 @@ function call(f, configArg) {
     }
 
     function*handleFlavor(dir, data) {
+        debug('handle flavor');
         if (!dir) dir = config.dir;
 
+        console.log(data);
         let structure = yield flavorUtils.getTree(data);
         yield flavorUtils.traverseTree(structure, doPath(dir));
-        yield flavorUtils.traverseTree(structure, setVersion);
         yield flavorUtils.traverseTree(structure, generateHtml(structure));
 
         if (config.selfContained) {
@@ -281,8 +247,8 @@ function call(f, configArg) {
     function*getVersionsFromTree(tree) {
         let versions = [];
         yield flavorUtils.traverseTree(tree, function (el) {
-            if (el.__version !== undefined) {
-                versions.push(el.__version);
+            if (el.version !== undefined) {
+                versions.push(el.version);
             }
         });
         return _.uniq(versions);
@@ -305,10 +271,11 @@ function call(f, configArg) {
             let relativePath = path.relative(basePath, config.dir) || '.';
 
             let data = {
-                viewURL: config.selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, config.couchurl),
-                dataURL: config.selfContained ? (el.__data ? './data.json' : undefined) : getDataUrl(el, config.couchurl),
+                viewURL: config.selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, 'public'),
+                dataURL: config.selfContained ? (el.__data ? './data.json' : undefined) : getDataUrl(el, 'public'),
                 queryString: buildQueryString(el),
-                version: el.__version,
+                version: el.version,
+                meta: el.meta,
                 structure: rootStructure,
                 config: config,
                 menuHtml: doMenu(rootStructure, basePath),
@@ -329,26 +296,8 @@ function call(f, configArg) {
                 if (homeData.reldir === '') homeData.reldir = '.';
             }
 
-            // If couch has meta.json, we make a request to get that file first
-            let metaProm = Promise.resolve();
-            if (el.__meta) {
-                metaProm = metaProm.then(function () {
-                    return new Promise(function (resolve, reject) {
-                        var url = getMetaUrl(el, config.couchLocalUrl);
-                        request(url, config.couchReqOptions, function (error, response, body) {
-                            if (!error && response.statusCode === 200) {
-                                data.meta = JSON.parse(body);
-                                if (homeData) {
-                                    homeData.meta = data.meta;
-                                }
-                                return resolve();
-                            }
-                            return reject();
-                        });
-                    })
-                });
-            }
-            metaProm = metaProm.then(function () {
+            let finalProm = Promise.resolve();
+            finalProm = finalProm.then(function () {
                 var prom = [];
                 var layoutFile = layouts[config.flavorLayouts[flavorName] || DEFAULT_FLAVOR];
                 writeFile(layoutFile, el.__path, data);
@@ -356,20 +305,20 @@ function call(f, configArg) {
                 // Now that the file is written the directory exists
                 if (config.selfContained) {
                     if (el.__view) {
-                        prom.push(new Promise(function(resolve, reject) {
-                            var read = request(getViewUrl(el, config.couchLocalUrl), config.couchReqOptions);
+                        prom.push(new Promise(function (resolve, reject) {
+                            var read = request(getViewUrl(el, 'local'), config.couchReqOptions);
                             var viewPath = path.join(basePath, 'view.json');
                             var write = fs.createWriteStream(viewPath);
                             write.on('finish', function () {
                                 var prom = config.flatViews ? processViewForLibraries(viewPath, path.join(config.flatViews.outdir, el.__id, 'view.json')) : Promise.resolve();
-                                prom.then(function() {
+                                prom.then(function () {
                                     return processViewForLibraries(viewPath);
-                                }).then(function() {
+                                }).then(function () {
                                     return resolve();
                                 });
                             });
 
-                            write.on('error', function() {
+                            write.on('error', function () {
                                 return reject();
                             });
 
@@ -380,8 +329,8 @@ function call(f, configArg) {
                         }));
                     }
                     if (el.__data) {
-                        prom.push(new Promise(function(resolve, reject) {
-                            var read = request(getDataUrl(el, config.couchLocalUrl), config.couchReqOptions);
+                        prom.push(new Promise(function (resolve, reject) {
+                            var read = request(getDataUrl(el, 'local'), config.couchReqOptions);
                             var viewPath = path.join(basePath, 'data.json');
                             var write = fs.createWriteStream(viewPath);
                             write.on('finish', function () {
@@ -408,7 +357,7 @@ function call(f, configArg) {
                 return Promise.all(prom);
             });
 
-            return metaProm;
+            return finalProm;
         };
     }
 
@@ -426,19 +375,6 @@ function call(f, configArg) {
             } else
                 el.__path = path.join(el.__path, el.__filename, 'index.html');
         };
-    }
-
-    function setVersion(el) {
-        return getVersion(el).then(function (view) {
-            view = JSON.parse(view);
-            if (versions.indexOf(view.version) > -1)
-                el.__version = view.version;
-            else {
-                // Fallback version is HEAD-min!
-                // See https://github.com/cheminfo/flavor-builder/issues/9
-                el.__version = 'HEAD-min';
-            }
-        });
     }
 
     function writeFile(readpath, writepath, data) {
@@ -471,8 +407,8 @@ function call(f, configArg) {
             }
         }, ['filter_editor', 'code_executor']);
 
-        eachModule(view, function(module) {
-            if(libraryNeedsProcess(module.url)) {
+        eachModule(view, function (module) {
+            if (libraryNeedsProcess(module.url)) {
                 prom.push(utils.cacheDir(config, module.url, true));
                 module.url = utils.fromVisuLocalUrl(config, module.url, false);
             }
@@ -516,7 +452,7 @@ function call(f, configArg) {
 
                 url = module.url;
                 if (url) {
-                    if(!moduleNames) {
+                    if (!moduleNames) {
                         callback(module);
                         continue;
                     }
