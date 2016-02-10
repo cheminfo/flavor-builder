@@ -95,7 +95,7 @@ function call(f, configArg) {
                     else {
                         flavorDir = path.join(config.dir, 'flavor', flavors[i]);
                     }
-                    fs.mkdirp(flavorDir);
+                    fs.mkdirpSync(flavorDir);
                     let flavor = yield getFlavor(flavors[i]);
                     yield handleFlavor(flavorDir, flavor);
                     yield Promise.all(filters.plist);
@@ -204,9 +204,9 @@ function call(f, configArg) {
     }
 
     function getCouchUrlByType(type) {
-        if(type === 'local') {
+        if (type === 'local') {
             return config.couchLocalUrl;
-        } else if(type === 'public') {
+        } else if (type === 'public') {
             return config.couchurl;
         }
         throw new Error('getCouchUrlByType: type must be "local" or "public"');
@@ -221,34 +221,38 @@ function call(f, configArg) {
         return flavorIdx !== -1;
     }
 
-    function*handleFlavor(dir, data) {
+    function * handleFlavor(dir, data) {
         debug('handle flavor');
         if (!dir) dir = config.dir;
 
+
         let structure = yield flavorUtils.getTree(data);
         yield flavorUtils.traverseTree(structure, doPath(dir));
+        yield flavorUtils.traverseTree(structure, fixVersion);
         yield flavorUtils.traverseTree(structure, generateHtml(structure));
 
         if (config.selfContained) {
             let versions = yield getVersionsFromTree(structure);
-            let copies = new Array(versions.length);
             for (let i = 0; i < versions.length; i++) {
-                copies[i] = copyVisualizer(versions[i]);
+                yield copyVisualizer(versions[i]);
             }
-            yield copies;
         }
         copyFiles();
         swigFiles();
     }
 
+    function fixVersion(el) {
+        if (el.__version === undefined || versions.indexOf(el.__version) === -1) {
+            el.__version = 'HEAD-min';
+        }
+    }
+
     function*getVersionsFromTree(tree) {
-        let versions = [];
+        let v = [];
         yield flavorUtils.traverseTree(tree, function (el) {
-            if (el.version !== undefined) {
-                versions.push(el.version);
-            }
+            v.push(el.__version);
         });
-        return _.uniq(versions);
+        return _.uniq(v);
     }
 
 
@@ -271,8 +275,8 @@ function call(f, configArg) {
                 viewURL: config.selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, 'public'),
                 dataURL: config.selfContained ? (el.__data ? './data.json' : undefined) : getDataUrl(el, 'public'),
                 queryString: buildQueryString(el),
-                version: el.version,
-                meta: el.meta,
+                version: el.__version,
+                meta: el.__meta,
                 structure: rootStructure,
                 config: config,
                 menuHtml: doMenu(rootStructure, basePath),
@@ -537,21 +541,24 @@ function call(f, configArg) {
             return Promise.resolve();
         } catch (e) {
             return new Promise(function (resolve, reject) {
-                console.log('copying visualizer', version);
+                console.log('copying visualizer', version, 'to', extractDir);
                 fs.mkdirpSync(extractDir);
-
                 var reqOptions = {};
                 utils.checkAuth(config, reqOptions, url);
                 reqOptions.encoding = null;
 
                 var read = request.get(url, reqOptions);
+                read.on('error', function (err) {
+                    console.log('read error');
+                    reject(err);
+                });
                 var write = targz().createWriteStream(extractDir);
                 write.on('finish', function () {
-                    return resolve();
+                    resolve();
                 });
 
                 write.on('error', function (err) {
-                    return reject(err);
+                    reject(err);
                 });
 
                 read.pipe(write);
@@ -559,6 +566,7 @@ function call(f, configArg) {
         }
     }
 }
+
 
 exports = module.exports = {
     build: function (config) {
