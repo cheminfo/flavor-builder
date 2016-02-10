@@ -26,7 +26,9 @@ module.exports.checkVersion = function (version) {
 };
 
 module.exports.cacheUrl = function (config, url, addExtension) {
-    var options = {};
+    var options = {
+        encoding: null
+    };
 
     // Add authentification if necessary
     module.exports.checkAuth(config, options, url);
@@ -34,6 +36,7 @@ module.exports.cacheUrl = function (config, url, addExtension) {
     var writePath = module.exports.getLocalUrl(config, url, config.dir, addExtension);
     url = module.exports.rewriteUrl(url, addExtension);
     if (config.selfContained) {
+        console.log('write file', writePath);
         return writeFile(url, writePath, options)
             .then(null, function () {
                 return writeFile(url + '.js', writePath + '.js', options);

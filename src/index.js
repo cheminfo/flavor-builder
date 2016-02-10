@@ -85,7 +85,6 @@ function call(f, configArg) {
 
             else {
                 let flavors = yield getFlavors();
-                console.log('flavors', flavors);
                 flavors = yield filterFlavorsByMd5(flavors);
                 console.log('Processing ' + flavors.length + ' flavors');
                 for (let i = 0; i < flavors.length; i++) {
@@ -139,7 +138,6 @@ function call(f, configArg) {
     function getFlavors() {
         debug('get list of flavors');
         return flavorUtils.getFlavors().then(function (flavors) {
-            console.log(flavors);
             return processFlavors(flavors);
         });
     }
@@ -227,7 +225,6 @@ function call(f, configArg) {
         debug('handle flavor');
         if (!dir) dir = config.dir;
 
-        console.log(data);
         let structure = yield flavorUtils.getTree(data);
         yield flavorUtils.traverseTree(structure, doPath(dir));
         yield flavorUtils.traverseTree(structure, generateHtml(structure));

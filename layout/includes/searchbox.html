@@ -20,23 +20,30 @@
                 return _.any(other, function(element) { if(!propName){return _.isEqual(element, item);} return _.isEqual(element[propName], item[propName])});
             });
         });
-    };
+    }
+
     var matches = [], term='', selectedTerm='', searchResults = {};
 
     function formatView(view) {
-        if(!view.value) {
+        if(!view.$content) {
             return view.text;
         }
-        var flavors = view.value.flavors;
-        return flavors.join('  \u2192  ');
+
+        var keys = Object.keys(view.$content.flavors);
+        var firstFlavor = view.$content.flavors[keys[0]];
+        return firstFlavor[firstFlavor.length -1] + view.$content.title;
+//        var flavors = view.$content.flavors;
+//        return flavors.join('  \u2192  ');
     }
 
     function formatViewSelection(view) {
-        if(!view.value) {
+        if(!view.$content) {
             return view.text;
         }
-        var flavors = view.value.flavors;
-        return flavors[flavors.length-1];
+//        var flavors = view.$content.flavors;
+//        return flavors[flavors.length-1];
+
+        return view.$content.title;
     }
 
     $(document).ready(function() {
@@ -51,7 +58,7 @@
         }
         $searchbox.select2({
             ajax: {
-                url: "http://visualizer.epfl.ch/cheminfo/_design/flavor/_view/searchOne",
+                url: "{{ config.couchurl }}/{{ config.couchDatabase }}/_view/searchOne?limit=50",
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
@@ -76,18 +83,23 @@
                     var args = [];
                     for(var i=0; i<terms.length; i++) {
                         if(searchResults[terms[i]]) {
-                            args.push(searchResults[terms[i]].rows);
+                            args.push(searchResults[terms[i]]);
                         }
                     }
                     args.push('id');
                     var res = intersectionObjects.apply(null, args);
-                    res = _.filter(res, function(val) { return val.id});
-                    console.log('flavor, {{flavor}}');
-                    res.sort(function(a, b) {
-                        return a.value.flavor === '{{flavor}}' || b.value.flavor === '{{flavor}}';
+                    res = _.filter(res, function(val) { return val._id});
+                    res.forEach(function (val) {
+                        val.id = val._id;
                     });
+
+
+//                    console.log('flavor, {{flavor}}');
+//                    res.sort(function(a, b) {
+//                        return a.$content.flavor === '{{flavor}}' || b.$content.flavor === '{{flavor}}';
+//                    });
                     res = _.uniq(res, function(val) {
-                        return val.value._id;
+                        return val._id;
                     });
                     return {
                         results: res
@@ -97,12 +109,12 @@
             },
             escapeMarkup: function (markup) { return markup; }, // let our custom formatter work
             templateResult: formatView, // omitted for brevity, see the source of this page
-            templateSelection: formatViewSelection // omitted for brevity, see the source of this page
+            templateSelection: formatView // omitted for brevity, see the source of this page
         });
 
         function ajaxCall(sterm) {
             $.ajax({
-                url: "http://visualizer.epfl.ch/cheminfo/_design/flavor/_view/searchOne",
+                url: "{{ config.couchurl }}/{{ config.couchDatabase }}/_view/searchOne?limit=50",
                 dataType: 'json',
                 data: {
                     startkey: JSON.stringify(sterm),
@@ -118,29 +130,28 @@
 
         $searchbox.on("select2:open", function (e) {
             var $searchinput = $('.select2-search__field');
-            console.log('open', $searchinput);
-            $searchinput.on('keydown', function(e) {
-                console.log('keydown');
-                var sterm;
-
-                if(String.fromCharCode(e.keyCode).match(/\s/)) {
-                    throttledAjax(selectedTerm);
-                }
-            })
+            $searchinput.off('keydown', onKeydown);
+            $searchinput.on('keydown', onKeydown);
         });
+
+        function onKeydown(e) {
+            if(String.fromCharCode(e.keyCode).match(/\s/)) {
+                throttledAjax(selectedTerm);
+            }
+        }
         $searchbox.on('select2:select', function(e) {
             var data = e.params.data;
             var uri = new URI(window.location.href);
             uri.query('');
-            if(data.value.view) {
+            if(data._attachments && data._attachments['view.json']) {
                 var viewURL =  '{{ config.couchurl }}/{{ config.couchDatabase }}/' + data.id + '/view.json';
                 uri.addSearch('viewURL', viewURL);
-                if(data.value.data) {
+                if(data._attachments && data._attachments['data.json']) {
                     uri.addSearch('dataURL', '{{ config.couchurl }}/{{ config.couchDatabase}}/' + data.id + '/data.json');
                 }
                 uri.addSearch('loadversion', true);
-                var flavors = e.params.data.value.flavors;
-                uri.addSearch('fillsearch', flavors[flavors.length-1]);
+//                var flavors = e.params.data.$content.flavors;
+//                uri.addSearch('fillsearch', flavors[flavors.length-1]);
                 window.location = uri.href();
             }
         });
