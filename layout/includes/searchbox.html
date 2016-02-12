@@ -7,59 +7,40 @@
         var slice = Array.prototype.slice; // added this line as a utility
         var rest;
         var propName;
-        if (typeof arguments[arguments.length - 1] === 'string') {
+        if(typeof arguments[arguments.length-1] === 'string') {
             rest = slice.call(arguments, 1, -1);
-            propName = arguments[arguments.length - 1];
+            propName = arguments[arguments.length-1];
         }
         else {
             rest = slice.call(arguments, 1);
         }
-        return _.filter(_.uniq(array), function (item) {
-            return _.every(rest, function (other) {
+        return _.filter(_.uniq(array), function(item) {
+            return _.every(rest, function(other) {
                 //return _.indexOf(other, item) >= 0;
-                return _.any(other, function (element) {
-                    if (!propName) {
-                        return _.isEqual(element, item);
-                    }
-                    return _.isEqual(element[propName], item[propName])
-                });
+                return _.any(other, function(element) { if(!propName){return _.isEqual(element, item);} return _.isEqual(element[propName], item[propName])});
             });
         });
-    }
-
-    var matches = [], term = '', selectedTerm = '', searchResults = {};
-
+    };
+    var matches = [], term='', selectedTerm='', searchResults = {};
     function formatView(view) {
-        if (!view.$content) {
+        if(!view.value) {
             return view.text;
         }
-
-        var keys = Object.keys(view.$content.flavors);
-        var firstFlavor = view.$content.flavors[keys[0]];
-        var res = [keys[0]].concat(firstFlavor).join('  \u2192  ');
-        if(keys.length > 1) {
-            res += '<br>In ' + keys.length + ' flavors';
-        }
-        return res;
-//        var flavors = view.$content.flavors;
-//        return flavors.join('  \u2192  ');
+        var flavors = view.value.flavors;
+        return flavors.join('  \u2192  ');
     }
-
     function formatViewSelection(view) {
-        if (!view.$content) {
+        if(!view.value) {
             return view.text;
         }
-//        var flavors = view.$content.flavors;
-//        return flavors[flavors.length-1];
-
-        return view.$content.title;
+        var flavors = view.value.flavors;
+        return flavors[flavors.length-1];
     }
-
-    $(document).ready(function () {
+    $(document).ready(function() {
         var $searchbox = $(".js-example-basic-single");
         var uri = new URI(window.location.href);
         var search = uri.search(true);
-        if (search.fillsearch) {
+        if(search.fillsearch) {
             $searchbox.append('<option>' + search.fillsearch + '</option>');
         }
         else {
@@ -67,16 +48,15 @@
         }
         $searchbox.select2({
             ajax: {
-                url: "{{ config.couchurl }}/{{ config.couchDatabase }}/_view/searchOne?limit=50",
+                url: "http://visualizer.epfl.ch/cheminfo/_design/flavor/_view/searchOne",
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
-                    if (typeof params.term === 'string') {
+                    if(typeof params.term === 'string') {
                         params.term = params.term.toLowerCase();
                     }
                     selectedTerm = getTerm(params.term);
                     term = params.term;
-
                     return {
                         startkey: JSON.stringify(selectedTerm),
                         endkey: JSON.stringify(selectedTerm + 'ZZZZZ')
@@ -90,27 +70,20 @@
                     searchResults[selectedTerm] = data;
                     var terms = extractTerms(term);
                     var args = [];
-                    for (var i = 0; i < terms.length; i++) {
-                        if (searchResults[terms[i]]) {
-                            args.push(searchResults[terms[i]]);
+                    for(var i=0; i<terms.length; i++) {
+                        if(searchResults[terms[i]]) {
+                            args.push(searchResults[terms[i]].rows);
                         }
                     }
                     args.push('id');
                     var res = intersectionObjects.apply(null, args);
-                    res = _.filter(res, function (val) {
-                        return val._id
+                    res = _.filter(res, function(val) { return val.id});
+                    console.log('flavor, {{flavor}}');
+                    res.sort(function(a, b) {
+                        return a.value.flavor === '{{flavor}}' || b.value.flavor === '{{flavor}}';
                     });
-                    res.forEach(function (val) {
-                        val.id = val._id;
-                    });
-
-
-//                    console.log('flavor, {{flavor}}');
-//                    res.sort(function(a, b) {
-//                        return a.$content.flavor === '{{flavor}}' || b.$content.flavor === '{{flavor}}';
-//                    });
-                    res = _.uniq(res, function (val) {
-                        return val._id;
+                    res = _.uniq(res, function(val) {
+                        return val.value._id;
                     });
                     return {
                         results: res
@@ -118,71 +91,62 @@
                 },
                 cache: true
             },
-            escapeMarkup: function (markup) {
-                return markup;
-            }, // let our custom formatter work
+            escapeMarkup: function (markup) { return markup; }, // let our custom formatter work
             templateResult: formatView, // omitted for brevity, see the source of this page
-            templateSelection: formatView // omitted for brevity, see the source of this page
+            templateSelection: formatViewSelection // omitted for brevity, see the source of this page
         });
-
         function ajaxCall(sterm) {
             $.ajax({
-                url: "{{ config.couchurl }}/{{ config.couchDatabase }}/_view/searchOne?limit=50",
+                url: "http://visualizer.epfl.ch/cheminfo/_design/flavor/_view/searchOne",
                 dataType: 'json',
                 data: {
                     startkey: JSON.stringify(sterm),
-                    endkey: JSON.stringify(sterm + 'ZZZZZ')
+                    endkey: JSON.stringify(sterm+'ZZZZZ')
                 },
                 cache: true,
-                success: function (data) {
+                success: function(data) {
                     searchResults[sterm] = data;
                 }
             })
         }
-
         var throttledAjax = _.throttle(ajaxCall, 200);
-
         $searchbox.on("select2:open", function (e) {
             var $searchinput = $('.select2-search__field');
-            $searchinput.off('keydown', onKeydown);
-            $searchinput.on('keydown', onKeydown);
+            console.log('open', $searchinput);
+            $searchinput.on('keydown', function(e) {
+                console.log('keydown');
+                var sterm;
+                if(String.fromCharCode(e.keyCode).match(/\s/)) {
+                    throttledAjax(selectedTerm);
+                }
+            })
         });
-
-        function onKeydown(e) {
-            if (String.fromCharCode(e.keyCode).match(/\s/)) {
-                throttledAjax(selectedTerm);
-            }
-        }
-
-        $searchbox.on('select2:select', function (e) {
+        $searchbox.on('select2:select', function(e) {
             var data = e.params.data;
             var uri = new URI(window.location.href);
             uri.query('');
-            if (data._attachments && data._attachments['view.json']) {
-                var viewURL = '{{ config.couchurl }}/{{ config.couchDatabase }}/' + data.id + '/view.json';
+            if(data.value.view) {
+                var viewURL =  '{{ config.couchurl }}/{{ config.couchDatabase }}/' + data.id + '/view.json';
                 uri.addSearch('viewURL', viewURL);
-                if (data._attachments && data._attachments['data.json']) {
+                if(data.value.data) {
                     uri.addSearch('dataURL', '{{ config.couchurl }}/{{ config.couchDatabase}}/' + data.id + '/data.json');
                 }
                 uri.addSearch('loadversion', true);
-//                var flavors = e.params.data.$content.flavors;
-//                uri.addSearch('fillsearch', flavors[flavors.length-1]);
+                var flavors = e.params.data.value.flavors;
+                uri.addSearch('fillsearch', flavors[flavors.length-1]);
                 window.location = uri.href();
             }
         });
     });
-
     function extractTerms(term) {
-        return (term || '').split(/\s+/).filter(function (val) {
-            return val !== ''
-        });
+        return (term || '').split(/\s+/).filter(function(val) { return val !== ''});
     }
 
     function getTerm(newTerm) {
         var newTerms = extractTerms(newTerm);
         var oldTerms = extractTerms(term);
         var idx = getChangedIdx(oldTerms, newTerms);
-        if (idx > -1) {
+        if(idx > -1) {
             return newTerms[idx];
         }
         return newTerms[0] || null;
@@ -191,19 +155,19 @@
     function getChangedIdx(oldarr, newarr) {
         // We look for what changed in newarr compared to oldarr
         var l = (oldarr.length > newarr.length) ? newarr.length : oldarr.length;
-        for (var i = 0; i < l; i++) {
-            if (oldarr[i] !== newarr[i]) {
+        for(var i=0; i<l; i++) {
+            if(oldarr[i] !== newarr[i]) {
                 return i;
             }
         }
-        if (oldarr.length === newarr.length) {
+        if(oldarr.length === newarr.length) {
             return -1;
         }
-        else if (oldarr.length < newarr.length) {
+        else if(oldarr.length < newarr.length) {
             return oldarr.length;
         }
         else {
-            return newarr.length - 1;
+            return newarr.length -1;
         }
     }
 </script>
