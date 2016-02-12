@@ -242,6 +242,12 @@ function call(f, configArg) {
     }
 
     function fixVersion(el) {
+        if(el.__version) {
+            if(!el.__version.startsWith('v')) {
+                el.__version = 'v' + el.__version;
+            }
+        }
+        console.log(el.__version);
         if (el.__version === undefined || versions.indexOf(el.__version) === -1) {
             el.__version = 'HEAD-min';
         }
@@ -541,7 +547,7 @@ function call(f, configArg) {
             return Promise.resolve();
         } catch (e) {
             return new Promise(function (resolve, reject) {
-                console.log('copying visualizer', version, 'to', extractDir);
+                console.log('copying visualizer', version);
                 fs.mkdirpSync(extractDir);
                 var reqOptions = {};
                 utils.checkAuth(config, reqOptions, url);
