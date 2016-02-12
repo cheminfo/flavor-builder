@@ -247,7 +247,6 @@ function call(f, configArg) {
                 el.__version = 'v' + el.__version;
             }
         }
-        console.log(el.__version);
         if (el.__version === undefined || versions.indexOf(el.__version) === -1) {
             el.__version = 'HEAD-min';
         }
