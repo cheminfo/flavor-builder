@@ -15,6 +15,7 @@ var Promise = require('bluebird'),
     utils = require('./utils'),
     targz = require('tar.gz'),
     FlavorUtils = require('flavor-utils'),
+    visualizerOnTabs = require('visualizer-on-tabs'),
     debug = require('debug')('flavor-builder:main');
 
 var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
@@ -79,7 +80,11 @@ function call(f, configArg) {
                 }
                 debug('get flavor');
                 let flavor = yield getFlavor(config.flavor);
-                yield handleFlavor(config.dir, flavor);
+                if(config.flavorLayouts[config.flavor] === 'visualizer-on-tabs') {
+                    yield handleVisualizerOnTabs(config.dir, flavor);
+                } else {
+                    yield handleFlavor(config.dir, flavor);
+                }
                 return yield Promise.all(filters.plist);
             }
 
@@ -101,6 +106,24 @@ function call(f, configArg) {
                     yield Promise.all(filters.plist);
                 }
             }
+        });
+    }
+
+    function * handleVisualizerOnTabs(flavorDir, data) {
+        var viewTree = yield flavorUtils.getTree(data);
+        var initViews = {};
+        yield flavorUtils.traverseTree(viewTree, function (el) {
+            console.log(el.__name)
+             if(el.__name === config.home) {
+                 initViews[el.__name] = {
+                     url: getViewUrl(el, 'public')
+                 }
+             }
+        });
+        console.log('init views', initViews);
+        yield visualizerOnTabs({
+            outDir: flavorDir,
+            config: initViews
         });
     }
 
@@ -226,13 +249,13 @@ function call(f, configArg) {
         if (!dir) dir = config.dir;
 
 
-        let structure = yield flavorUtils.getTree(data);
-        yield flavorUtils.traverseTree(structure, doPath(dir));
-        yield flavorUtils.traverseTree(structure, fixVersion);
-        yield flavorUtils.traverseTree(structure, generateHtml(structure));
+        let viewTree = yield flavorUtils.getTree(data);
+        yield flavorUtils.traverseTree(viewTree, doPath(dir));
+        yield flavorUtils.traverseTree(viewTree, fixVersion);
+        yield flavorUtils.traverseTree(viewTree, generateHtml(viewTree));
 
         if (config.selfContained) {
-            let versions = yield getVersionsFromTree(structure);
+            let versions = yield getVersionsFromTree(viewTree);
             for (let i = 0; i < versions.length; i++) {
                 yield copyVisualizer(versions[i]);
             }

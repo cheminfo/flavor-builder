@@ -1,5 +1,5 @@
 <div id="search-box">
-    <select style="width: 250px;" class="js-example-basic-single"></select>
+    <select title="Search in public views" style="width: 250px;" class="js-example-basic-single"></select>
 </div>
 
 <script>
@@ -20,7 +20,8 @@
                 return _.any(other, function(element) { if(!propName){return _.isEqual(element, item);} return _.isEqual(element[propName], item[propName])});
             });
         });
-    };
+    }
+
     var matches = [], term='', selectedTerm='', searchResults = {};
     function formatView(view) {
         if(!view.value) {
