@@ -7,22 +7,23 @@
         var uri = new URI(window.location.href);
         var search = uri.search(true);
 
-        if(redirect.protocol() === 'https' && uri.protocol() === 'http') {
+        if (!search.viewURL) {
+            uri = uri.addSearch('viewURL', '{{ viewURL }}')
+        }
+        if (!search.dataURL) {
+            uri.addSearch('dataURL', '{{ dataURL }}');
+        }
+
+        if (redirect.protocol() === 'https' && new URI(search.viewURL).protocol() === 'http') {
             // don't try to fork since it wouldn't work
             return redirect.href();
         }
 
-        if (search.viewURL) {
-            redirect.addSearch('viewURL', search.viewURL);
-            if (search.dataURL) {
-                redirect.addSearch('dataURL', search.dataURL);
-            }
-            redirect = redirect.href();
+        redirect.addSearch('viewURL', search.viewURL);
+        if (search.dataURL) {
+            redirect.addSearch('dataURL', search.dataURL);
         }
-        else {
-            redirect = redirect.href() + '{{ queryString|raw }}';
-        }
-        return redirect;
+        return redirect.href();
     }
 
 
