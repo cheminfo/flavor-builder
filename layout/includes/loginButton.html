@@ -1,13 +1,20 @@
 <!-- Button trigger modal -->
-<input type="button" id="login-button"> </input>
+<input type="button" id="login-button" value="Fork"> </input>
 
 <script>
-    function getRedirect(redirect) {
+    function getRedirect() {
+        var redirect = new URI('{{ config.editRedirect }}');
         var uri = new URI(window.location.href);
         var search = uri.search(true);
-        if(search.viewURL) {
+
+        if(redirect.protocol() === 'https' && uri.protocol() === 'http') {
+            // don't try to fork since it wouldn't work
+            return redirect.href();
+        }
+
+        if (search.viewURL) {
             redirect.addSearch('viewURL', search.viewURL);
-            if(search.dataURL) {
+            if (search.dataURL) {
                 redirect.addSearch('dataURL', search.dataURL);
             }
             redirect = redirect.href();
@@ -17,43 +24,14 @@
         }
         return redirect;
     }
-    function getEditRedirect() {
-        var redirect = new URI('{{ reldir }}/static/index.html');
-        return getRedirect(redirect);
-    }
-
-    function getAuthRedirect(method) {
-        var redirect = new URI('{{ config.clp }}/auth/' + method );
-        return getRedirect(redirect);
-    }
-
 
 
     // Do request to clp to know is user is logged in
     var $loginButton = $('#login-button');
-    $.ajax({
-        url: '{{ config.clp }}/_session',
-        type: 'GET',
-        dataType: 'json',
-        success: function(data) {
 
-            if(data.userCtx && data.userCtx.name) {
-                // User is already connected
-                $loginButton.val('Edit my views');
-            }
-            else {
-                // user is not connected
-                $loginButton.val('Login');
-            }
-            $loginButton.on('click', function() {
-                window.location = getEditRedirect();
-            });
-        },
-        error: function() {
-            $loginButton.on('click', function() {
-                window.location = getEditRedirect();
-            });
-            $loginButton.val('Fork view');
-        }
-    })
+    $loginButton.on('click', function () {
+        console.log('redirect', getRedirect());
+        window.location = getRedirect();
+    });
+
 </script>

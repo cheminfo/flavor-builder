@@ -51,18 +51,7 @@ function call(f, configArg) {
             {src: path.join(__dirname, '../static'), dest: path.join(config.dir, './static')}
         ];
 
-        toSwig = [
-            {
-                src: path.join(__dirname, '../static/editConfig.json'),
-                dest: path.join(config.dir, './static/editConfig.json'),
-                data: {config: config}
-            },
-            {
-                src: path.join(__dirname, '../static/index.html'),
-                dest: path.join(config.dir, './static/index.html'),
-                data: {config: config}
-            }
-        ];
+        toSwig = [];
 
         for (var key in filters) {
             swig.setFilter(key, filters[key]);
