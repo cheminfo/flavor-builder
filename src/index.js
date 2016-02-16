@@ -91,12 +91,18 @@ function call(f, configArg) {
                     }
                     fs.mkdirpSync(flavorDir);
                     let flavor = yield getFlavor(flavors[i]);
-                    yield handleFlavor(flavorDir, flavor);
+                    if(config.flavorLayouts[flavors[i]] === 'visualizer-on-tabs') {
+                        yield handleVisualizerOnTabs(flavorDir, flavor);
+                    } else {
+                        yield handleFlavor(flavorDir, flavor);
+                    }
                     yield Promise.all(filters.plist);
                 }
             }
         });
     }
+
+
 
     function * handleVisualizerOnTabs(flavorDir, data) {
         var viewTree = yield flavorUtils.getTree(data);
