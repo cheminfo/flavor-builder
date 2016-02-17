@@ -79,7 +79,6 @@
                     args.push('id');
                     var res = intersectionObjects.apply(null, args);
                     res = _.filter(res, function(val) { return val.id});
-                    console.log('flavor, {{flavor}}');
                     res.sort(function(a, b) {
                         return a.value.flavor === '{{flavor}}' || b.value.flavor === '{{flavor}}';
                     });
@@ -113,9 +112,7 @@
         var throttledAjax = _.throttle(ajaxCall, 200);
         $searchbox.on("select2:open", function (e) {
             var $searchinput = $('.select2-search__field');
-            console.log('open', $searchinput);
             $searchinput.on('keydown', function(e) {
-                console.log('keydown');
                 var sterm;
                 if(String.fromCharCode(e.keyCode).match(/\s/)) {
                     throttledAjax(selectedTerm);

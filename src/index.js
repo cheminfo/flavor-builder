@@ -108,14 +108,12 @@ function call(f, configArg) {
         var viewTree = yield flavorUtils.getTree(data);
         var initViews = {};
         yield flavorUtils.traverseTree(viewTree, function (el) {
-            console.log(el.__name)
              if(el.__name === config.home) {
                  initViews[el.__name] = {
                      url: getViewUrl(el, 'public')
                  }
              }
         });
-        console.log('init views', initViews);
         yield visualizerOnTabs({
             outDir: flavorDir,
             config: initViews
