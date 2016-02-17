@@ -77,8 +77,8 @@
 <tr>
     <td class="left"></td>
     <td colspan="3">
-        <div id="ci-visualizer" {% if dataURL %} dataURL="{{ dataURL }}" {% endif %} viewURL="{{ viewURL }}"
-             config="{{ readConfig }}"/>
+        <div id="ci-visualizer" {% if dataURL %} data-ci-data="{{ dataURL }}" dataURL="{{ dataURL }}" {% endif %} data-ci-view="{{ viewURL }}" viewURL="{{ viewURL }}"
+             data-ci-config="{{ readConfig }}" config="{{ readConfig }}"/>
     </td>
     <td class="right"></td>
 </tr>
