@@ -106,17 +106,21 @@ function call(f, configArg) {
 
     function * handleVisualizerOnTabs(flavorDir, data) {
         var viewTree = yield flavorUtils.getTree(data);
-        var initViews = {};
+        var customConfig = {
+            possibleViews: {}
+        };
+        var possibleViews = customConfig.possibleViews;
+
         yield flavorUtils.traverseTree(viewTree, function (el) {
              if(el.__name === config.home) {
-                 initViews[el.__name] = {
+                 possibleViews[el.__name] = {
                      url: getViewUrl(el, 'public')
                  }
              }
         });
         yield visualizerOnTabs({
             outDir: flavorDir,
-            config: initViews
+            config: customConfig
         });
     }
 
