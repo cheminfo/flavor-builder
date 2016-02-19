@@ -114,7 +114,8 @@ function call(f, configArg) {
         yield flavorUtils.traverseTree(viewTree, function (el) {
              if(el.__name === config.home) {
                  possibleViews[el.__name] = {
-                     url: getViewUrl(el, 'public')
+                     url: getViewUrl(el, 'public'),
+                     closable: false
                  }
              }
         });
