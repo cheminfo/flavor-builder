@@ -121,7 +121,7 @@ function call(f, configArg) {
         });
         yield visualizerOnTabs({
             outDir: flavorDir,
-            config: customConfig
+            config: Object.assign({}, config.visualizerOnTabs, customConfig)
         });
     }
 
