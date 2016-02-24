@@ -21,6 +21,6 @@
     "superagent": "^0.21.0",
     "swig": "~1.4.2",
     "tar.gz": "1.0.2",
-    "visualizer-on-tabs": "cheminfo/visualizer-on-tabs#8631af78016e916232b629ed3ea22957ba2fcae8"
+    "visualizer-on-tabs": "cheminfo/visualizer-on-tabs#4411bf095606a777e1b43dc8d69f994707b96f8b"
   }
 }
