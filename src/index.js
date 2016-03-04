@@ -70,7 +70,7 @@ function call(f, configArg) {
                 debug('get flavor');
                 let flavor = yield getFlavor(config.flavor);
                 if(config.flavorLayouts[config.flavor] === 'visualizer-on-tabs') {
-                    yield handleVisualizerOnTabs(config.dir, flavor);
+                    yield handleVisualizerOnTabs(config.dir, flavor, config.flavor);
                 } else {
                     yield handleFlavor(config.dir, flavor);
                 }
@@ -92,7 +92,7 @@ function call(f, configArg) {
                     fs.mkdirpSync(flavorDir);
                     let flavor = yield getFlavor(flavors[i]);
                     if(config.flavorLayouts[flavors[i]] === 'visualizer-on-tabs') {
-                        yield handleVisualizerOnTabs(flavorDir, flavor);
+                        yield handleVisualizerOnTabs(flavorDir, flavor, flavors[i]);
                     } else {
                         yield handleFlavor(flavorDir, flavor);
                     }
@@ -104,7 +104,7 @@ function call(f, configArg) {
 
 
 
-    function * handleVisualizerOnTabs(flavorDir, data) {
+    function * handleVisualizerOnTabs(flavorDir, data, flavorName) {
         var viewTree = yield flavorUtils.getTree(data);
         var customConfig = {
             possibleViews: {}
@@ -119,9 +119,14 @@ function call(f, configArg) {
                  }
              }
         });
+        var tabsConfig;
+        try {
+            tabsConfig = config.visualizerOnTabs[flavorName] || config.visualizerOnTabs._default;
+        } catch(e) {}
+
         yield visualizerOnTabs({
             outDir: flavorDir,
-            config: Object.assign({}, config.visualizerOnTabs, customConfig)
+            config: Object.assign({}, tabsConfig , customConfig)
         });
     }
 
