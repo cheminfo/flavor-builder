@@ -26,6 +26,7 @@ function call(f, configArg) {
 
     function init(configArg) {
         config = require('./config')(configArg);
+        console.log(config)
         filters = require('./filters')(config);
         layouts = config.layouts;
         flavorUtils = new FlavorUtils({
@@ -310,7 +311,7 @@ function call(f, configArg) {
                 meta: el.__meta,
                 structure: rootStructure,
                 config: config,
-                menuHtml: doMenu(rootStructure, basePath),
+                menuHtml: doMenu(rootStructure, basePath, flavorName),
                 reldir: relativePath,
                 readConfig: path.join(relativePath, READ_CONFIG),
                 title: el.__name,
@@ -322,7 +323,7 @@ function call(f, configArg) {
             if (isHome && flavorDir === basePath) {
                 data.home = '.';
                 homeData = _.cloneDeep(data);
-                homeData.menuHtml = doMenu(rootStructure, flavorDir);
+                homeData.menuHtml = doMenu(rootStructure, flavorDir, flavorName);
                 homeData.reldir = path.relative(flavorDir, config.dir);
                 homeData.readConfig = path.join(path.relative(flavorDir, config.dir), READ_CONFIG);
                 if (homeData.reldir === '') homeData.reldir = '.';
@@ -501,7 +502,15 @@ function call(f, configArg) {
         }
     }
 
-    function buildQueryString(el) {
+    function getFlavorConfig(flavorName) {
+        flavorName = flavorName || config.flavor;
+        if(config.flavorConfig && config.flavorConfig[flavorName]) {
+            return config.flavorConfig[flavorName];
+        }
+        return {};
+    }
+
+    function buildQueryString(el, flavorName) {
         var result = '?';
         if (el.__view) {
             if (config.selfContained)
@@ -517,27 +526,34 @@ function call(f, configArg) {
                 result += 'dataURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev);
         }
 
+        var conf =  getFlavorConfig(flavorName);
+
+        if(conf.lockView) {
+            if (result !== '?') result += '&';
+            result += 'lockView=1';
+        }
+
         if (result === '?') return '';
         return result;
     }
 
 
-    function doMenu(structure, cpath) {
+    function doMenu(structure, cpath, flavorName) {
         var html = '';
         if (structure.__id) {
             if (structure.__name !== config.home) {
-                html += '<li><a href="' + path.relative(cpath, structure.__path) + buildQueryString(structure) + '"><span>' + structure.__name + '</span></a></li>';
+                html += '<li><a href="' + path.relative(cpath, structure.__path) + buildQueryString(structure, flavorName) + '"><span>' + structure.__name + '</span></a></li>';
             } // No leaf for home elements
             return html;
         }
         else {
-            var link = structure.__homeChild ? path.relative(cpath, structure.__homeChild.__path) + buildQueryString(structure.__homeChild) : '#';
+            var link = structure.__homeChild ? path.relative(cpath, structure.__homeChild.__path) + buildQueryString(structure.__homeChild, flavorName) : '#';
 
             if (structure.__name) html += '<li><a href="' + link + '">' + structure.__name + '</a>';
             html += '<ul' + (structure.__root ? ' class="navmenu" style="display:none"' : '') + '>';
             for (var key in structure) {
                 if (key.startsWith('__')) continue;
-                html += doMenu(structure[key], cpath);
+                html += doMenu(structure[key], cpath, flavorName);
             }
             html += '</ul>';
             if (structure.__name) html += '</li>';
