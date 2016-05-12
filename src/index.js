@@ -26,7 +26,6 @@ function call(f, configArg) {
 
     function init(configArg) {
         config = require('./config')(configArg);
-        console.log(config)
         filters = require('./filters')(config);
         layouts = config.layouts;
         flavorUtils = new FlavorUtils({
@@ -63,22 +62,23 @@ function call(f, configArg) {
             debug('get versions');
             versions = yield getVersionsRequest();
             if (config.flavor) {
+                // Build single flavor
                 let exists = yield hasFlavor(config.flavor);
                 if (!exists) {
                     console.log('Flavor not found');
                     return;
                 }
                 debug('get flavor');
-                let flavor = yield getFlavor(config.flavor);
-                if(config.flavorLayouts[config.flavor] === 'visualizer-on-tabs') {
-                    yield handleVisualizerOnTabs(config.dir, flavor, config.flavor);
+                if (config.flavorLayouts[config.flavor] === 'visualizer-on-tabs') {
+                    yield handleVisualizerOnTabs(config.dir, config.flavor);
                 } else {
-                    yield handleFlavor(config.dir, flavor);
+                    yield handleFlavor(config.dir, config.flavor);
                 }
                 return yield Promise.all(filters.plist);
             }
 
             else {
+                // Build all flavors
                 let flavors = yield getFlavors();
                 flavors = yield filterFlavorsByMd5(flavors);
                 console.log('Processing ' + flavors.length + ' flavors');
@@ -91,11 +91,10 @@ function call(f, configArg) {
                         flavorDir = path.join(config.dir, 'flavor', flavors[i]);
                     }
                     fs.mkdirpSync(flavorDir);
-                    let flavor = yield getFlavor(flavors[i]);
-                    if(config.flavorLayouts[flavors[i]] === 'visualizer-on-tabs') {
-                        yield handleVisualizerOnTabs(flavorDir, flavor, flavors[i]);
+                    if (config.flavorLayouts[flavors[i]] === 'visualizer-on-tabs') {
+                        yield handleVisualizerOnTabs(flavorDir, flavors[i]);
                     } else {
-                        yield handleFlavor(flavorDir, flavor);
+                        yield handleFlavor(flavorDir, flavors[i]);
                     }
                     yield Promise.all(filters.plist);
                 }
@@ -104,30 +103,31 @@ function call(f, configArg) {
     }
 
 
-
-    function * handleVisualizerOnTabs(flavorDir, data, flavorName) {
-        var viewTree = yield flavorUtils.getTree(data);
+    function * handleVisualizerOnTabs(flavorDir, flavorName) {
+        var viewsList = yield getFlavor(flavorName);
+        var viewTree = yield flavorUtils.getTree(viewsList);
         var customConfig = {
             possibleViews: {}
         };
         var possibleViews = customConfig.possibleViews;
 
         yield flavorUtils.traverseTree(viewTree, function (el) {
-             if(el.__name === config.home) {
-                 possibleViews[el.__name] = {
-                     url: getViewUrl(el, 'public'),
-                     closable: false
-                 }
-             }
+            if (el.__name === config.home) {
+                possibleViews[el.__name] = {
+                    url: getViewUrl(el, 'public'),
+                    closable: false
+                }
+            }
         });
         var tabsConfig;
         try {
             tabsConfig = config.visualizerOnTabs[flavorName] || config.visualizerOnTabs._default;
-        } catch(e) {}
+        } catch (e) {
+        }
 
         yield visualizerOnTabs({
             outDir: flavorDir,
-            config: Object.assign({}, tabsConfig , customConfig)
+            config: Object.assign({}, tabsConfig, customConfig)
         });
     }
 
@@ -203,6 +203,7 @@ function call(f, configArg) {
     }
 
     function getFlavor(flavor) {
+        // Returns sorted flavor views
         return flavorUtils.getFlavor({flavor: flavor}, true);
     }
 
@@ -248,29 +249,40 @@ function call(f, configArg) {
         return flavorIdx !== -1;
     }
 
-    function * handleFlavor(dir, data) {
+    // dir: The directory where this flavor should be copied to
+    // data: the
+    function * handleFlavor(dir, flavorName) {
+        var viewsList = yield getFlavor(flavorName);
         debug('handle flavor');
         if (!dir) dir = config.dir;
 
 
-        let viewTree = yield flavorUtils.getTree(data);
+        // Transforms the array-representation of a flavor's views as returned by couchdb
+        // into a tree representation that reflects the views' hierarchy in a flavor
+        let viewTree = yield flavorUtils.getTree(viewsList);
+        // Set the path of each view to end up to
         yield flavorUtils.traverseTree(viewTree, doPath(dir));
+        // For each view fix version number
         yield flavorUtils.traverseTree(viewTree, fixVersion);
+        // For each view generate the html in the appropriate directory
         yield flavorUtils.traverseTree(viewTree, generateHtml(viewTree));
 
+        // Copy visualizer from cdn
         if (config.selfContained) {
             let versions = yield getVersionsFromTree(viewTree);
             for (let i = 0; i < versions.length; i++) {
                 yield copyVisualizer(versions[i]);
             }
         }
+        // Copy static files
         copyFiles();
+        // Process non view-specific swig
         swigFiles();
     }
 
     function fixVersion(el) {
-        if(el.__version) {
-            if(!el.__version.startsWith('v')) {
+        if (el.__version) {
+            if (!el.__version.startsWith('v')) {
                 el.__version = 'v' + el.__version;
             }
         }
@@ -504,7 +516,7 @@ function call(f, configArg) {
 
     function getFlavorConfig(flavorName) {
         flavorName = flavorName || config.flavor;
-        if(config.flavorConfig && config.flavorConfig[flavorName]) {
+        if (config.flavorConfig && config.flavorConfig[flavorName]) {
             return config.flavorConfig[flavorName];
         }
         return {};
@@ -526,9 +538,9 @@ function call(f, configArg) {
                 result += 'dataURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev);
         }
 
-        var conf =  getFlavorConfig(flavorName);
+        var conf = getFlavorConfig(flavorName);
 
-        if(conf.lockView) {
+        if (conf.lockView) {
             if (result !== '?') result += '&';
             result += 'lockView=1';
         }
