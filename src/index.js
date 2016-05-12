@@ -70,42 +70,50 @@ function call(f, configArg) {
                 }
                 debug('get flavor');
                 if (config.flavorLayouts[config.flavor] === 'visualizer-on-tabs') {
-                    yield handleVisualizerOnTabs(config.dir, config.flavor);
+                    yield handleVisualizerOnTabs(flavorDir, config.flavor);
                 } else {
-                    yield handleFlavor(config.dir, config.flavor);
+                    yield handleFlavor(config.flavor);
                 }
                 return yield Promise.all(filters.plist);
             }
 
             else {
                 // Build all flavors
+                // Get a list of all available flavors
                 let flavors = yield getFlavors();
+                // Filter flavors to get only those that have changed
                 flavors = yield filterFlavorsByMd5(flavors);
                 console.log('Processing ' + flavors.length + ' flavors');
                 for (let i = 0; i < flavors.length; i++) {
-                    let flavorDir;
-                    if (flavors[i] === DEFAULT_FLAVOR) {
-                        flavorDir = config.dir;
-                    }
-                    else {
-                        flavorDir = path.join(config.dir, 'flavor', flavors[i]);
-                    }
-                    fs.mkdirpSync(flavorDir);
                     if (config.flavorLayouts[flavors[i]] === 'visualizer-on-tabs') {
-                        yield handleVisualizerOnTabs(flavorDir, flavors[i]);
+                        yield handleVisualizerOnTabs(flavors[i]);
                     } else {
-                        yield handleFlavor(flavorDir, flavors[i]);
+                        yield handleFlavor(flavors[i]);
                     }
+                    // Some swig filter are asynchronous, wait for them to finish
                     yield Promise.all(filters.plist);
                 }
             }
         });
     }
 
+    function getFlavorDir(flavorName, create) {
+        var flavorDir;
+        if(flavorName === DEFAULT_FLAVOR || flavorName === config.flavor) {
+            flavorDir = config.dir;
+        } else {
+            flavorDir = path.join(config.dir, 'flavor', flavors[i]);
+        }
+        if(create) {
+            fs.mkdirpSync(flavorDir);
+        }
+        return flavorDir;
+    }
 
-    function * handleVisualizerOnTabs(flavorDir, flavorName) {
+    function * handleVisualizerOnTabs(flavorName) {
         var viewsList = yield getFlavor(flavorName);
         var viewTree = yield flavorUtils.getTree(viewsList);
+        const flavorDir = getFlavorDir(flavorName, true);
         var customConfig = {
             possibleViews: {}
         };
@@ -251,21 +259,20 @@ function call(f, configArg) {
 
     // dir: The directory where this flavor should be copied to
     // data: the
-    function * handleFlavor(dir, flavorName) {
+    function * handleFlavor(flavorName) {
         var viewsList = yield getFlavor(flavorName);
         debug('handle flavor');
-        if (!dir) dir = config.dir;
-
+        const flavorDir = getFlavorDir(flavorName, true);
 
         // Transforms the array-representation of a flavor's views as returned by couchdb
         // into a tree representation that reflects the views' hierarchy in a flavor
         let viewTree = yield flavorUtils.getTree(viewsList);
         // Set the path of each view to end up to
-        yield flavorUtils.traverseTree(viewTree, doPath(dir));
+        yield flavorUtils.traverseTree(viewTree, doPath(flavorDir));
         // For each view fix version number
         yield flavorUtils.traverseTree(viewTree, fixVersion);
         // For each view generate the html in the appropriate directory
-        yield flavorUtils.traverseTree(viewTree, generateHtml(viewTree));
+        yield flavorUtils.traverseTree(viewTree, generateHtml(flavorName, viewTree));
 
         // Copy visualizer from cdn
         if (config.selfContained) {
@@ -300,19 +307,11 @@ function call(f, configArg) {
     }
 
 
-    function generateHtml(rootStructure) {
+    function generateHtml(flavorName, rootStructure) {
         return function (el) {
-            let flavorDir;
             let isHome = el.__id && el.__name === config.home;
             let basePath = path.parse(el.__path).dir;
-            let flavorName = /\/flavor\/([^\/]+)/.exec(basePath);
-            if (flavorName && flavorName[1]) {
-                flavorName = flavorName[1];
-                flavorDir = path.join(config.dir, 'flavor', flavorName);
-            }
-            else {
-                flavorDir = config.dir;
-            }
+            let flavorDir = getFlavorDir(flavorName);
             let relativePath = path.relative(basePath, config.dir) || '.';
 
             let data = {
@@ -328,7 +327,7 @@ function call(f, configArg) {
                 readConfig: path.join(relativePath, READ_CONFIG),
                 title: el.__name,
                 home: path.join(relativePath, path.relative(config.dir, flavorDir)),
-                flavor: flavorName || DEFAULT_FLAVOR
+                flavor: flavorName
             };
 
             let homeData;
