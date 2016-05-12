@@ -18,14 +18,14 @@ function filters(config) {
         return a + b;
     }
 
-    function processUrl(url, reldir) {
-       if(!config.selfContained) {
+    function processUrl(url, reldir, flavorName) {
+       if(!config.isSelfContained(flavorName)) {
            // We return the original url
            return url;
         }
 
         url = utils.rewriteUrl(url);
-        plist.push(utils.cacheUrl(config, url));
+        plist.push(utils.cacheUrl(config, url, flavorName));
         return utils.getLocalUrl(config, url, reldir);
     }
 
@@ -33,8 +33,9 @@ function filters(config) {
 
 
 
-    function visualizer(version, reldir) {
-        if (!config.selfContained) return;
+    function visualizer(version, reldir, flavorName) {
+        console.log('visualizer', flavorName);
+        if (!config.isSelfContained(flavorName)) return;
         version = utils.checkVersion(version);
         let visualizerUrl = (config.cdn + '/visualizer').replace(/^\/\//, 'https://');
         let parsedUrl = urlLib.parse(visualizerUrl);

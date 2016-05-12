@@ -102,7 +102,7 @@ function call(f, configArg) {
         if(flavorName === DEFAULT_FLAVOR || flavorName === config.flavor) {
             flavorDir = config.dir;
         } else {
-            flavorDir = path.join(config.dir, 'flavor', flavors[i]);
+            flavorDir = path.join(config.dir, 'flavor', flavorName);
         }
         if(create) {
             fs.mkdirpSync(flavorDir);
@@ -275,7 +275,7 @@ function call(f, configArg) {
         yield flavorUtils.traverseTree(viewTree, generateHtml(flavorName, viewTree));
 
         // Copy visualizer from cdn
-        if (config.selfContained) {
+        if (config.isSelfContained(flavorName)) {
             let versions = yield getVersionsFromTree(viewTree);
             for (let i = 0; i < versions.length; i++) {
                 yield copyVisualizer(versions[i]);
@@ -313,10 +313,11 @@ function call(f, configArg) {
             let basePath = path.parse(el.__path).dir;
             let flavorDir = getFlavorDir(flavorName);
             let relativePath = path.relative(basePath, config.dir) || '.';
+            let selfContained = config.isSelfContained(flavorName);
 
             let data = {
-                viewURL: config.selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, 'public'),
-                dataURL: config.selfContained ? (el.__data ? './data.json' : undefined) : getDataUrl(el, 'public'),
+                viewURL: selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, 'public'),
+                dataURL: selfContained ? (el.__data ? './data.json' : undefined) : getDataUrl(el, 'public'),
                 queryString: buildQueryString(el),
                 version: el.__version,
                 meta: el.__meta,
@@ -327,7 +328,8 @@ function call(f, configArg) {
                 readConfig: path.join(relativePath, READ_CONFIG),
                 title: el.__name,
                 home: path.join(relativePath, path.relative(config.dir, flavorDir)),
-                flavor: flavorName
+                flavor: flavorName,
+                selfContained
             };
 
             let homeData;
@@ -347,16 +349,16 @@ function call(f, configArg) {
                 writeFile(layoutFile, el.__path, data);
 
                 // Now that the file is written the directory exists
-                if (config.selfContained) {
+                if (config.isSelfContained(flavorName)) {
                     if (el.__view) {
                         prom.push(new Promise(function (resolve, reject) {
                             var read = request(getViewUrl(el, 'local'), config.couchReqOptions);
                             var viewPath = path.join(basePath, 'view.json');
                             var write = fs.createWriteStream(viewPath);
                             write.on('finish', function () {
-                                var prom = config.flatViews ? processViewForLibraries(viewPath, path.join(config.flatViews.outdir, el.__id, 'view.json')) : Promise.resolve();
+                                var prom = config.flatViews ? processViewForLibraries(viewPath, flavorName, path.join(config.flatViews.outdir, el.__id, 'view.json')) : Promise.resolve();
                                 prom.then(function () {
-                                    return processViewForLibraries(viewPath);
+                                    return processViewForLibraries(viewPath, flavorName);
                                 }).then(function () {
                                     return resolve();
                                 });
@@ -433,7 +435,7 @@ function call(f, configArg) {
         fs.writeFileSync(writepath, htmlcontent);
     }
 
-    function processViewForLibraries(viewPath, out) {
+    function processViewForLibraries(viewPath, flavorName, out) {
         var prom = [];
         var view = fs.readJsonSync(viewPath);
         eachModule(view, function (module) {
@@ -441,7 +443,7 @@ function call(f, configArg) {
                 var libs = module.configuration.groups.libs[0];
                 for (var i = 0; i < libs.length; i++) {
                     if (libraryNeedsProcess(libs[i].lib)) {
-                        prom.push(utils.cacheUrl(config, libs[i].lib, true));
+                        prom.push(utils.cacheUrl(config, libs[i].lib, flavorName, true));
                         libs[i].lib = utils.fromVisuLocalUrl(config, libs[i].lib, false);
                     }
                 }
@@ -453,7 +455,7 @@ function call(f, configArg) {
 
         eachModule(view, function (module) {
             if (libraryNeedsProcess(module.url)) {
-                prom.push(utils.cacheDir(config, module.url, true));
+                prom.push(utils.cacheDir(config, module.url, flavorName, true));
                 module.url = utils.fromVisuLocalUrl(config, module.url, false);
             }
         });
@@ -463,7 +465,7 @@ function call(f, configArg) {
                 for (var i = 0; i < view.aliases.length; i++) {
                     let lib = view.aliases[i].path;
                     if (libraryNeedsProcess(lib)) {
-                        prom.push(utils.cacheUrl(config, lib, true));
+                        prom.push(utils.cacheUrl(config, lib, flavorName, true));
                         view.aliases[i].path = utils.fromVisuLocalUrl(config, lib, false);
                     }
                 }
@@ -524,14 +526,14 @@ function call(f, configArg) {
     function buildQueryString(el, flavorName) {
         var result = '?';
         if (el.__view) {
-            if (config.selfContained)
+            if (config.isSelfContained(flavorName))
                 result += 'viewURL=' + encodeURIComponent('./view.json');
             else
                 result += 'viewURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev);
         }
         if (el.__data) {
             if (result !== '?') result += '&';
-            if (config.selfContained)
+            if (config.isSelfContained(flavorName))
                 result += 'dataURL=' + encodeURIComponent('./data.json');
             else
                 result += 'dataURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev);

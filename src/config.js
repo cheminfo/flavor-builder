@@ -47,6 +47,12 @@ exports = module.exports = function (configArg) {
             config.layouts[key] = path.join(__dirname, '../layout', config.layouts[key]);
         }
     }
+    
+    config.isSelfContained = function (flavor) {
+        if (!config.selfContained) return false;
+        else if (config.selfContained === true) return true;
+        else return config.selfContained[flavor];
+    };
 
     return config;
 };

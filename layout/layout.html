@@ -14,8 +14,8 @@
     <title>{% block title %} Visualizer {% endblock %}</title>
     {% endif %}
 
-    <script src="{{ config.cdn | concat('/lib/jquery/2.1.1/jquery.min.js') | processUrl(reldir) }}"></script>
-    <script src="{{ config.cdn | concat('/lib/uri.js/1.14.1/URI.min.js') | processUrl(reldir) }}"></script>
+    <script src="{{ config.cdn | concat('/lib/jquery/2.1.1/jquery.min.js') | processUrl(reldir, flavor) }}"></script>
+    <script src="{{ config.cdn | concat('/lib/uri.js/1.14.1/URI.min.js') | processUrl(reldir, flavor) }}"></script>
     <script>
         window.addEventListener('load', function() {
             $('.navmenu').show();

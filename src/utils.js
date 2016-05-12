@@ -25,7 +25,7 @@ module.exports.checkVersion = function (version) {
     return version;
 };
 
-module.exports.cacheUrl = function (config, url, addExtension) {
+module.exports.cacheUrl = function (config, url, flavorName, addExtension) {
     var options = {
         encoding: null
     };
@@ -35,7 +35,7 @@ module.exports.cacheUrl = function (config, url, addExtension) {
 
     var writePath = module.exports.getLocalUrl(config, url, config.dir, addExtension);
     url = module.exports.rewriteUrl(url, addExtension);
-    if (config.selfContained) {
+    if (config.isSelfContained(flavorName)) {
         return writeFile(url, writePath, options)
             .then(null, function () {
                 return writeFile(url + '.js', writePath + '.js', options);
@@ -48,7 +48,7 @@ module.exports.cacheUrl = function (config, url, addExtension) {
     }
 };
 
-module.exports.cacheDir = function (config, url, addExtension) {
+module.exports.cacheDir = function (config, url, flavorName, addExtension) {
     return new Promise(function(resolve) {
         var prom = [];
         var options = {};
@@ -60,7 +60,7 @@ module.exports.cacheDir = function (config, url, addExtension) {
                     return val;
                 });
                 prom = files.map(function (file) {
-                    return module.exports.cacheUrl(config, urlLib.resolve(url, file), addExtension);
+                    return module.exports.cacheUrl(config, urlLib.resolve(url, file), flavorName, addExtension);
                 });
                 return resolve(Promise.all(prom));
             } else {

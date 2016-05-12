@@ -16,7 +16,7 @@
     window.onload = function () {
         var prom;
         // Weird but will avoid javascript error if this param is not what we expect
-        {% if config.selfContained %}
+        {% if selfContained %}
             prom = Promise.resolve([]);
         {% else %}
             prom = Promise.resolve($.getJSON('{{ config.cdn }}/visualizer/versions.json'));
@@ -61,8 +61,8 @@
             var visualizer = document.createElement('script');
             var baseUrl;
 
-            {% if config.selfContained %}
-                baseUrl = '{{ version | visualizer(reldir) }}';
+            {% if selfContained %}
+                baseUrl = '{{ version | visualizer(reldir, flavor) }}';
             {% else %}
                 baseUrl = (search.direct ? direct : cdn) + '/visualizer/' + version;
             {% endif %}
