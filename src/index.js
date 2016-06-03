@@ -71,7 +71,7 @@ function call(f, configArg) {
                 }
                 debug('get flavor');
                 if (config.flavorLayouts[config.flavor] === 'visualizer-on-tabs') {
-                    yield handleVisualizerOnTabs(flavorDir, config.flavor);
+                    yield handleVisualizerOnTabs(config.flavor);
                 } else {
                     yield handleFlavor(config.flavor);
                 }
@@ -153,6 +153,7 @@ function call(f, configArg) {
         var viewsList = yield getFlavor(flavorName);
         var viewTree = yield flavorUtils.getTree(viewsList);
         const flavorDir = getFlavorDir(flavorName, true);
+        const indexPage = path.relative(config.dir, path.join(flavorDir, 'index.html'));
         var customConfig = {
             possibleViews: {}
         };
@@ -160,6 +161,7 @@ function call(f, configArg) {
 
         yield flavorUtils.traverseTree(viewTree, function (el) {
             if (el.__name === config.home) {
+                sitemaps[indexPage] = true;
                 possibleViews[el.__name] = {
                     url: getViewUrl(el, 'public'),
                     closable: false
