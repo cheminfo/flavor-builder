@@ -21,7 +21,7 @@ var Promise = require('bluebird'),
 var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
 
 function call(f, configArg) {
-    var config, layouts, toCopy, toSwig, versions, filters, flavorUtils;
+    var config, layouts, toCopy, toSwig, versions, filters, flavorUtils, sitemaps;
 
 
     function init(configArg) {
@@ -59,6 +59,7 @@ function call(f, configArg) {
 
 
         return co(function*() {
+            sitemaps = readSiteMaps();
             debug('get versions');
             versions = yield getVersionsRequest();
             if (config.flavor) {
@@ -74,7 +75,7 @@ function call(f, configArg) {
                 } else {
                     yield handleFlavor(config.flavor);
                 }
-                return yield Promise.all(filters.plist);
+                yield Promise.all(filters.plist);
             }
 
             else {
@@ -94,17 +95,55 @@ function call(f, configArg) {
                     yield Promise.all(filters.plist);
                 }
             }
+            writeSiteMaps();
         });
+    }
+
+    function readSiteMaps() {
+        debug('write site maps');
+        try {
+            var r = {};
+            var content = fs.readFileSync(path.join(config.dir, 'sitemap.txt'), 'utf-8');
+            content.split('\n').forEach(function(el) {
+                el = el.replace(config.rootUrl, '');
+                el = el.replace(/^\//, '');
+                r[el] = true;
+            });
+            return r;
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function writeSiteMaps() {
+        if (!config.rootUrl) {
+            console.warn('No root url specified, not creating sitemap.txt');
+            return;
+        }
+        debug('write site maps')
+        fs.writeFileSync(path.join(config.dir, 'sitemap.txt'), 
+            Object.keys(sitemaps)
+                .map(el => config.rootUrl + '/' + el)
+                .join('\n'));
+    }
+
+    function pathFromDir(flavorName, p) {
+        var basicPath = path.relative(config.dir, p);
+        if (flavorName === DEFAULT_FLAVOR) {
+            return basicPath;
+        } else {
+            return path.join('flavor', flavorName, basicPath);
+        }
     }
 
     function getFlavorDir(flavorName, create) {
         var flavorDir;
-        if(flavorName === DEFAULT_FLAVOR || flavorName === config.flavor) {
+        if (flavorName === DEFAULT_FLAVOR || flavorName === config.flavor) {
             flavorDir = config.dir;
         } else {
             flavorDir = path.join(config.dir, 'flavor', flavorName);
         }
-        if(create) {
+        if (create) {
             fs.mkdirpSync(flavorDir);
         }
         return flavorDir;
@@ -314,6 +353,8 @@ function call(f, configArg) {
             let flavorDir = getFlavorDir(flavorName);
             let relativePath = path.relative(basePath, config.dir) || '.';
             let selfContained = config.isSelfContained(flavorName);
+            sitemaps[pathFromDir(flavorName, el.__path)] = true;
+
 
             let data = {
                 viewURL: selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, 'public'),

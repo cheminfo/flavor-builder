@@ -39,6 +39,10 @@ exports = module.exports = function (configArg) {
     } : {};
 
     config.couchurl = config.couchurl.replace(/\/$/, '');
+    if(config.rootUrl) {
+        config.rootUrl = config.rootUrl.replace(/\/$/, '');
+    }
+
     if (config.couchLocalUrl) config.couchLocalUrl = config.couchLocalUrl.replace(/\/$/, '');
     config.dir = path.resolve(config.dir);
     config.flavorLayouts = config.flavorLayouts || {};

@@ -29,12 +29,7 @@ function filters(config) {
         return utils.getLocalUrl(config, url, reldir);
     }
 
-
-
-
-
     function visualizer(version, reldir, flavorName) {
-        console.log('visualizer', flavorName);
         if (!config.isSelfContained(flavorName)) return;
         version = utils.checkVersion(version);
         let visualizerUrl = (config.cdn + '/visualizer').replace(/^\/\//, 'https://');
