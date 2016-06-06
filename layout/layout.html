@@ -17,7 +17,7 @@
     <script src="{{ config.cdn | concat('/lib/jquery/2.1.1/jquery.min.js') | processUrl(reldir, flavor) }}"></script>
     <script src="{{ config.cdn | concat('/lib/uri.js/1.14.1/URI.min.js') | processUrl(reldir, flavor) }}"></script>
     <script>
-        window.addEventListener('load', function() {
+        window.addEventListener('load', function () {
             $('.navmenu').show();
         });
     </script>
@@ -26,25 +26,30 @@
     {% endblock %}
 </head>
 <body>
-{% block menu %}
-    {{ menuHtml|safe }}
-{% endblock %}
+<header>
+    <nav>
+        {% block menu %}
+        {{ menuHtml|safe }}
+        {% endblock %}
+    </nav>
+</header>
+
 {% block content %}{% endblock %}
 
 {% block couchStatic %}
 <div class="general">
-{% if meta.content.type == 'text' %}
-{{ meta.content.value }}
-{% elseif meta.content.type == 'html' %}
-{{ meta.content.value|safe }}
-{% endif %}
+    {% if meta.content.type == 'text' %}
+    {{ meta.content.value }}
+    {% elseif meta.content.type == 'html' %}
+    {{ meta.content.value|safe }}
+    {% endif %}
 </div>
 {% endblock couchStatic %}
 
 {% block visualizer %}
-    {% if viewURL %}
-        {% include "./visualizer.html" %}
-    {% endif %}
+{% if viewURL %}
+{% include "./visualizer.html" %}
+{% endif %}
 {% endblock %}
 
 </body>
