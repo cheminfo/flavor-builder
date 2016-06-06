@@ -104,7 +104,7 @@ function call(f, configArg) {
         try {
             var r = {};
             var content = fs.readFileSync(path.join(config.dir, 'sitemap.txt'), 'utf-8');
-            content.split('\n').forEach(function(el) {
+            content.split('\n').forEach(function (el) {
                 el = el.replace(config.rootUrl, '');
                 el = el.replace(/^\//, '');
                 r[el] = true;
@@ -121,7 +121,7 @@ function call(f, configArg) {
             return;
         }
         debug('write site maps')
-        fs.writeFileSync(path.join(config.dir, 'sitemap.txt'), 
+        fs.writeFileSync(path.join(config.dir, 'sitemap.txt'),
             Object.keys(sitemaps)
                 .map(el => config.rootUrl + '/' + el)
                 .join('\n'));
@@ -375,74 +375,64 @@ function call(f, configArg) {
                 selfContained
             };
 
-            let homeData;
             if (isHome && flavorDir === basePath) {
                 data.home = '.';
-                homeData = _.cloneDeep(data);
-                homeData.menuHtml = doMenu(rootStructure, flavorDir, flavorName);
-                homeData.reldir = path.relative(flavorDir, config.dir);
-                homeData.readConfig = path.join(path.relative(flavorDir, config.dir), READ_CONFIG);
-                if (homeData.reldir === '') homeData.reldir = '.';
             }
 
             let finalProm = Promise.resolve();
             finalProm = finalProm.then(function () {
                 var prom = [];
-                var layoutFile = layouts[config.flavorLayouts[flavorName] || DEFAULT_FLAVOR];
-                writeFile(layoutFile, el.__path, data);
 
                 // Now that the file is written the directory exists
-                if (config.isSelfContained(flavorName)) {
-                    if (el.__view) {
-                        prom.push(new Promise(function (resolve, reject) {
-                            var read = request(getViewUrl(el, 'local'), config.couchReqOptions);
-                            var viewPath = path.join(basePath, 'view.json');
-                            var write = fs.createWriteStream(viewPath);
-                            write.on('finish', function () {
-                                var prom = config.flatViews ? processViewForLibraries(viewPath, flavorName, path.join(config.flatViews.outdir, el.__id, 'view.json')) : Promise.resolve();
-                                prom.then(function () {
-                                    return processViewForLibraries(viewPath, flavorName);
-                                }).then(function () {
-                                    return resolve();
-                                });
-                            });
 
-                            write.on('error', function () {
-                                return reject();
-                            });
-
-                            read.on('error', function () {
-                                return reject();
-                            });
-                            read.pipe(write);
-                        }));
-                    }
-                    if (el.__data) {
-                        prom.push(new Promise(function (resolve, reject) {
-                            var read = request(getDataUrl(el, 'local'), config.couchReqOptions);
-                            var viewPath = path.join(basePath, 'data.json');
-                            var write = fs.createWriteStream(viewPath);
-                            write.on('finish', function () {
-                                return resolve();
-                            });
-                            write.on('error', function () {
-                                return reject();
-                            });
-                            read.on('error', function () {
-                                return reject();
-                            });
-                            read.pipe(write);
-                        }));
-                    }
-
-
-                    fs.mkdirpSync(basePath);
-                    fs.writeJsonSync(path.join(basePath, 'couch.json'), {
-                        id: el.__id,
-                        rev: el.__rev,
-                        database: config.couchurl + '/' + config.couchDatabase
-                    });
+                if (el.__view) {
+                    prom.push(new Promise(function (resolve, reject) {
+                        var viewPath = path.join(basePath, 'view.json');
+                        var prom = Promise.resolve();
+                        request(getViewUrl(el, 'local'), config.couchReqOptions, function (err, response, body) {
+                            if (err) {
+                                return reject(err);
+                            }
+                            data.botHtml = getBotContent(body);
+                            var layoutFile = layouts[config.flavorLayouts[flavorName] || DEFAULT_FLAVOR];
+                            writeFile(layoutFile, el.__path, data);
+                            if (config.isSelfContained(flavorName)) {
+                                fs.writeFileSync(viewPath, body);
+                                if (config.flatViews) {
+                                    prom = prom.then(processViewForLibraries(viewPath, flavorName, path.join(config.flatViews.outdir, el.__id, 'view.json')));
+                                } else {
+                                    prom = prom.then(processViewForLibraries(viewPath, flavorName))
+                                }
+                            }
+                        });
+                        prom.then(resolve);
+                    }));
                 }
+                if (el.__data) {
+                    prom.push(new Promise(function (resolve, reject) {
+                        var read = request(getDataUrl(el, 'local'), config.couchReqOptions);
+                        var viewPath = path.join(basePath, 'data.json');
+                        var write = fs.createWriteStream(viewPath);
+                        write.on('finish', function () {
+                            return resolve();
+                        });
+                        write.on('error', function () {
+                            return reject();
+                        });
+                        read.on('error', function () {
+                            return reject();
+                        });
+                        read.pipe(write);
+                    }));
+                }
+
+
+                fs.mkdirpSync(basePath);
+                fs.writeJsonSync(path.join(basePath, 'couch.json'), {
+                    id: el.__id,
+                    rev: el.__rev,
+                    database: config.couchurl + '/' + config.couchDatabase
+                });
                 return Promise.all(prom);
             });
 
@@ -476,6 +466,19 @@ function call(f, configArg) {
         else dir = writepath;
         fs.mkdirpSync(dir);
         fs.writeFileSync(writepath, htmlcontent);
+    }
+
+    function getBotContent(viewContent) {
+        var content = JSON.parse(viewContent);
+        if(content.modules) {
+            var modules = content.modules.filter(m => {
+                return m.url.match(/\/(rich_text|postit)/);
+            });
+            return modules.map(m => {
+                return m.richtext || m.text || '';
+            }).join('');
+        }
+        return '';
     }
 
     function processViewForLibraries(viewPath, flavorName, out) {

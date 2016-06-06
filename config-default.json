@@ -1,4 +1,6 @@
 {
+  "useSSI": "",
+  "rootUrl": "",
   "couchurl": "",
   "flavorUsername": "",
   "couchUsername": "",
