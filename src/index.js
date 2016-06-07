@@ -69,7 +69,7 @@ function call(f, configArg) {
                     // Build single flavor
                     let exists = yield hasFlavor(config.flavor);
                     if (!exists) {
-                        console.log('Flavor not found');
+                        debug('Flavor not found');
                         return;
                     }
                     debug('get flavor');
@@ -87,7 +87,7 @@ function call(f, configArg) {
                     let flavors = yield getFlavors();
                     // Filter flavors to get only those that have changed
                     flavors = yield filterFlavorsByMd5(flavors);
-                    console.log('Processing ' + flavors.length + ' flavors');
+                    debug('Processing ' + flavors.length + ' flavors');
                     for (let i = 0; i < flavors.length; i++) {
                         if (config.flavorLayouts[flavors[i]] === 'visualizer-on-tabs') {
                             yield handleVisualizerOnTabs(flavors[i]);
@@ -123,7 +123,7 @@ function call(f, configArg) {
 
     function writeSiteMaps() {
         if (!config.rootUrl) {
-            console.warn('No root url specified, not creating sitemap.txt');
+            debug('No root url specified, not creating sitemap.txt');
             return;
         }
         debug('write site maps')
@@ -656,7 +656,7 @@ function call(f, configArg) {
             return Promise.resolve();
         } catch (e) {
             return new Promise(function (resolve, reject) {
-                console.log('copying visualizer', version);
+                debug('copying visualizer', version);
                 fs.mkdirpSync(extractDir);
                 var reqOptions = {};
                 utils.checkAuth(config, reqOptions, url);
@@ -664,7 +664,7 @@ function call(f, configArg) {
 
                 var read = request.get(url, reqOptions);
                 read.on('error', function (err) {
-                    console.log('read error');
+                    debug('read error');
                     reject(err);
                 });
                 var write = targz().createWriteStream(extractDir);
