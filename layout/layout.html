@@ -6,8 +6,7 @@
 
     {% if config.useSSI %}
 
-    <!--#if expr="%{HTTP_USER_AGENT} =~ /bot/" -->
-    <!--#else -->
+    <!--#if expr="%{HTTP_USER_AGENT} !~ /bot/" -->
     {% endif %}
     {% if meta.keywords %}
     <meta name="keywords" content="{{meta.keywords.value | safe}}">
@@ -42,7 +41,6 @@
 {% if config.useSSI %}
 <!--#if expr="%{HTTP_USER_AGENT} =~ /bot/" -->
 {{ botHtml | safe }}
-<!--#else -->
 <!--#endif -->
 {% endif %}
 
@@ -57,8 +55,7 @@
 </header>
 
 {% if config.useSSI %}
-<!--#if expr="%{HTTP_USER_AGENT} =~ /bot/" -->
-<!--#else -->
+<!--#if expr="%{HTTP_USER_AGENT} !~ /bot/" -->
 {% endif %}
 
 {% block content %}{% endblock %}
