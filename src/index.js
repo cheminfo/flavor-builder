@@ -59,43 +59,49 @@ function call(f, configArg) {
 
 
         return co(function*() {
-            sitemaps = readSiteMaps();
-            debug('get versions');
-            versions = yield getVersionsRequest();
-            if (config.flavor) {
-                // Build single flavor
-                let exists = yield hasFlavor(config.flavor);
-                if (!exists) {
-                    console.log('Flavor not found');
-                    return;
-                }
-                debug('get flavor');
-                if (config.flavorLayouts[config.flavor] === 'visualizer-on-tabs') {
-                    yield handleVisualizerOnTabs(config.flavor);
-                } else {
-                    yield handleFlavor(config.flavor);
-                }
-                yield Promise.all(filters.plist);
-            }
+            try {
 
-            else {
-                // Build all flavors
-                // Get a list of all available flavors
-                let flavors = yield getFlavors();
-                // Filter flavors to get only those that have changed
-                flavors = yield filterFlavorsByMd5(flavors);
-                console.log('Processing ' + flavors.length + ' flavors');
-                for (let i = 0; i < flavors.length; i++) {
-                    if (config.flavorLayouts[flavors[i]] === 'visualizer-on-tabs') {
-                        yield handleVisualizerOnTabs(flavors[i]);
-                    } else {
-                        yield handleFlavor(flavors[i]);
+
+                sitemaps = readSiteMaps();
+                debug('get versions');
+                versions = yield getVersionsRequest();
+                if (config.flavor) {
+                    // Build single flavor
+                    let exists = yield hasFlavor(config.flavor);
+                    if (!exists) {
+                        console.log('Flavor not found');
+                        return;
                     }
-                    // Some swig filter are asynchronous, wait for them to finish
+                    debug('get flavor');
+                    if (config.flavorLayouts[config.flavor] === 'visualizer-on-tabs') {
+                        yield handleVisualizerOnTabs(config.flavor);
+                    } else {
+                        yield handleFlavor(config.flavor);
+                    }
                     yield Promise.all(filters.plist);
                 }
+
+                else {
+                    // Build all flavors
+                    // Get a list of all available flavors
+                    let flavors = yield getFlavors();
+                    // Filter flavors to get only those that have changed
+                    flavors = yield filterFlavorsByMd5(flavors);
+                    console.log('Processing ' + flavors.length + ' flavors');
+                    for (let i = 0; i < flavors.length; i++) {
+                        if (config.flavorLayouts[flavors[i]] === 'visualizer-on-tabs') {
+                            yield handleVisualizerOnTabs(flavors[i]);
+                        } else {
+                            yield handleFlavor(flavors[i]);
+                        }
+                        // Some swig filter are asynchronous, wait for them to finish
+                        yield Promise.all(filters.plist);
+                    }
+                }
+                writeSiteMaps();
+            } catch(e) {
+                debug('error occured', e);
             }
-            writeSiteMaps();
         });
     }
 
@@ -307,12 +313,16 @@ function call(f, configArg) {
 
         // Transforms the array-representation of a flavor's views as returned by couchdb
         // into a tree representation that reflects the views' hierarchy in a flavor
+        debug('get tree');
         let viewTree = yield flavorUtils.getTree(viewsList);
         // Set the path of each view to end up to
+        debug('do path on tree')
         yield flavorUtils.traverseTree(viewTree, doPath(flavorDir));
         // For each view fix version number
+        debug('fix version on tree')
         yield flavorUtils.traverseTree(viewTree, fixVersion);
         // For each view generate the html in the appropriate directory
+        debug('generate html on tree');
         yield flavorUtils.traverseTree(viewTree, generateHtml(flavorName, viewTree));
 
         // Copy visualizer from cdn
@@ -356,6 +366,9 @@ function call(f, configArg) {
             let relativePath = path.relative(basePath, config.dir) || '.';
             let selfContained = config.isSelfContained(flavorName);
             sitemaps[pathFromDir(flavorName, el.__path)] = true;
+
+            // Create directory
+            fs.mkdirpSync(basePath);
 
 
             let data = {
@@ -404,8 +417,8 @@ function call(f, configArg) {
                                     prom = prom.then(processViewForLibraries(viewPath, flavorName))
                                 }
                             }
+                            prom.then(resolve);
                         });
-                        prom.then(resolve);
                     }));
                 }
                 if (el.__data) {
@@ -416,18 +429,17 @@ function call(f, configArg) {
                         write.on('finish', function () {
                             return resolve();
                         });
-                        write.on('error', function () {
-                            return reject();
+                        write.on('error', function (err) {
+                            return reject(err);
                         });
-                        read.on('error', function () {
-                            return reject();
+                        read.on('error', function (err) {
+                            return reject(err);
                         });
                         read.pipe(write);
                     }));
                 }
 
 
-                fs.mkdirpSync(basePath);
                 fs.writeJsonSync(path.join(basePath, 'couch.json'), {
                     id: el.__id,
                     rev: el.__rev,
@@ -460,11 +472,6 @@ function call(f, configArg) {
         // Compile a file and store it, rendering it later
         var tpl = swig.compileFile(readpath);
         var htmlcontent = tpl(data);
-        var idx = writepath.lastIndexOf('/');
-        var dir;
-        if (idx > -1) dir = writepath.slice(0, idx);
-        else dir = writepath;
-        fs.mkdirpSync(dir);
         fs.writeFileSync(writepath, htmlcontent);
     }
 
@@ -621,7 +628,9 @@ function call(f, configArg) {
     }
 
     function copyFiles() {
+        debug('copy files')
         for (var i = 0; i < toCopy.length; i++) {
+            debug('copy ' + toCopy[i].src + ' to ' +  toCopy[i].dest);
             fs.copySync(toCopy[i].src, toCopy[i].dest);
         }
     }
