@@ -4,10 +4,6 @@
 <head>
     <meta charset="utf-8">
 
-    {% if config.useSSI %}
-
-    <!--#if expr="%{HTTP_USER_AGENT} !~ /bot/" -->
-    {% endif %}
     {% if meta.keywords %}
     <meta name="keywords" content="{{meta.keywords.value | safe}}">
     {% endif %}
@@ -27,6 +23,11 @@
             $('.navmenu').show();
         });
     </script>
+
+    <!--No need to load other libraries if bot-->
+    {% if config.useSSI %}
+    <!--#if expr="%{HTTP_USER_AGENT} !~ /bot/" -->
+    {% endif %}
     {% block head %}
 
     {% endblock %}
