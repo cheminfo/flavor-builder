@@ -377,6 +377,7 @@ function call(f, configArg) {
                 queryString: buildQueryString(el),
                 version: el.__version,
                 meta: el.__meta,
+                keywords: el.__keywords,
                 structure: rootStructure,
                 config: config,
                 menuHtml: doMenu(rootStructure, basePath, flavorName),

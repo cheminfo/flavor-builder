@@ -4,17 +4,10 @@
 <head>
     <meta charset="utf-8">
 
-    {% if meta.keywords %}
-    <meta name="keywords" content="{{meta.keywords.value | safe}}">
+    {% if keywords %}
+    <meta name="keywords" content="{{keywords}}">
     {% endif %}
-    {% if meta.description %}
-    <meta name="description" content="{{meta.description.value | safe}}">
-    {% endif %}
-    {% if meta.description %}
-    <title>{{meta.title.value | safe}}</title>
-    {% else %}
-    <title>{% block title %} Visualizer {% endblock %}</title>
-    {% endif %}
+    <title>{% block title %} {{title}} {% endblock %}</title>
 
     <script src="{{ config.cdn | concat('/lib/jquery/2.1.1/jquery.min.js') | processUrl(reldir, flavor) }}"></script>
     <script src="{{ config.cdn | concat('/lib/uri.js/1.14.1/URI.min.js') | processUrl(reldir, flavor) }}"></script>
