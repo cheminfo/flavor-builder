@@ -17,17 +17,10 @@
         });
     </script>
 
-    <!--No need to load other libraries if bot-->
-    {% if config.useSSI %}
-    <!--#if expr="%{HTTP_USER_AGENT} !~ /bot/" -->
-    {% endif %}
     {% block head %}
 
     {% endblock %}
 
-    {% if config.useSSI %}
-    <!--#endif -->
-    {% endif %}
 
 
 </head>
