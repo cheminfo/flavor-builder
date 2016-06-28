@@ -383,7 +383,7 @@ function call(f, configArg) {
                 menuHtml: doMenu(rootStructure, basePath, flavorName),
                 reldir: relativePath,
                 readConfig: path.join(relativePath, READ_CONFIG),
-                title: el.__name,
+                title: el.__title === 'No title' ? el.__name : el.__title,
                 home: path.join(relativePath, path.relative(config.dir, flavorDir)),
                 flavor: flavorName,
                 selfContained
