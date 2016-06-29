@@ -7,6 +7,7 @@
     {% if keywords %}
     <meta name="keywords" content="{{keywords}}">
     {% endif %}
+    <meta description="{{description}}">
     <title>{% block title %} {{title}} {% endblock %}</title>
 
     <script src="{{ config.cdn | concat('/lib/jquery/2.1.1/jquery.min.js') | processUrl(reldir, flavor) }}"></script>

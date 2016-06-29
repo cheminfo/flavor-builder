@@ -408,6 +408,7 @@ function call(f, configArg) {
                                 return reject(err);
                             }
                             data.botHtml = getBotContent(body);
+                            data.description = data.botHtml.replace(/<[^>]*>/g, ' ').replace('"', "'");
                             var layoutFile = layouts[config.flavorLayouts[flavorName] || DEFAULT_FLAVOR];
                             writeFile(layoutFile, el.__path, data);
                             if (config.isSelfContained(flavorName)) {
