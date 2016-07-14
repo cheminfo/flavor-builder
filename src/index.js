@@ -13,7 +13,8 @@ var Promise = require('bluebird'),
     crypto = require('crypto'),
     co = require('co'),
     utils = require('./utils'),
-    targz = require('tar.gz'),
+    tar = require('tar'),
+    zlib = require('zlib'),
     FlavorUtils = require('flavor-utils'),
     visualizerOnTabs = require('visualizer-on-tabs'),
     debug = require('debug')('flavor-builder:main');
@@ -669,16 +670,30 @@ function call(f, configArg) {
                     debug('read error');
                     reject(err);
                 });
-                var write = targz().createWriteStream(extractDir);
-                write.on('finish', function () {
-                    resolve();
+
+                var gzipStream = zlib.createGunzip({});
+                var extractor = tar.Extract({
+                    path: extractDir,
+                    strip: 0
                 });
 
-                write.on('error', function (err) {
+                gzipStream.on('error', function (err) {
+                    debug('error decompressing with zlib');
                     reject(err);
                 });
 
-                read.pipe(write);
+                extractor.on('finish', function () {
+                    console.log('finish');
+                    resolve();
+                });
+
+                extractor.on('error', function (err) {
+                    debug('tar extract error');
+                    reject(err);
+                });
+
+                read.pipe(gzipStream).pipe(extractor);
+
             });
         }
     }
