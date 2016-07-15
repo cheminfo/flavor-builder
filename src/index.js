@@ -660,9 +660,7 @@ function call(f, configArg) {
             return new Promise(function (resolve, reject) {
                 debug('copying visualizer', version);
                 fs.mkdirpSync(extractDir);
-                var reqOptions = {};
-                utils.checkAuth(config, reqOptions, url);
-                reqOptions.encoding = null;
+                url = utils.getAuthUrl(config, url);
 
                 exec(`curl ${url} | tar -xz`, {
                     cwd: extractDir

@@ -20,6 +20,16 @@ module.exports.checkAuth = function (config, options, url) {
     return options;
 };
 
+module.exports.getAuthUrl = function(config, url) {
+    var options = {};
+    module.exports.checkAuth(config, options, url);
+    var parsedUrl = urlLib.parse(url);
+    if(!parsedUrl.auth && options.auth) {
+        parsedUrl.auth = `${options.auth.user}:${options.auth.pass}`
+    }
+    return parsedUrl.format();
+};
+
 module.exports.checkVersion = function (version) {
     if (version && version[0] >= '0' && version[0] <= '9' && !version.startsWith('v')) version = 'v' + version;
     return version;
