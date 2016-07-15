@@ -1,6 +1,6 @@
 {
   "name": "flavor-builder",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "Make an indexable website from a flavor (a bunch of views in the visualizer)",
   "main": "src/index.js",
   "bin": "bin/build.js",
