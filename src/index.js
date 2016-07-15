@@ -604,7 +604,7 @@ function call(f, configArg) {
             return Promise.resolve();
         } catch (e) {
             return new Promise(function (resolve, reject) {
-                debug('copying visualizer', version);
+                console.log('copying visualizer', version);
                 fs.mkdirpSync(extractDir);
                 url = utils.getAuthUrl(config, url);
 
