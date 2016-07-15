@@ -14,8 +14,7 @@ var Promise = require('bluebird'),
     co = require('co'),
     flavorUtils = require('flavor-utils'),
     utils = require('./utils'),
-    wf = require('./writeFile'),
-    targz = require('tar.gz'),
+    exec = require('child_process').exec,
     auth = '';
 
 var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
