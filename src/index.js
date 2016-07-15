@@ -415,6 +415,7 @@ function call(f, configArg) {
                                 fs.writeFileSync(viewPath, body);
                                 if (config.flatViews) {
                                     prom = prom.then(processViewForLibraries(viewPath, flavorName, path.join(config.flatViews.outdir, el.__id, 'view.json')));
+                                    prom = prom.then(processViewForLibraries(viewPath, flavorName));
                                 } else {
                                     prom = prom.then(processViewForLibraries(viewPath, flavorName))
                                 }
@@ -517,11 +518,16 @@ function call(f, configArg) {
 
         try {
             if (view.aliases) {
+                
                 for (var i = 0; i < view.aliases.length; i++) {
                     let lib = view.aliases[i].path;
                     if (libraryNeedsProcess(lib)) {
+                        var hasAlias = true;
+                        console.log('needs process', viewPath);
+                        console.log(lib);
                         prom.push(utils.cacheUrl(config, lib, flavorName, true));
                         view.aliases[i].path = utils.fromVisuLocalUrl(config, lib);
+                        console.log(view.aliases[i].path);
                     }
                 }
             }
@@ -532,6 +538,9 @@ function call(f, configArg) {
         out = out || viewPath;
         fs.mkdirpSync(path.parse(out).dir);
         fs.writeJsonSync(out, view);
+        if(hasAlias) {
+            console.log('write view.json', out);
+        }
         return Promise.all(prom);
     }
 
