@@ -499,7 +499,7 @@ function call(f, configArg) {
                 for (var i = 0; i < libs.length; i++) {
                     if (libraryNeedsProcess(libs[i].lib)) {
                         prom.push(utils.cacheUrl(config, libs[i].lib, flavorName, true));
-                        libs[i].lib = utils.fromVisuLocalUrl(config, libs[i].lib, false);
+                        libs[i].lib = utils.fromVisuLocalUrl(config, libs[i].lib);
                     }
                 }
 
@@ -511,7 +511,7 @@ function call(f, configArg) {
         eachModule(view, function (module) {
             if (libraryNeedsProcess(module.url)) {
                 prom.push(utils.cacheDir(config, module.url, flavorName, true));
-                module.url = utils.fromVisuLocalUrl(config, module.url, false);
+                module.url = utils.fromVisuLocalUrl(config, module.url);
             }
         });
 
@@ -521,7 +521,7 @@ function call(f, configArg) {
                     let lib = view.aliases[i].path;
                     if (libraryNeedsProcess(lib)) {
                         prom.push(utils.cacheUrl(config, lib, flavorName, true));
-                        view.aliases[i].path = utils.fromVisuLocalUrl(config, lib, false);
+                        view.aliases[i].path = utils.fromVisuLocalUrl(config, lib);
                     }
                 }
             }

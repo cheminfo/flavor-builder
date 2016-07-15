@@ -93,9 +93,11 @@ module.exports.getLocalUrl = function (config, url, reldir, addExtension) {
     return path.join(reldir, p);
 };
 
-module.exports.fromVisuLocalUrl = function (config, url, addExtension) {
+module.exports.fromVisuLocalUrl = function (config, url) {
     url = url.replace(/^\/\//, 'https://');
-    var localUrl = module.exports.getLocalUrl(config, url, '.', addExtension);
+    var localUrl = module.exports.getLocalUrl(config, url, '.', false);
+    // Never put js extension when local url
+    localUrl = localUrl.replace(/\.js$/, '');
     return path.join('../../../..', localUrl);
 };
 
