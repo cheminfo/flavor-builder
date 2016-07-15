@@ -35,7 +35,7 @@ function call(f, configArg) {
             couchDatabase: config.couchDatabase,
             couchUsername: config.couchUsername,
             couchPassword: config.couchPassword,
-            designDoc: 'app'
+            designDoc: config.designDoc || 'app'
         });
     }
 

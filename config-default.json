@@ -2,6 +2,7 @@
   "useSSI": "",
   "rootUrl": "",
   "couchurl": "",
+  "designDoc": "",
   "flavorUsername": "",
   "couchUsername": "",
   "couchPassword": "",
