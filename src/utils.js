@@ -81,19 +81,23 @@ module.exports.cacheDir = function (config, url, addExtension) {
 
 module.exports.getLocalUrl = function (config, url, reldir, addExtension) {
     url = url.replace(/^\/\//, 'https://');
+    console.log(url);
     var parsedUrl = urlLib.parse(url);
     var parsedPath = path.parse(parsedUrl.path);
 
     var p = path.join(config.libFolder, parsedUrl.hostname, parsedUrl.path);
+    console.log(parsedUrl.path);
     if (addExtension) {
         p += parsedPath.ext ? '' : '.js';
     }
     return path.join(reldir, p);
 };
 
-module.exports.fromVisuLocalUrl = function (config, url, addExtension) {
+module.exports.fromVisuLocalUrl = function (config, url) {
     url = url.replace(/^\/\//, 'https://');
-    var localUrl = module.exports.getLocalUrl(config, url, '.', addExtension);
+    var localUrl = module.exports.getLocalUrl(config, url, '.', false);
+    // Remove js extension
+    localUrl = localUrl.replace(/\.js$/, '');
     return path.join('../../../..', localUrl);
 };
 
