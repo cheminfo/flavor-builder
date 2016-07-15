@@ -13,10 +13,9 @@ var Promise = require('bluebird'),
     crypto = require('crypto'),
     co = require('co'),
     utils = require('./utils'),
-    tar = require('tar'),
-    zlib = require('zlib'),
     FlavorUtils = require('flavor-utils'),
     visualizerOnTabs = require('visualizer-on-tabs'),
+    exec = require('child_process').exec,
     debug = require('debug')('flavor-builder:main');
 
 var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
@@ -665,35 +664,12 @@ function call(f, configArg) {
                 utils.checkAuth(config, reqOptions, url);
                 reqOptions.encoding = null;
 
-                var read = request.get(url, reqOptions);
-                read.on('error', function (err) {
-                    debug('read error');
-                    reject(err);
-                });
-
-                var gzipStream = zlib.createGunzip({});
-                var extractor = tar.Extract({
-                    path: extractDir,
-                    strip: 0
-                });
-
-                gzipStream.on('error', function (err) {
-                    debug('error decompressing with zlib');
-                    reject(err);
-                });
-
-                extractor.on('finish', function () {
-                    console.log('finish');
+                exec(`curl ${url} | tar -xz`, {
+                    cwd: extractDir
+                }, function(err) {
+                    if(err) reject(err);
                     resolve();
                 });
-
-                extractor.on('error', function (err) {
-                    debug('tar extract error');
-                    reject(err);
-                });
-
-                read.pipe(gzipStream).pipe(extractor);
-
             });
         }
     }
