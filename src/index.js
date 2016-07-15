@@ -604,24 +604,16 @@ function call(f, configArg) {
             return Promise.resolve();
         } catch (e) {
             return new Promise(function (resolve, reject) {
-                console.log('copying visualizer', version);
+                debug('copying visualizer', version);
                 fs.mkdirpSync(extractDir);
+                url = utils.getAuthUrl(config, url);
 
-                var reqOptions = {};
-                utils.checkAuth(config, reqOptions, url);
-                reqOptions.encoding = null;
-
-                var read = request.get(url, reqOptions);
-                var write = targz().createWriteStream(extractDir);
-                write.on('finish', function () {
-                    return resolve();
+                exec(`curl ${url} | tar -xz`, {
+                    cwd: extractDir
+                }, function(err) {
+                    if(err) reject(err);
+                    resolve();
                 });
-
-                write.on('error', function (err) {
-                    return reject(err);
-                });
-
-                read.pipe(write);
             });
         }
     }
