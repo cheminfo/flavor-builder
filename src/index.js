@@ -180,6 +180,8 @@ function call(f, configArg) {
         } catch (e) {
         }
 
+        customConfig.possibleViews = Object.assign({}, customConfig.possibleViews, tabsConfig ? tabsConfig.possibleViews : {});
+        
         yield visualizerOnTabs({
             outDir: flavorDir,
             config: Object.assign({}, tabsConfig, customConfig)
