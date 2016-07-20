@@ -159,33 +159,41 @@ function call(f, configArg) {
         var viewsList = yield getFlavor(flavorName);
         var viewTree = yield flavorUtils.getTree(viewsList);
         const flavorDir = getFlavorDir(flavorName, true);
-        const indexPage = path.relative(config.dir, path.join(flavorDir, 'index.html'));
-        var customConfig = {
-            possibleViews: {}
-        };
-        var possibleViews = customConfig.possibleViews;
 
-        yield flavorUtils.traverseTree(viewTree, function (el) {
-            if (el.__name === config.home) {
-                sitemaps[indexPage] = true;
-                possibleViews[el.__name] = {
-                    url: getViewUrl(el, 'public'),
-                    closable: false
-                }
-            }
-        });
+
+        const homePages = [];
         var tabsConfig;
         try {
             tabsConfig = config.visualizerOnTabs[flavorName] || config.visualizerOnTabs._default;
         } catch (e) {
         }
 
-        customConfig.possibleViews = Object.assign({}, customConfig.possibleViews, tabsConfig ? tabsConfig.possibleViews : {});
-        
-        yield visualizerOnTabs({
-            outDir: flavorDir,
-            config: Object.assign({}, tabsConfig, customConfig)
+        yield flavorUtils.traverseTree(viewTree, function (el) {
+            if (el.__name === config.home) {
+                const outDir =  path.join(flavorDir, el.__parents.join('/'));
+                const indexPage = path.relative(config.dir, path.join(outDir, 'index.html'));
+
+                var customConfig = {
+                    possibleViews: {}
+                };
+                sitemaps[indexPage] = true;
+
+                customConfig.possibleViews[el.__name] = {
+                    url: getViewUrl(el, 'public'),
+                    closable: false
+                };
+
+                customConfig.possibleViews = Object.assign(customConfig.possibleViews, tabsConfig ? tabsConfig.possibleViews : {});
+                homePages.push({
+                    outDir,
+                    config: Object.assign({}, tabsConfig, customConfig)
+                });
+            }
         });
+
+        for(let i=0; i<homePages.length; i++) {
+            yield visualizerOnTabs(homePages[i]);
+        }
     }
 
 // returns an array of flavors for which the md5 has changed
@@ -514,7 +522,7 @@ function call(f, configArg) {
         eachModule(view, function (module) {
             if (libraryNeedsProcess(module.url)) {
                 prom.push(utils.cacheDir(config, module.url, flavorName, true));
-                module.url = utils.fromVisuLocalUrl(config, module.url);
+                module.url = utils.fromVisuLocalUrl(config, module.url);                                                                                                                                                                           
             }
         });
 
@@ -524,12 +532,8 @@ function call(f, configArg) {
                 for (var i = 0; i < view.aliases.length; i++) {
                     let lib = view.aliases[i].path;
                     if (libraryNeedsProcess(lib)) {
-                        var hasAlias = true;
-                        console.log('needs process', viewPath);
-                        console.log(lib);
                         prom.push(utils.cacheUrl(config, lib, flavorName, true));
                         view.aliases[i].path = utils.fromVisuLocalUrl(config, lib);
-                        console.log(view.aliases[i].path);
                     }
                 }
             }
@@ -540,9 +544,7 @@ function call(f, configArg) {
         out = out || viewPath;
         fs.mkdirpSync(path.parse(out).dir);
         fs.writeJsonSync(out, view);
-        if(hasAlias) {
-            console.log('write view.json', out);
-        }
+
         return Promise.all(prom);
     }
 
