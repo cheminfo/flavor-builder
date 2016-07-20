@@ -27,5 +27,13 @@
       "user": "",
       "pass": ""
     }
-  }
+  },
+  "flatViews": {
+    "reldir": "",
+    "outdir": ""
+  },
+  "visualizerOnTabs": {
+    "_default": {}
+  },
+  "myFlavor": {}
 }
