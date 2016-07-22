@@ -1,0 +1,31 @@
+<div id="roc-auth" style="position: fixed; right:20px; top: 10px; ">
+</div>
+
+<script>
+    var url = '{{rocLogin.url}}';
+    var loginUrl = url + '/auth/login';
+    var redirectLoginUrl = url + '/auth/login?continue=' + window.location.href;
+    var autoLogin = '{{rocLogin.auto}}';
+    var $auth = $('#roc-auth');
+    function checkSession() {
+        $.ajax(url + '/auth/session', {xhrFields: {withCredentials: true}, crossDomain: true})
+                .then(function (res) {
+                    if(res.authenticated) {
+                        $auth.html(res.username + '(<a href="#">Logout</a>)');
+                        $auth.find('a').on('click', function () {
+                            $.ajax(url + '/auth/logout', {xhrFields: {withCredentials: true}, crossDomain: true}).then(function () {
+                                checkSession();
+                            });
+                        })
+
+                    } else {
+                        if(autoLogin === 'true') {
+                            window.location = redirectLoginUrl;
+                        } else {
+                            $auth.html('<a href="' + redirectLoginUrl + '">Login</a>');
+                        }
+                    }
+                });
+    }
+    checkSession();
+</script>

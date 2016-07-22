@@ -58,6 +58,8 @@ exports = module.exports = function (configArg) {
         else return config.selfContained[flavor];
     };
 
+    config.rocLogin = config.rocLogin || {};
+
     return config;
 };
 

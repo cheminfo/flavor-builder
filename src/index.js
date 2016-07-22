@@ -380,7 +380,6 @@ function call(f, configArg) {
             // Create directory
             fs.mkdirpSync(basePath);
 
-
             let data = {
                 viewURL: selfContained ? (el.__view ? './view.json' : undefined) : getViewUrl(el, 'public'),
                 dataURL: selfContained ? (el.__data ? './data.json' : undefined) : getDataUrl(el, 'public'),
@@ -396,7 +395,8 @@ function call(f, configArg) {
                 title: el.__title === 'No title' ? el.__name : el.__title,
                 home: path.join(relativePath, path.relative(config.dir, flavorDir)),
                 flavor: flavorName,
-                selfContained
+                selfContained,
+                rocLogin: config.rocLogin[flavorName]
             };
 
             if (isHome && flavorDir === basePath) {
@@ -522,7 +522,7 @@ function call(f, configArg) {
         eachModule(view, function (module) {
             if (libraryNeedsProcess(module.url)) {
                 prom.push(utils.cacheDir(config, module.url, flavorName, true));
-                module.url = utils.fromVisuLocalUrl(config, module.url);                                                                                                                                                                           
+                module.url = utils.fromVisuLocalUrl(config, module.url);
             }
         });
 
