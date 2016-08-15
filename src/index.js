@@ -262,7 +262,7 @@ function call(f, configArg) {
         var result;
         if (data && data.rows && !_.isUndefined(data.rows.length)) {
             result = _.flatten(data.rows);
-            result = _(result).pluck('value').flatten().value();
+            result = _.flatten(result.map(r => r.value));
         }
         return result;
     }
