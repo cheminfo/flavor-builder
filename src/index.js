@@ -215,12 +215,13 @@ function call(f, configArg) {
             for (var key in result) {
                 if (result[key] !== md5[key]) {
                     debug(`flavor ${key} has changed, add to the list`);
+                    md5[key] = result[key];
                     keys.push(key);
                 } else {
                     debug(`flavor ${key} has not changed, ignoring it`)
                 }
             }
-            fs.writeJSONSync(md5Json, result);
+            fs.writeJSONSync(md5Json, md5);
             return keys;
         });
     }
