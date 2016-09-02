@@ -19,6 +19,7 @@ var Promise = require('bluebird'),
     debug = require('debug')('flavor-builder:main');
 
 var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
+const md5Json = path.join(__dirname, '../md5.json');
 
 function call(f, configArg) {
     var config, layouts, toCopy, toSwig, versions, filters, flavorUtils, sitemaps;
@@ -201,21 +202,25 @@ function call(f, configArg) {
         debug('filter flavors by md5');
         return getFlavorMD5(flavors).then(function (result) {
             if (config.forceUpdate) {
+                debug('force update, no flavor filtering')
                 return Object.keys(result);
             }
-            var exists = fs.existsSync('./md5s.json');
+            var exists = fs.existsSync(md5Json);
             if (!exists) {
-                fs.writeJSONFileSync('./md5s.json', result);
+                fs.writeJSONSync(md5Json, result);
                 return Object.keys(result);
             }
-            var md5 = fs.readJSONFileSync('./md5s.json');
+            var md5 = fs.readJSONSync(md5Json);
             var keys = [];
             for (var key in result) {
                 if (result[key] !== md5[key]) {
+                    debug(`flavor ${key} has changed, add to the list`);
                     keys.push(key);
+                } else {
+                    debug(`flavor ${key} has not changed, ignoring it`)
                 }
             }
-            fs.writeJSONFileSync('./md5s.json', result);
+            fs.writeJSONSync(md5Json, result);
             return keys;
         });
     }
