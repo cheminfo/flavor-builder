@@ -88,7 +88,7 @@ function call(f, configArg) {
                     let flavors = yield getFlavors();
                     // Filter flavors to get only those that have changed
                     flavors = yield filterFlavorsByMd5(flavors);
-                    debug('Processing ' + flavors.length + ' flavors');
+                    debug(`Processing ${flavors.length} flavors: ${flavors}`);
                     for (let i = 0; i < flavors.length; i++) {
                         if (config.flavorLayouts[flavors[i]] === 'visualizer-on-tabs') {
                             yield handleVisualizerOnTabs(flavors[i]);
