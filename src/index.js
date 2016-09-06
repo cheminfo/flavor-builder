@@ -3,8 +3,7 @@
 const DEFAULT_FLAVOR = 'default';
 const READ_CONFIG = './static/readConfig.json';
 
-var Promise = require('bluebird'),
-    urlLib = require('url'),
+var urlLib = require('url'),
     _ = require('lodash'),
     swig = require('swig'),
     fs = require('fs-extra'),
