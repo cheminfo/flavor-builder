@@ -4,6 +4,9 @@
   "description": "Make an indexable website from a flavor (a bunch of views in the visualizer)",
   "main": "src/index.js",
   "bin": "bin/build.js",
+  "scripts": {
+    "create-config": "node bin/create-config.js"
+  },
   "keywords": [
     "visualizer",
     "build"
@@ -22,5 +25,8 @@
     "swig": "^1.4.2",
     "tar": "^2.2.1",
     "visualizer-on-tabs": "cheminfo/visualizer-on-tabs#48338129d8c7a0e94879797f9ecdf5c8ecbf7dbd"
+  },
+  "devDependencies": {
+    "inquirer": "^1.1.3"
   }
 }
