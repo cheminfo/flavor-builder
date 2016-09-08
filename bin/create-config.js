@@ -99,10 +99,16 @@ var generalPrompt = [
         message: 'What is your public couch url?',
     },
     {
-        name: 'couchDatabase',
+        name: 'couchUsername',
         type: 'input',
-        required: true,
-        message: 'What is the name of the database you would like to build?',
+        required: false,
+        message: 'Which user to connect to the couchdb database? (not needed if your database is public)',
+    },
+    {
+        name: 'couchPassword',
+        type: 'password',
+        required: false,
+        message: 'What the couchdb user\'s password? (not needed if your database is public)'
     },
     {
         name: 'flavorUsername',
@@ -227,12 +233,12 @@ function addFlavor() {
             }));
         }
         if (answer.layout === 'visualizer-on-tabs') {
-            prom = prom.then(() => inquirer.prompt(visualizerOnTabsPrompt)).then(function(ans) {
+            prom = prom.then(() => inquirer.prompt(visualizerOnTabsPrompt)).then(function (ans) {
                 answer.visualizerOnTabs = ans;
             });
         }
-        return prom.then(function() {
-            if(!answer.login) delete answer.login;
+        return prom.then(function () {
+            if (!answer.login) delete answer.login;
             return answer;
         });
     });
@@ -260,10 +266,10 @@ function postProcess() {
     for (var i = 0; i < config.flavors.length; i++) {
         var flavor = config.flavors[i];
         config.flavorLayouts[flavor.name] = flavor.layout;
-        if(flavor.visualizerOnTabs) {
+        if (flavor.visualizerOnTabs) {
             var onTabsConfig = config.visualizerOnTabs[flavor.name] = {};
             onTabsConfig.rocLogin = flavor.login;
-            if(flavor.visualizerOnTabs.addRewrite) {
+            if (flavor.visualizerOnTabs.addRewrite) {
                 onTabsConfig.rewriteRules = [
                     {reg: "^[^/]+$", replace: `${config.couchurl}/cheminfo-public/$&/view.json`},
                     {reg: "^[^/]+\/[^/]+$", replace: `${config.couchurl}/$&/view.json`},
@@ -278,7 +284,7 @@ function postProcess() {
         }
     }
     delete config.flavors;
-    if(!config.flavor) delete config.flavor;
+    if (!config.flavor) delete config.flavor;
 }
 
 
