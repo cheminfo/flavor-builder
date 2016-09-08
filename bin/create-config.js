@@ -11,6 +11,11 @@ const LAYOUT_DEFAULT = 'Visualizer with menu';
 const LAYOUT_ON_TABS = 'visualizer-on-tabs';
 const LAYOUT_SEARCH = 'Visualizer with menu and search box';
 
+function filterUndef(input) {
+    if(!input) return undefined;
+    return input;
+}
+
 const config = {
     flavors: [],
     rocLogin: {},
@@ -65,7 +70,7 @@ var addFlavorPrompt = [
         name: 'login',
         type: 'confirm',
         required: true,
-        message: 'Should the built page have a login link'
+        message: 'Should the built page have rest-on-couch login link'
     }
 ];
 
@@ -102,19 +107,30 @@ var generalPrompt = [
         name: 'couchUsername',
         type: 'input',
         required: false,
-        message: 'Which user to connect to the couchdb database? (not needed if your database is public)',
+        message: 'Which user to connect to the couchdb database (not needed if your database is public) ?',
+        filter: filterUndef
     },
     {
         name: 'couchPassword',
         type: 'password',
         required: false,
-        message: 'What the couchdb user\'s password? (not needed if your database is public)'
+        message: 'What the couchdb user\'s password?',
+        when: function(answers) {
+            return !!answers.couchUsername;
+        }
+    },
+    {
+        name: 'rocUrl',
+        type: 'input',
+        required: false,
+        message: 'What is the public rest-on-couch url (optional)?'
     },
     {
         name: 'flavorUsername',
         type: 'input',
         required: true,
         message: 'What is the user for which you would like to build?',
+
     },
     {
         name: 'flavor',
@@ -141,8 +157,9 @@ var visualizerOnTabsPrompt = {
 function main() {
     filePath()
         .then(buildDir)
-        .then(addFlavors)
         .then(general)
+        .then(updateFlavorPrompt)
+        .then(addFlavors)
         .then(postProcess)
         .then(writeConfig)
         .catch(function (e) {
@@ -221,6 +238,12 @@ function filePath() {
             return createDirectory(dir, filePath);
         }
     });
+}
+
+function updateFlavorPrompt() {
+    if(config.rocUrl) {
+        loginPrompt.find(el => el.name === 'url').default = config.rocUrl;
+    }
 }
 
 function addFlavor() {
