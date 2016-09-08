@@ -138,12 +138,9 @@ function main() {
         .then(addFlavors)
         .then(general)
         .then(postProcess)
-        .then(function () {
-            console.log(configPath);
-            console.log(JSON.stringify(config, null, '\t'));
-        })
+        .then(writeConfig)
         .catch(function (e) {
-            console.log('error', e);
+            console.error('error', e);
         });
 }
 
@@ -159,6 +156,10 @@ function overwrite() {
             return filePath();
         }
     })
+}
+
+function writeConfig() {
+    fs.writeJsonSync(configPath, config);
 }
 
 function buildDir() {
@@ -276,6 +277,8 @@ function postProcess() {
             config.rocLogin[flavor.name] = flavor.login;
         }
     }
+    delete config.flavors;
+    if(!config.flavor) delete config.flavor;
 }
 
 
