@@ -17,9 +17,9 @@
         var prom;
         // Weird but will avoid javascript error if this param is not what we expect
         {% if selfContained %}
-            prom = Promise.resolve([]);
+            prom = $.Deferred(); prom.resolve([]);
         {% else %}
-            prom = Promise.resolve($.getJSON('{{ config.cdn }}/visualizer/versions.json'));
+            prom = $.getJSON('{{ config.cdn }}/visualizer/versions.json');
         {% endif %}
 
         prom.then(function (versions) {
