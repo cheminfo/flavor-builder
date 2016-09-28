@@ -30,6 +30,11 @@ exports = module.exports = function (configArg) {
         }
     }
 
+    if (process.env.COUCHDB_USER) {
+        config.couchUsername = process.env.COUCHDB_USER;
+        config.couchPassword = process.env.COUCHDB_PASSWORD;
+    }
+
     config.couchReqOptions = config.couchPassword ? {
         auth: {
             user: config.couchUsername,
