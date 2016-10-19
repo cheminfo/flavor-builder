@@ -323,7 +323,7 @@ function call(f, configArg) {
     // data: the
     function * handleFlavor(flavorName) {
         var viewsList = yield getFlavor(flavorName);
-        debug('handle flavor');
+        debug(`handle flavor ${flavorName}`);
         const flavorDir = getFlavorDir(flavorName, true);
 
         // Transforms the array-representation of a flavor's views as returned by couchdb

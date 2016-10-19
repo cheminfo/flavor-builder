@@ -1,6 +1,9 @@
 <script>
     'use strict';
     function checkVersion(versions, version) {
+        versions = versions.map(function(v) {
+            return v.toLowerCase();
+        });
         version = version.toLowerCase();
         if (version && version[0] >= '0' && version[0] <= '9' && !version.startsWith('v')) version = 'v' + version;
         var idx = versions.indexOf(version);
