@@ -2,24 +2,8 @@
 Visualizer website generator
 
 ## Config
-```json
-{
-  "couchurl": "http://visualizer.epfl.ch/",
-  "couchUsername": "myusername",
-  "couchPassword": "mypassword",
-  "couchDatabase": "cheminfo",
-  "flavor": "default",
-  "dir": "./build",
-  "layoutFile": "bootstrap/bootstrap.html",
-  "configUrl": "http://example.com/path/to/my/config.json",
-  "home": "Home"
-}
+To create a configuration file, run:
+```bash
+npm run create-config
 ```
-
-All config options can be overwritten on the commandline:
-```
- cp config-default.json config.json
- cp layouts-default.json layouts.json
- node index.js --layoutFile="simple/page.html"
-```
-
+It will prompt you with questions and create the configuration file with your answers.
