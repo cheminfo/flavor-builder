@@ -18,10 +18,9 @@ var urlLib = require('url'),
     debug = require('debug')('flavor-builder:main');
 
 var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
-const md5Json = path.join(__dirname, '../md5.json');
 
 function call(f, configArg) {
-    var config, layouts, toCopy, toSwig, versions, filters, flavorUtils, sitemaps;
+    var config, layouts, toCopy, toSwig, versions, filters, flavorUtils, sitemaps, revisionById, md5;
 
 
     function init(configArg) {
@@ -45,6 +44,9 @@ function call(f, configArg) {
 
     function build() {
         debug('start build');
+        revisionById = checkFile(config.revisionByIdPath);
+        md5 = checkFile(config.md5Path);
+
         toCopy = [
             {src: path.join(__dirname, '../lib'), dest: path.join(config.dir, './lib')},
             {src: path.join(__dirname, '../themes'), dest: path.join(config.dir, './themes')},
@@ -60,8 +62,6 @@ function call(f, configArg) {
 
         return co(function*() {
             try {
-
-
                 sitemaps = readSiteMaps();
                 debug('get versions');
                 versions = yield getVersionsRequest();
@@ -103,6 +103,28 @@ function call(f, configArg) {
                 debug('error occured', e);
             }
         });
+    }
+
+    function checkFile(path) {
+        debug(`check that ${path} can be written`);
+        try {
+            var fid = fs.openSync(path, 'a+');
+            fs.closeSync(fid);
+            try {
+                return fs.readJSONSync(path);
+            } catch(e) {
+                return {};
+            }
+
+        } catch(e) {
+            if(e.code === 'ENOENT') {
+                fs.writeJSONSync(path, {});
+                return {};
+            } else {
+                // propagate the error
+                throw e;
+            }
+        }
     }
 
     function readSiteMaps() {
@@ -204,12 +226,10 @@ function call(f, configArg) {
                 debug('force update, no flavor filtering')
                 return Object.keys(result);
             }
-            var exists = fs.existsSync(md5Json);
-            if (!exists) {
-                fs.writeJSONSync(md5Json, result);
+            if (JSON.stringify(md5) === '{}') {
+                fs.writeJSONSync(config.md5Path, result);
                 return Object.keys(result);
             }
-            var md5 = fs.readJSONSync(md5Json);
             var keys = [];
             for (var key in result) {
                 if (result[key] !== md5[key]) {
@@ -220,7 +240,7 @@ function call(f, configArg) {
                     debug(`flavor ${key} has not changed, ignoring it`)
                 }
             }
-            fs.writeJSONSync(md5Json, md5);
+            fs.writeJSONSync(config.md5Path, md5);
             return keys;
         });
     }
@@ -331,15 +351,14 @@ function call(f, configArg) {
         debug('get tree');
         let viewTree = yield flavorUtils.getTree(viewsList);
         // Set the path of each view to end up to
-        debug('do path on tree')
+        debug('do path on tree');
         yield flavorUtils.traverseTree(viewTree, doPath(flavorDir));
         // For each view fix version number
-        debug('fix version on tree')
+        debug('fix version on tree');
         yield flavorUtils.traverseTree(viewTree, fixVersion);
         // For each view generate the html in the appropriate directory
         debug('generate html on tree');
-        yield flavorUtils.traverseTree(viewTree, generateHtml(flavorName, viewTree));
-
+        yield flavorUtils.traverseTree(viewTree, checkRevisionChanged(generateHtml(flavorName, viewTree), flavorName));
         // Copy visualizer from cdn
         if (config.isSelfContained(flavorName)) {
             let versions = yield getVersionsFromTree(viewTree);
@@ -351,6 +370,21 @@ function call(f, configArg) {
         copyFiles();
         // Process non view-specific swig
         swigFiles();
+        // Update
+    }
+
+    function checkRevisionChanged(cb, flavorName) {
+        return function(el) {
+            var id = el.__id;
+            var rev = el.__rev;
+            if(config.forceUpdate || !revisionById[flavorName] || revisionById[flavorName][id] !== rev) {
+                debug(`process view - flavor: ${flavorName}, id: ${el.__id}`);
+                cb(el);
+                if(!revisionById[flavorName]) revisionById[flavorName] = {};
+                revisionById[flavorName][el.__id] = el.__rev;
+                fs.writeJsonSync(config.revisionByIdPath, revisionById);
+            }
+        }
     }
 
     function fixVersion(el) {

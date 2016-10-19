@@ -35,6 +35,14 @@ exports = module.exports = function (configArg) {
         config.couchPassword = process.env.COUCHDB_PASSWORD;
     }
 
+    if(!config.revisionByIdPath) {
+        config.revisionByIdPath = path.resolve(__dirname, '../revisionById.json');
+    }
+
+    if(!config.md5Path) {
+        config.md5Path = path.resolve(__dirname, '../md5.json');
+    }
+
     config.couchReqOptions = config.couchPassword ? {
         auth: {
             user: config.couchUsername,
