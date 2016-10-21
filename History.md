@@ -1,3 +1,13 @@
+<a name="1.2.3"></a>
+## [1.2.3](https://github.com/cheminfo/flavor-builder/compare/v1.2.2...v1.2.3) (2016-10-21)
+
+
+### Bug Fixes
+
+* **visualizer template:** make versions lowercase for comparison ([cc99c9d](https://github.com/cheminfo/flavor-builder/commit/cc99c9d))
+
+
+
 <a name="1.2.2"></a>
 ## [1.2.2](https://github.com/cheminfo/flavor-builder/compare/v1.2.1...v1.2.2) (2016-09-29)
 
