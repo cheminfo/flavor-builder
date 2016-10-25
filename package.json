@@ -20,7 +20,7 @@
     "fs-extra": "^0.30.0",
     "lodash": "^4.16.4",
     "minimist": "^1.2.0",
-    "request": "^2.75.0",
+    "request": "^2.76.0",
     "superagent": "^2.3.0",
     "swig": "^1.4.2",
     "tar": "^2.2.1",
