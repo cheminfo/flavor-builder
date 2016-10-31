@@ -1,4 +1,4 @@
-{% extends '../complete.html' %}
+{% extends '../simple-menu.html' %}
 
 {% block head %}
 {% parent %}
@@ -6,5 +6,26 @@
 <script src="{{ '//cdnjs.cloudflare.com/ajax/libs/select2/4.0.1/js/select2.min.js' | processUrl(reldir, flavor) }}"></script>
 <link rel="stylesheet" href="{{ reldir }}/themes/simplemenu/normal.css"/>
 {% endblock head %}
+
+{% block menu %}
+<div>
+    <!-- override menu block -->
+    <div class="header-element">
+        <div id="cssmenu">
+            {{ menuHtml|safe }}
+        </div>
+    </div>
+    <div class="header-element">
+        {% include "../../includes/searchbox.html" %}
+    </div>
+    <div class="header-element">
+        {% include "../../includes/loginButton.html" %}
+    </div>
+    <div class="header-element">
+        {% include "../../includes/copyLinkButton.html" %}
+    </div>
+</div>
+{% endblock menu %}
+
 
 
