@@ -99,7 +99,7 @@ function call(f, configArg) {
                     }
                 }
                 writeSiteMaps();
-            } catch(e) {
+            } catch (e) {
                 debug('error occured', e);
             }
         });
@@ -112,12 +112,12 @@ function call(f, configArg) {
             fs.closeSync(fid);
             try {
                 return fs.readJSONSync(path);
-            } catch(e) {
+            } catch (e) {
                 return {};
             }
 
-        } catch(e) {
-            if(e.code === 'ENOENT') {
+        } catch (e) {
+            if (e.code === 'ENOENT') {
                 fs.writeJSONSync(path, {});
                 return {};
             } else {
@@ -192,7 +192,7 @@ function call(f, configArg) {
 
         yield flavorUtils.traverseTree(viewTree, function (el) {
             if (el.__name === config.home) {
-                const outDir =  path.join(flavorDir, el.__parents.join('/'));
+                const outDir = path.join(flavorDir, el.__parents.join('/'));
                 const indexPage = path.relative(config.dir, path.join(outDir, 'index.html'));
 
                 var customConfig = {
@@ -213,7 +213,7 @@ function call(f, configArg) {
             }
         });
 
-        for(let i=0; i<homePages.length; i++) {
+        for (let i = 0; i < homePages.length; i++) {
             yield visualizerOnTabs(homePages[i]);
         }
     }
@@ -374,16 +374,18 @@ function call(f, configArg) {
     }
 
     function checkRevisionChanged(cb, flavorName) {
-        return function(el) {
+        return function (el) {
+            var prom = Promise.resolve();
             var id = el.__id;
             var rev = el.__rev;
-            if(config.forceUpdate || !revisionById[flavorName] || revisionById[flavorName][id] !== rev) {
+            if (config.forceUpdate || !revisionById[flavorName] || revisionById[flavorName][id] !== rev) {
                 debug(`process view - flavor: ${flavorName}, id: ${el.__id}`);
-                cb(el);
-                if(!revisionById[flavorName]) revisionById[flavorName] = {};
+                prom = cb(el);
+                if (!revisionById[flavorName]) revisionById[flavorName] = {};
                 revisionById[flavorName][el.__id] = el.__rev;
                 fs.writeJsonSync(config.revisionByIdPath, revisionById);
             }
+            return prom;
         }
     }
 
@@ -529,7 +531,7 @@ function call(f, configArg) {
 
     function getBotContent(viewContent) {
         var content = JSON.parse(viewContent);
-        if(content.modules) {
+        if (content.modules) {
             var modules = content.modules.filter(m => {
                 return m.url.match(/\/(rich_text|postit)/);
             });
@@ -567,7 +569,7 @@ function call(f, configArg) {
 
         try {
             if (view.aliases) {
-                
+
                 for (var i = 0; i < view.aliases.length; i++) {
                     let lib = view.aliases[i].path;
                     if (libraryNeedsProcess(lib)) {
@@ -684,7 +686,7 @@ function call(f, configArg) {
     function copyFiles() {
         debug('copy files')
         for (var i = 0; i < toCopy.length; i++) {
-            debug('copy ' + toCopy[i].src + ' to ' +  toCopy[i].dest);
+            debug('copy ' + toCopy[i].src + ' to ' + toCopy[i].dest);
             fs.copySync(toCopy[i].src, toCopy[i].dest);
         }
     }
@@ -716,8 +718,8 @@ function call(f, configArg) {
 
                 exec(`curl ${url} | tar -xz`, {
                     cwd: extractDir
-                }, function(err) {
-                    if(err) reject(err);
+                }, function (err) {
+                    if (err) reject(err);
                     resolve();
                 });
             });
