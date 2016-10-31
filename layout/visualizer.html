@@ -14,6 +14,7 @@
             // Fallback version is HEAD-min
             version = 'HEAD-min';
         }
+        if(version === 'head-min') version = 'HEAD-min';
         return version;
     }
     window.onload = function () {
@@ -26,17 +27,22 @@
         {% endif %}
 
         prom.then(function (versions) {
-            var url;
+            var version;
             var uri = new URI(window.location.href);
             var search = uri.search(true);
-            url = '{{ viewURL }}';
+            var url = '{{ viewURL }}';
+            var tplVersion = '{{ version }}';
             var fallbackVersion = '{{ version }}';
-            var version;
             if (search.viewURL) {
                 url = search.viewURL;
             }
+            // Get version in the following priority order
+            // In url, in template, fallback
             if (search.v) {
                 version = checkVersion(versions, search.v);
+            }
+            if (!version) {
+                version = checkVersion(versions, tplVersion);
             }
             if (!version) {
                 version = checkVersion(versions, fallbackVersion);
