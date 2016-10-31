@@ -1,0 +1,27 @@
+<!-- Button to trigger copy link -->
+<input type="button" id="copy-link-button" value="Copy url"> </input>
+
+<script>
+
+
+    // Do request to clp to know is user is logged in
+    var $linkButton = $('#copy-link-button');
+
+    $linkButton.on('click', function () {
+        // Create text area, select it and copy it, then hide it
+        var url = new window.URL(document.location.href);
+        var viewUrl = '{{ viewURL }}';
+        if(viewUrl) {
+            url.searchParams.set('viewURL', viewUrl);
+        }
+        var dataUrl = '{{ dataURL }}';
+        if(dataUrl) {
+            url.searchParams.set('dataURL', dataUrl);
+        }
+        var $ta = $linkButton.after(`<textarea>${url}</textarea>`).next();
+        $ta.focus().select();
+        document.execCommand('copy');
+        $ta.remove();
+    });
+
+</script>
