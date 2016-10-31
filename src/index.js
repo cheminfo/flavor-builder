@@ -358,7 +358,22 @@ function call(f, configArg) {
         yield flavorUtils.traverseTree(viewTree, fixVersion);
         // For each view generate the html in the appropriate directory
         debug('generate html on tree');
-        yield flavorUtils.traverseTree(viewTree, checkRevisionChanged(generateHtml(flavorName, viewTree), flavorName));
+
+        var hasNew;
+
+        yield flavorUtils.traverseTree(viewTree, function (el) {
+            if(!revisionById[flavorName] || !revisionById[flavorName][el.__id]) {
+                hasNew = true;
+            }
+        });
+
+        if(!hasNew) {
+            // Generate only for views that changed
+            yield flavorUtils.traverseTree(viewTree, checkRevisionChanged(generateHtml(flavorName, viewTree), flavorName));
+        } else {
+            // Generate for all views (because menu needs to be updated)
+            yield flavorUtils.traverseTree(viewTree, updateRevision(generateHtml(flavorName, viewTree), flavorName));
+        }
         // Copy visualizer from cdn
         if (config.isSelfContained(flavorName)) {
             let versions = yield getVersionsFromTree(viewTree);
@@ -370,7 +385,21 @@ function call(f, configArg) {
         copyFiles();
         // Process non view-specific swig
         swigFiles();
-        // Update
+    }
+
+    function logProcessView(el, flavorName) {
+        debug(`process view - flavor: ${flavorName}, id: ${el.__id}`);
+    }
+
+    function updateRevision(cb, flavorName) {
+        return function(el) {
+            logProcessView(el, flavorName);
+            var prom = cb(el);
+            if (!revisionById[flavorName]) revisionById[flavorName] = {};
+            revisionById[flavorName][el.__id] = el.__rev;
+            fs.writeJsonSync(config.revisionByIdPath, revisionById);
+            return prom;
+        }
     }
 
     function checkRevisionChanged(cb, flavorName) {
@@ -379,7 +408,7 @@ function call(f, configArg) {
             var id = el.__id;
             var rev = el.__rev;
             if (config.forceUpdate || !revisionById[flavorName] || revisionById[flavorName][id] !== rev) {
-                debug(`process view - flavor: ${flavorName}, id: ${el.__id}`);
+                logProcessView(el, flavorName);
                 prom = cb(el);
                 if (!revisionById[flavorName]) revisionById[flavorName] = {};
                 revisionById[flavorName][el.__id] = el.__rev;
@@ -634,19 +663,19 @@ function call(f, configArg) {
 
     function buildQueryString(el, flavorName) {
         var result = '?';
-        if (el.__view) {
-            if (config.isSelfContained(flavorName))
-                result += 'viewURL=' + encodeURIComponent('./view.json');
-            else
-                result += 'viewURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev);
-        }
-        if (el.__data) {
-            if (result !== '?') result += '&';
-            if (config.isSelfContained(flavorName))
-                result += 'dataURL=' + encodeURIComponent('./data.json');
-            else
-                result += 'dataURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev);
-        }
+        // if (el.__view) {
+        //     if (config.isSelfContained(flavorName))
+        //         result += 'viewURL=' + encodeURIComponent('./view.json');
+        //     else
+        //         result += 'viewURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev);
+        // }
+        // if (el.__data) {
+        //     if (result !== '?') result += '&';
+        //     if (config.isSelfContained(flavorName))
+        //         result += 'dataURL=' + encodeURIComponent('./data.json');
+        //     else
+        //         result += 'dataURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev);
+        // }
 
         var conf = getFlavorConfig(flavorName);
 
@@ -684,7 +713,7 @@ function call(f, configArg) {
     }
 
     function copyFiles() {
-        debug('copy files')
+        debug('copy files');
         for (var i = 0; i < toCopy.length; i++) {
             debug('copy ' + toCopy[i].src + ' to ' + toCopy[i].dest);
             fs.copySync(toCopy[i].src, toCopy[i].dest);
