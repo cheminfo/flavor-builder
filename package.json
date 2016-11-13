@@ -27,6 +27,6 @@
     "visualizer-on-tabs": "cheminfo/visualizer-on-tabs#master"
   },
   "devDependencies": {
-    "inquirer": "^1.2.2"
+    "inquirer": "^1.2.3"
   }
 }
