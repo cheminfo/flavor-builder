@@ -18,7 +18,7 @@
     "debug": "^2.3.2",
     "flavor-utils": "^3.2.0",
     "fs-extra": "^1.0.0",
-    "lodash": "^4.17.0",
+    "lodash": "^4.17.2",
     "minimist": "^1.2.0",
     "request": "^2.78.0",
     "superagent": "^2.3.0",
