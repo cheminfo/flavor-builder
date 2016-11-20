@@ -21,7 +21,7 @@
     "lodash": "^4.17.2",
     "minimist": "^1.2.0",
     "request": "^2.79.0",
-    "superagent": "^2.3.0",
+    "superagent": "^3.0.0",
     "swig": "^1.4.2",
     "tar": "^2.2.1",
     "visualizer-on-tabs": "cheminfo/visualizer-on-tabs#master"
