@@ -21,10 +21,10 @@
     "lodash": "^4.17.2",
     "minimist": "^1.2.0",
     "request": "^2.79.0",
-    "superagent": "^2.3.0",
+    "superagent": "^3.3.1",
     "swig": "^1.4.2",
     "tar": "^2.2.1",
-    "visualizer-on-tabs": "git+https://github.com/cheminfo/visualizer-on-tabs.git#master"
+    "visualizer-on-tabs": "git+https://github.com/cheminfo/visualizer-on-tabs#48b2da955eeb3b26faa7d1f6f934239b87fa60ec"
   },
   "devDependencies": {
     "inquirer": "^1.2.3"
