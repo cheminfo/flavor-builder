@@ -365,15 +365,18 @@ function call(f, configArg) {
         // For each view generate the html in the appropriate directory
         debug('generate html on tree');
 
-        var hasNew;
+        var hasNew = false;
+        var nameChanged = false;
 
         yield flavorUtils.traverseTree(viewTree, function (el) {
             if(!revisionById[flavorName] || !revisionById[flavorName][el.__id]) {
                 hasNew = true;
+            } else if(revisionById[flavorName][el.__id].name !== el.__name) {
+                nameChanged = true;
             }
         });
 
-        if(!hasNew) {
+        if(!hasNew && !nameChanged) {
             // Generate only for views that changed
             yield flavorUtils.traverseTree(viewTree, checkRevisionChanged(generateHtml(flavorName, viewTree), flavorName));
         } else {
@@ -402,7 +405,10 @@ function call(f, configArg) {
             logProcessView(el, flavorName);
             var prom = cb(el);
             if (!revisionById[flavorName]) revisionById[flavorName] = {};
-            revisionById[flavorName][el.__id] = el.__rev;
+            revisionById[flavorName][el.__id] = {
+                rev: el.__rev,
+                name: el.__name
+            };
             fs.writeJsonSync(config.revisionByIdPath, revisionById);
             return prom;
         }
@@ -413,11 +419,14 @@ function call(f, configArg) {
             var prom = Promise.resolve();
             var id = el.__id;
             var rev = el.__rev;
-            if (config.forceUpdate || !revisionById[flavorName] || revisionById[flavorName][id] !== rev) {
+            if (config.forceUpdate || !revisionById[flavorName] || !revisionById[flavorName][id] || revisionById[flavorName][id].rev !== rev) {
                 logProcessView(el, flavorName);
                 prom = cb(el);
                 if (!revisionById[flavorName]) revisionById[flavorName] = {};
-                revisionById[flavorName][el.__id] = el.__rev;
+                revisionById[flavorName][el.__id] = {
+                    rev: el.__rev,
+                    name: el.__name
+                };
                 fs.writeJsonSync(config.revisionByIdPath, revisionById);
             }
             return prom;
