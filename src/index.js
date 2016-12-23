@@ -25,7 +25,7 @@ function call(f, configArg) {
     function init(configArg) {
         config = require('./config')(configArg);
         if(config.pidFile) {
-            var isLocked = require('./isLocked')(path.resolve(__dirname, path.join('..', config.pidFile)));
+            var isLocked = require('./isLocked')(path.resolve(path.join(__dirname, '..'), config.pidFile));
             if(isLocked) {
                 throw new Error('flavor-builder already running');
             }
