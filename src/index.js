@@ -15,7 +15,13 @@ var urlLib = require('url'),
     FlavorUtils = require('flavor-utils'),
     visualizerOnTabs = require('visualizer-on-tabs'),
     exec = require('child_process').exec,
-    debug = require('debug')('flavor-builder:main');
+    debug = require('debug')('flavor-builder:main'),
+    isLocked = require('./isLocked')(path.join(__dirname, '..', 'flavor-builder.pid'));
+
+if(isLocked) {
+    console.log('flavor-builder already running');
+    process.exit(0);
+}
 
 var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
 
