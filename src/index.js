@@ -367,8 +367,11 @@ function call(f, configArg) {
 
         var hasNew = false;
         var nameChanged = false;
+        var hasDeleted = false;
+        const flavorIds = {};
 
         yield flavorUtils.traverseTree(viewTree, function (el) {
+            flavorIds[el.__id] = 1;
             if(!revisionById[flavorName] || !revisionById[flavorName][el.__id]) {
                 hasNew = true;
             } else if(revisionById[flavorName][el.__id].name !== el.__name) {
@@ -376,7 +379,18 @@ function call(f, configArg) {
             }
         });
 
-        if(!hasNew && !nameChanged) {
+        // Remove deleted views
+        const savedIds = revisionById[flavorName] ? Object.keys(revisionById[flavorName]) : [];
+        for(let i = 0; i<savedIds.length; i++) {
+            if(!flavorIds[savedIds[i]]) {
+                hasDeleted = true;
+                delete revisionById[flavorName][savedIds[i]];
+            }
+        }
+
+        fs.writeJsonSync(config.revisionByIdPath, revisionById);
+
+        if(!hasNew && !nameChanged && !hasDeleted) {
             // Generate only for views that changed
             yield flavorUtils.traverseTree(viewTree, checkRevisionChanged(generateHtml(flavorName, viewTree), flavorName));
         } else {
