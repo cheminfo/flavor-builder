@@ -15,22 +15,22 @@ var urlLib = require('url'),
     FlavorUtils = require('flavor-utils'),
     visualizerOnTabs = require('visualizer-on-tabs'),
     exec = require('child_process').exec,
-    debug = require('debug')('flavor-builder:main'),
-    isLocked = require('./isLocked')(path.join(__dirname, '..', 'flavor-builder.pid'));
-
-if(isLocked) {
-    console.log('flavor-builder already running');
-    process.exit(0);
-}
+    debug = require('debug')('flavor-builder:main')
 
 var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
 
 function call(f, configArg) {
     var config, layouts, toCopy, toSwig, versions, filters, flavorUtils, sitemaps, revisionById, md5;
 
-
     function init(configArg) {
         config = require('./config')(configArg);
+        if(config.pidFile) {
+            var isLocked = require('./isLocked')(path.resolve(__dirname, path.join('..', config.pidFile)));
+            if(isLocked) {
+                throw new Error('flavor-builder already running');
+            }
+        }
+
         filters = require('./filters')(config);
         layouts = config.layouts;
         flavorUtils = new FlavorUtils({
