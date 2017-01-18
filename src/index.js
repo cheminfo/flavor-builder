@@ -773,7 +773,7 @@ function call(f, configArg) {
             return new Promise(function (resolve, reject) {
                 debug('copying visualizer', version);
                 fs.mkdirpSync(extractDir);
-                url = utils.getAuthUrl(config, url);
+                url = utils.getAuthUrl(config, url.href);
 
                 exec(`curl ${url} | tar -xz`, {
                     cwd: extractDir
