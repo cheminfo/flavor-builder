@@ -1,3 +1,19 @@
+<a name="1.4.0"></a>
+# [1.4.0](https://github.com/cheminfo/flavor-builder/compare/v1.3.2...v1.4.0) (2017-01-18)
+
+
+### Bug Fixes
+
+* rebuild entire flavor when a name changes ([617ec7d](https://github.com/cheminfo/flavor-builder/commit/617ec7d))
+* regenerate flavor when a view was deleted from it ([15b4383](https://github.com/cheminfo/flavor-builder/commit/15b4383))
+
+
+### Features
+
+* check if flavor-builder already running ([0e730cc](https://github.com/cheminfo/flavor-builder/commit/0e730cc))
+
+
+
 <a name="1.3.2"></a>
 ## [1.3.2](https://github.com/cheminfo/flavor-builder/compare/v1.3.1...v1.3.2) (2016-12-19)
 
