@@ -15,7 +15,9 @@ var urlLib = require('url'),
     FlavorUtils = require('flavor-utils'),
     visualizerOnTabs = require('visualizer-on-tabs'),
     exec = require('child_process').exec,
-    debug = require('debug')('flavor-builder:main')
+    debug = require('debug')('flavor-builder:main');
+
+var URL = urlLib.URL;
 
 var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
 
@@ -316,7 +318,8 @@ function call(f, configArg) {
     }
 
     function getVersionsRequest() {
-        return requestGet('http://www.lactame.com/visualizer/versions.json')
+        const u = new URL('visualizer/versions.json', config.cdn);
+        return requestGet(u.href);
     }
 
     function getViewUrl(el, type) {
@@ -757,12 +760,10 @@ function call(f, configArg) {
 
     function copyVisualizer(version) {
         version = utils.checkVersion(version);
-        let visualizerUrl = (config.cdn + '/visualizer').replace(/^\/\//, 'https://');
-        let parsedUrl = urlLib.parse(visualizerUrl);
-        let file = version + '.tar.gz';
-        let url = visualizerUrl + '/' + file;
-        let extractDir = path.join(config.dir, config.libFolder, parsedUrl.hostname, parsedUrl.path, version);
+        let url = new URL('visualizer', config.cdn);
+        let extractDir = path.join(config.dir, config.libFolder, url.hostname, url.pathname, version);
 
+        url.pathname += `/${version}.tar.gz`;
 
         // Check if already exists
         try {
