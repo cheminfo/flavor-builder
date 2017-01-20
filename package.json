@@ -25,7 +25,7 @@
     "superagent": "^3.3.1",
     "swig": "^1.4.2",
     "tar": "^2.2.1",
-    "visualizer-on-tabs": "git+https://github.com/cheminfo/visualizer-on-tabs#511bdd08265a69a0f42f17e1728280c95d27bb33"
+    "visualizer-on-tabs": "git+https://github.com/cheminfo/visualizer-on-tabs#9fe1d739e314aece273896aea56bef054af2d55b"
   },
   "devDependencies": {
     "inquirer": "^1.2.3"
