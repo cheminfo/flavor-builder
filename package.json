@@ -17,7 +17,7 @@
     "co": "^4.4.0",
     "debug": "^2.3.3",
     "flavor-utils": "^3.2.0",
-    "fs-extra": "^1.0.0",
+    "fs-extra": "^2.0.0",
     "is-running": "^2.1.0",
     "lodash": "^4.17.2",
     "minimist": "^1.2.0",
@@ -25,7 +25,7 @@
     "superagent": "^3.3.1",
     "swig": "^1.4.2",
     "tar": "^2.2.1",
-    "visualizer-on-tabs": "git+https://github.com/cheminfo/visualizer-on-tabs#9fe1d739e314aece273896aea56bef054af2d55b"
+    "visualizer-on-tabs": "git+https://github.com/cheminfo/visualizer-on-tabs#6a98b089c3db5adbec9921e7ecc72ca0abc96d30"
   },
   "devDependencies": {
     "inquirer": "^1.2.3"
