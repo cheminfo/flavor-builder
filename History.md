@@ -1,3 +1,8 @@
+<a name="1.4.3"></a>
+## [1.4.3](https://github.com/cheminfo/flavor-builder/compare/v1.4.2...v1.4.3) (2017-02-06)
+
+
+
 <a name="1.4.2"></a>
 ## [1.4.2](https://github.com/cheminfo/flavor-builder/compare/v1.4.1...v1.4.2) (2017-01-20)
 
