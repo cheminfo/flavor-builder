@@ -7,3 +7,6 @@ To create a configuration file, run:
 npm run create-config
 ```
 It will prompt you with questions and create the configuration file with your answers.
+
+
+To force the rebuild you should add the option `--forceUpdate`.
