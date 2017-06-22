@@ -1,3 +1,16 @@
+<a name="2.0.0"></a>
+# [2.0.0](https://github.com/cheminfo/flavor-builder/compare/v1.5.0...v2.0.0) (2017-06-22)
+
+
+* default designDoc: customApp ([43c38be](https://github.com/cheminfo/flavor-builder/commit/43c38be))
+
+
+### BREAKING CHANGES
+
+* the default design doc changed from app to customApp
+
+
+
 <a name="1.5.0"></a>
 # [1.5.0](https://github.com/cheminfo/flavor-builder/compare/v1.4.4...v1.5.0) (2017-06-02)
 
