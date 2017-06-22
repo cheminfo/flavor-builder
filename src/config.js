@@ -73,6 +73,8 @@ exports = module.exports = function (configArg) {
 
     config.rocLogin = config.rocLogin || {};
 
+    config.designDoc = config.designDoc || 'customApp';
+
     return config;
 };
 

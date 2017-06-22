@@ -49,7 +49,7 @@
         }
         $searchbox.select2({
             ajax: {
-                url: "{{ config.couchurl }}/{{ config.couchDatabase }}/_design/app/_view/searchOne",
+                url: "{{ config.couchurl }}/{{ config.couchDatabase }}/_design/{{ config.designDoc }}/_view/searchOne",
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
@@ -97,7 +97,7 @@
         });
         function ajaxCall(sterm) {
             $.ajax({
-                url: "{{ config.couchurl }}/{{ config.couchDatabase }}/_design/app/_view/searchOne",
+                url: "{{ config.couchurl }}/{{ config.couchDatabase }}/_design/{{ config.designDoc }}/_view/searchOne",
                 dataType: 'json',
                 data: {
                     startkey: JSON.stringify(sterm),
