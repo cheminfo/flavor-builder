@@ -1,3 +1,17 @@
+<a name="3.0.0"></a>
+# [3.0.0](https://github.com/cheminfo/flavor-builder/compare/v2.0.0...v3.0.0) (2017-08-31)
+
+
+* No longer check visualizer version ([d740949](https://github.com/cheminfo/flavor-builder/commit/d740949))
+
+
+### BREAKING CHANGES
+
+* The version used no longer falls back to HEAD-min if the version is
+unspecified or the versions does not exist in lactame.
+
+
+
 <a name="2.0.0"></a>
 # [2.0.0](https://github.com/cheminfo/flavor-builder/compare/v1.5.0...v2.0.0) (2017-06-22)
 
