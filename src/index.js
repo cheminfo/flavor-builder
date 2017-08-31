@@ -22,7 +22,7 @@ var URL = urlLib.URL;
 var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
 
 function call(f, configArg) {
-    var config, layouts, toCopy, toSwig, versions, filters, flavorUtils, sitemaps, revisionById, md5;
+    var config, layouts, toCopy, toSwig, filters, flavorUtils, sitemaps, revisionById, md5;
 
     function init(configArg) {
         config = require('./config')(configArg);
@@ -72,7 +72,6 @@ function call(f, configArg) {
             try {
                 sitemaps = readSiteMaps();
                 debug('get versions');
-                versions = yield getVersionsRequest();
                 if (config.flavor) {
                     // Build single flavor
                     let exists = yield hasFlavor(config.flavor);
@@ -305,23 +304,6 @@ function call(f, configArg) {
         return flavorUtils.getFlavor({flavor: flavor}, true);
     }
 
-    function requestGet(url, options) {
-        options = options || {};
-        return new Promise(function (resolve, reject) {
-            request(url, options, function (err, response, body) {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve(body);
-            });
-        });
-    }
-
-    function getVersionsRequest() {
-        const u = new URL('visualizer/versions.json', config.cdn);
-        return requestGet(u.href);
-    }
-
     function getViewUrl(el, type) {
         return el.__view ? getCouchUrlByType(type) + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev : undefined;
     }
@@ -455,9 +437,6 @@ function call(f, configArg) {
             if (!el.__version.startsWith('v')) {
                 el.__version = 'v' + el.__version;
             }
-        }
-        if (el.__version === undefined || versions.indexOf(el.__version) === -1) {
-            el.__version = 'HEAD-min';
         }
     }
 
