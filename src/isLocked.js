@@ -3,17 +3,17 @@ const fs = require('fs');
 const isRunning = require('is-running');
 
 
-module.exports = function(filename) {
+module.exports = function (filename) {
     // try to read the file
     let running;
     try {
         const pid = fs.readFileSync(filename, 'utf8');
         running = isRunning(pid);
-        if(!running) {
+        if (!running) {
             fs.writeFileSync(filename, process.pid);
         }
-    } catch(e) {
-        if(e.code === 'ENOENT') {
+    } catch (e) {
+        if (e.code === 'ENOENT') {
             fs.writeFileSync(filename, process.pid);
             running = false;
         } else {

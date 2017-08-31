@@ -1,14 +1,8 @@
 'use strict';
 
-var config = require('./config');
-var request = require('request');
 var path = require('path');
 var urlLib = require('url');
-var fs = require('fs-extra');
-var writeFile = require('./writeFile');
 var utils = require('./utils');
-
-
 
 function filters(config) {
     var plist = [];
@@ -19,9 +13,9 @@ function filters(config) {
     }
 
     function processUrl(url, reldir, flavorName) {
-       if(!config.isSelfContained(flavorName)) {
-           // We return the original url
-           return url;
+        if (!config.isSelfContained(flavorName)) {
+            // We return the original url
+            return url;
         }
 
         url = utils.rewriteUrl(url);
@@ -30,7 +24,7 @@ function filters(config) {
     }
 
     function visualizer(version, reldir, flavorName) {
-        if (!config.isSelfContained(flavorName)) return;
+        if (!config.isSelfContained(flavorName)) return null;
         version = utils.checkVersion(version);
         let visualizerUrl = (config.cdn + '/visualizer').replace(/^\/\//, 'https://');
         let parsedUrl = urlLib.parse(visualizerUrl);
@@ -44,7 +38,7 @@ function filters(config) {
         visualizer: visualizer
     };
 
-    Object.defineProperty(r, 'plist',{
+    Object.defineProperty(r, 'plist', {
         enumerable: false,
         value: plist
     });

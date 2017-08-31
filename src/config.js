@@ -17,12 +17,12 @@ exports = module.exports = function (configArg) {
     } else {
         throw new TypeError('Incorrect argument');
     }
-// Config given in the command line takes precendence
-    for (var key in args) {
+    // Config given in the command line takes precendence
+    for (let key in args) {
         config[key] = args[key];
     }
 
-// Check mandatory parameters
+    // Check mandatory parameters
     var mandatory = ['dir', 'cdn', 'direct', 'home', 'couchurl', 'couchLocalUrl', 'flavorUsername', 'couchDatabase', 'layouts', 'libFolder'];
     for (var i = 0; i < mandatory.length; i++) {
         if (config[mandatory[i]] === undefined) {
@@ -35,11 +35,11 @@ exports = module.exports = function (configArg) {
         config.couchPassword = process.env.COUCHDB_PASSWORD;
     }
 
-    if(!config.revisionByIdPath) {
+    if (!config.revisionByIdPath) {
         config.revisionByIdPath = path.resolve(__dirname, '../revisionById.json');
     }
 
-    if(!config.md5Path) {
+    if (!config.md5Path) {
         config.md5Path = path.resolve(__dirname, '../md5.json');
     }
 
@@ -52,19 +52,19 @@ exports = module.exports = function (configArg) {
     } : {};
 
     config.couchurl = config.couchurl.replace(/\/$/, '');
-    if(config.rootUrl) {
+    if (config.rootUrl) {
         config.rootUrl = config.rootUrl.replace(/\/$/, '');
     }
 
     if (config.couchLocalUrl) config.couchLocalUrl = config.couchLocalUrl.replace(/\/$/, '');
     config.dir = path.resolve(config.dir);
     config.flavorLayouts = config.flavorLayouts || {};
-    if(config.layouts) {
-        for(var key in config.layouts) {
+    if (config.layouts) {
+        for (let key in config.layouts) {
             config.layouts[key] = path.join(__dirname, '../layout', config.layouts[key]);
         }
     }
-    
+
     config.isSelfContained = function (flavor) {
         if (!config.selfContained) return false;
         else if (config.selfContained === true) return true;

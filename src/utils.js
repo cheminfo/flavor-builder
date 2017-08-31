@@ -15,17 +15,17 @@ module.exports.checkAuth = function (config, options, url) {
             user: config.httpAuth[parsedUrl.hostname].user,
             pass: config.httpAuth[parsedUrl.hostname].pass,
             sendImmediately: true
-        }
+        };
     }
     return options;
 };
 
-module.exports.getAuthUrl = function(config, url) {
+module.exports.getAuthUrl = function (config, url) {
     var options = {};
     module.exports.checkAuth(config, options, url);
     var parsedUrl = urlLib.parse(url);
-    if(!parsedUrl.auth && options.auth) {
-        parsedUrl.auth = `${options.auth.user}:${options.auth.pass}`
+    if (!parsedUrl.auth && options.auth) {
+        parsedUrl.auth = `${options.auth.user}:${options.auth.pass}`;
     }
     return parsedUrl.format();
 };
@@ -51,6 +51,7 @@ module.exports.cacheUrl = function (config, url, flavorName, addExtension) {
                 return writeFile(url + '.js', writePath + '.js', options);
             })
             .catch(function (err) {
+                // eslint-disable-next-line no-console
                 console.error('error fetching file', url, err);
             });
     } else {
@@ -59,7 +60,7 @@ module.exports.cacheUrl = function (config, url, flavorName, addExtension) {
 };
 
 module.exports.cacheDir = function (config, url, flavorName, addExtension) {
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
         var prom = [];
         var options = {};
         // Add authentification if necessary
@@ -74,6 +75,7 @@ module.exports.cacheDir = function (config, url, flavorName, addExtension) {
                 });
                 return resolve(Promise.all(prom));
             } else {
+                // eslint-disable-next-line no-console
                 console.error(err);
                 return resolve();
             }

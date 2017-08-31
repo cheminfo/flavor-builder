@@ -3,32 +3,32 @@
 const DEFAULT_FLAVOR = 'default';
 const READ_CONFIG = './static/readConfig.json';
 
-var urlLib = require('url'),
-    _ = require('lodash'),
-    swig = require('swig'),
-    fs = require('fs-extra'),
-    path = require('path'),
-    request = require('request'),
-    crypto = require('crypto'),
-    co = require('co'),
-    utils = require('./utils'),
-    FlavorUtils = require('flavor-utils'),
-    visualizerOnTabs = require('visualizer-on-tabs'),
-    exec = require('child_process').exec,
-    debug = require('debug')('flavor-builder:main');
+const urlLib = require('url');
+const _ = require('lodash');
+const swig = require('swig');
+const fs = require('fs-extra');
+const path = require('path');
+const request = require('request');
+const crypto = require('crypto');
+const co = require('co');
+const utils = require('./utils');
+const FlavorUtils = require('flavor-utils');
+const visualizerOnTabs = require('visualizer-on-tabs');
+const exec = require('child_process').exec;
+const debug = require('debug')('flavor-builder:main');
 
-var URL = urlLib.URL;
+const URL = urlLib.URL;
 
-var pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
+const pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
 
 function call(f, configArg) {
     var config, layouts, toCopy, toSwig, filters, flavorUtils, sitemaps, revisionById, md5;
 
     function init(configArg) {
         config = require('./config')(configArg);
-        if(config.pidFile) {
+        if (config.pidFile) {
             var isLocked = require('./isLocked')(path.resolve(path.join(__dirname, '..'), config.pidFile));
-            if(isLocked) {
+            if (isLocked) {
                 throw new Error('flavor-builder already running');
             }
         }
@@ -86,9 +86,7 @@ function call(f, configArg) {
                         yield handleFlavor(config.flavor);
                     }
                     yield Promise.all(filters.plist);
-                }
-
-                else {
+                } else {
                     // Build all flavors
                     // Get a list of all available flavors
                     let flavors = yield getFlavors();
@@ -155,7 +153,7 @@ function call(f, configArg) {
             debug('No root url specified, not creating sitemap.txt');
             return;
         }
-        debug('write site maps')
+        debug('write site maps');
         fs.writeFileSync(path.join(config.dir, 'sitemap.txt'),
             Object.keys(sitemaps)
                 .map(el => config.rootUrl + '/' + el)
@@ -191,11 +189,9 @@ function call(f, configArg) {
 
 
         const homePages = [];
-        var tabsConfig;
-        try {
-            tabsConfig = config.visualizerOnTabs[flavorName] || config.visualizerOnTabs._default;
-        } catch (e) {
-        }
+        var tabsConfig = config.visualizerOnTabs && config.visualizerOnTabs[flavorName];
+        if (!tabsConfig) tabsConfig = config.visualizerOnTabs._default;
+        if (!tabsConfig) throw new Error('No visualizer on tabs configuration found');
 
         yield flavorUtils.traverseTree(viewTree, function (el) {
             if (el.__name === config.home) {
@@ -225,12 +221,12 @@ function call(f, configArg) {
         }
     }
 
-// returns an array of flavors for which the md5 has changed
+    // returns an array of flavors for which the md5 has changed
     function filterFlavorsByMd5(flavors) {
         debug('filter flavors by md5');
         return getFlavorMD5(flavors).then(function (result) {
             if (config.forceUpdate) {
-                debug('force update, no flavor filtering')
+                debug('force update, no flavor filtering');
                 return Object.keys(result);
             }
             if (JSON.stringify(md5) === '{}') {
@@ -244,18 +240,11 @@ function call(f, configArg) {
                     md5[key] = result[key];
                     keys.push(key);
                 } else {
-                    debug(`flavor ${key} has not changed, ignoring it`)
+                    debug(`flavor ${key} has not changed, ignoring it`);
                 }
             }
             fs.writeJSONSync(config.md5Path, md5);
             return keys;
-        });
-    }
-
-    function filterFlavorByMD5(flavor) {
-        return filterFlavorsByMd5([flavor]).then(function (flavors) {
-            if (flavors.length) return flavors[0];
-            return null;
         });
     }
 
@@ -279,8 +268,7 @@ function call(f, configArg) {
                 }
                 return result;
             });
-        }
-        else {
+        } else {
             return flavorUtils.getFlavor({flavor: flavors}, false).then(function (result) {
                 return crypto.createHash('md5').update(JSON.stringify(result.rows)).digest('hex');
             }, function (err) {
@@ -357,17 +345,17 @@ function call(f, configArg) {
 
         yield flavorUtils.traverseTree(viewTree, function (el) {
             flavorIds[el.__id] = 1;
-            if(!revisionById[flavorName] || !revisionById[flavorName][el.__id]) {
+            if (!revisionById[flavorName] || !revisionById[flavorName][el.__id]) {
                 hasNew = true;
-            } else if(revisionById[flavorName][el.__id].name !== el.__name) {
+            } else if (revisionById[flavorName][el.__id].name !== el.__name) {
                 nameChanged = true;
             }
         });
 
         // Remove deleted views
         const savedIds = revisionById[flavorName] ? Object.keys(revisionById[flavorName]) : [];
-        for(let i = 0; i<savedIds.length; i++) {
-            if(!flavorIds[savedIds[i]]) {
+        for (let i = 0; i < savedIds.length; i++) {
+            if (!flavorIds[savedIds[i]]) {
                 hasDeleted = true;
                 delete revisionById[flavorName][savedIds[i]];
             }
@@ -375,7 +363,7 @@ function call(f, configArg) {
 
         fs.writeJsonSync(config.revisionByIdPath, revisionById);
 
-        if(!hasNew && !nameChanged && !hasDeleted) {
+        if (!hasNew && !nameChanged && !hasDeleted) {
             // Generate only for views that changed
             yield flavorUtils.traverseTree(viewTree, checkRevisionChanged(generateHtml(flavorName, viewTree), flavorName));
         } else {
@@ -400,7 +388,7 @@ function call(f, configArg) {
     }
 
     function updateRevision(cb, flavorName) {
-        return function(el) {
+        return function (el) {
             logProcessView(el, flavorName);
             var prom = cb(el);
             if (!revisionById[flavorName]) revisionById[flavorName] = {};
@@ -410,7 +398,7 @@ function call(f, configArg) {
             };
             fs.writeJsonSync(config.revisionByIdPath, revisionById);
             return prom;
-        }
+        };
     }
 
     function checkRevisionChanged(cb, flavorName) {
@@ -429,7 +417,7 @@ function call(f, configArg) {
                 fs.writeJsonSync(config.revisionByIdPath, revisionById);
             }
             return prom;
-        }
+        };
     }
 
     function fixVersion(el) {
@@ -496,22 +484,23 @@ function call(f, configArg) {
                         var prom = Promise.resolve();
                         request(getViewUrl(el, 'local'), config.couchReqOptions, function (err, response, body) {
                             if (err) {
-                                return reject(err);
-                            }
-                            data.botHtml = getBotContent(body);
-                            data.description = data.botHtml.replace(/<[^>]*>/g, ' ').replace('"', "'");
-                            var layoutFile = layouts[config.flavorLayouts[flavorName] || DEFAULT_FLAVOR];
-                            writeFile(layoutFile, el.__path, data);
-                            if (config.isSelfContained(flavorName)) {
-                                fs.writeFileSync(viewPath, body);
-                                if (config.flatViews) {
-                                    prom = prom.then(processViewForLibraries(viewPath, flavorName, path.join(config.flatViews.outdir, el.__id, 'view.json')));
-                                    prom = prom.then(processViewForLibraries(viewPath, flavorName));
-                                } else {
-                                    prom = prom.then(processViewForLibraries(viewPath, flavorName))
+                                reject(err);
+                            } else {
+                                data.botHtml = getBotContent(body);
+                                data.description = data.botHtml.replace(/<[^>]*>/g, ' ').replace('"', "'");
+                                var layoutFile = layouts[config.flavorLayouts[flavorName] || DEFAULT_FLAVOR];
+                                writeFile(layoutFile, el.__path, data);
+                                if (config.isSelfContained(flavorName)) {
+                                    fs.writeFileSync(viewPath, body);
+                                    if (config.flatViews) {
+                                        prom = prom.then(processViewForLibraries(viewPath, flavorName, path.join(config.flatViews.outdir, el.__id, 'view.json')));
+                                        prom = prom.then(processViewForLibraries(viewPath, flavorName));
+                                    } else {
+                                        prom = prom.then(processViewForLibraries(viewPath, flavorName));
+                                    }
                                 }
+                                prom.then(resolve);
                             }
-                            prom.then(resolve);
                         });
                     }));
                 }
@@ -557,8 +546,9 @@ function call(f, configArg) {
             if (el.__name === config.home) {
                 el.__path = path.join(el.__path, 'index.html');
                 el.__parent.__homeChild = el;
-            } else
+            } else {
                 el.__path = path.join(el.__path, el.__filename, 'index.html');
+            }
         };
     }
 
@@ -596,7 +586,8 @@ function call(f, configArg) {
                 }
 
             } catch (e) {
-                console.error('Error  while processing view to change libraries', e, e.stack)
+                // eslint-disable-next-line no-console
+                console.error('Error  while processing view to change libraries', e, e.stack);
             }
         }, ['filter_editor', 'code_executor']);
 
@@ -619,6 +610,7 @@ function call(f, configArg) {
                 }
             }
         } catch (e) {
+            // eslint-disable-next-line no-console
             console.error('Error while processing view to change library urls (general preferences)', e, e.stack);
         }
 
@@ -635,13 +627,17 @@ function call(f, configArg) {
 
     function eachModule(view, callback, moduleNames) {
         if (view.modules) {
-            if (typeof(moduleNames) === 'string') {
+            if (typeof (moduleNames) === 'string') {
                 moduleNames = [moduleNames];
             } else if (!Array.isArray(moduleNames)) {
                 moduleNames = [''];
             }
-            var i = 0, ii = view.modules.length, module, url;
-            var j, jj = moduleNames.length;
+            var i = 0;
+            var ii = view.modules.length;
+            var module;
+            var url;
+            var j;
+            var jj = moduleNames.length;
             for (; i < ii; i++) {
                 module = view.modules[i];
 
@@ -707,8 +703,7 @@ function call(f, configArg) {
                 html += '<li><a href="' + path.relative(cpath, structure.__path) + buildQueryString(structure, flavorName) + '"><span>' + structure.__name + '</span></a></li>';
             } // No leaf for home elements
             return html;
-        }
-        else {
+        } else {
             var link = structure.__homeChild ? path.relative(cpath, structure.__homeChild.__path) + buildQueryString(structure.__homeChild, flavorName) : '#';
 
             if (structure.__name) html += '<li><a href="' + link + '">' + structure.__name + '</a>';

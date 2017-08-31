@@ -9,13 +9,15 @@ var filesWriting = {};
 exports = module.exports = function (url, p, options) {
     options = options || {};
     return new Promise(function (resolve, reject) {
-        if(filesWriting[p]) {
-            return resolve(true);
+        if (filesWriting[p]) {
+            resolve(true);
+            return;
         }
         filesWriting[p] = true;
 
         if (fs.existsSync(p)) {
-            return resolve();
+            resolve();
+            return;
         }
         fs.mkdirpSync(path.parse(p).dir);
         var read = request.get(url, options);
@@ -23,7 +25,8 @@ exports = module.exports = function (url, p, options) {
 
         read.on('response', function (res) {
             if (res.statusCode !== 200) {
-                return reject(new Error('Got an error code !== 200'))
+                reject(new Error('Got an error code !== 200'));
+                return;
             }
 
             var write = fs.createWriteStream(p);
@@ -42,5 +45,5 @@ exports = module.exports = function (url, p, options) {
         });
 
 
-    })
+    });
 };
