@@ -670,20 +670,6 @@ function call(f, configArg) {
 
     function buildQueryString(el, flavorName) {
         var result = '?';
-        // if (el.__view) {
-        //     if (config.isSelfContained(flavorName))
-        //         result += 'viewURL=' + encodeURIComponent('./view.json');
-        //     else
-        //         result += 'viewURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/view.json?rev=' + el.__rev);
-        // }
-        // if (el.__data) {
-        //     if (result !== '?') result += '&';
-        //     if (config.isSelfContained(flavorName))
-        //         result += 'dataURL=' + encodeURIComponent('./data.json');
-        //     else
-        //         result += 'dataURL=' + encodeURIComponent(config.couchurl + '/' + config.couchDatabase + '/' + el.__id + '/data.json?rev=' + el.__rev);
-        // }
-
         var conf = getFlavorConfig(flavorName);
 
         if (conf.lockView) {
