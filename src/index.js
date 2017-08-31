@@ -21,7 +21,7 @@ const URL = urlLib.URL;
 
 const pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
 
-function call(f, configArg) {
+function call(configArg) {
     var config, layouts, toCopy, toSwig, filters, flavorUtils, sitemaps, revisionById, md5;
 
     function init(configArg) {
@@ -45,10 +45,16 @@ function call(f, configArg) {
         });
     }
 
-    return Promise.resolve().then(function () {
-        init(configArg);
-        return eval(f + '()');
-    });
+    return {
+        build: function () {
+            init(configArg);
+            return build();
+        },
+        getFlavors: function () {
+            init(configArg);
+            return getFlavors();
+        }
+    };
 
     function build() {
         debug('start build');
@@ -749,9 +755,9 @@ function call(f, configArg) {
 
 exports = module.exports = {
     build: function (config) {
-        return call('build', config);
+        return call(config).build();
     },
     getFlavors: function (config) {
-        return call('getFlavors', config);
+        return call(config).getFlavors();
     }
 };
