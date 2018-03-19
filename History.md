@@ -1,3 +1,13 @@
+<a name="3.1.1"></a>
+## [3.1.1](https://github.com/cheminfo/flavor-builder/compare/v3.1.0...v3.1.1) (2018-03-19)
+
+
+### Bug Fixes
+
+* update visualizer-on-tabs ([386d5c7](https://github.com/cheminfo/flavor-builder/commit/386d5c7))
+
+
+
 <a name="3.0.3"></a>
 ## [3.0.3](https://github.com/cheminfo/flavor-builder/compare/v3.0.2...v3.0.3) (2017-11-09)
 
