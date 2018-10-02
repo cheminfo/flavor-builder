@@ -25,9 +25,9 @@
     "minimist": "^1.2.0",
     "request": "^2.79.0",
     "superagent": "^3.3.1",
-    "swig": "^1.4.2",
+    "swig-templates": "^2.0.3",
     "tar": "^2.2.1",
-    "visualizer-on-tabs": "git+https://github.com/cheminfo/visualizer-on-tabs#dc7d065fadc470c1fe66e4f4cffda30654cf74ba"
+    "visualizer-on-tabs": "git+https://github.com/cheminfo/visualizer-on-tabs#aa6f69125be67fecd54069df475c0900d82cb787"
   },
   "devDependencies": {
     "eslint": "^4.5.0",

@@ -5,7 +5,7 @@ const READ_CONFIG = './static/readConfig.json';
 
 const urlLib = require('url');
 const _ = require('lodash');
-const swig = require('swig');
+const swig = require('swig-templates');
 const fs = require('fs-extra');
 const path = require('path');
 const request = require('request');
