@@ -1,3 +1,7 @@
+# [3.2.0](https://github.com/cheminfo/flavor-builder/compare/v3.1.1...v3.2.0) (2019-01-18)
+
+
+
 <a name="3.1.1"></a>
 ## [3.1.1](https://github.com/cheminfo/flavor-builder/compare/v3.1.0...v3.1.1) (2018-03-19)
 
