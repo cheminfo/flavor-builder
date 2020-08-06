@@ -1,91 +1,62 @@
 <script>
-    'use strict';
-    function checkVersion(versions, version) {
-        versions = versions.map(function(v) {
-            return v.toLowerCase();
-        });
-        version = version.toLowerCase();
-        if (version && version[0] >= '0' && version[0] <= '9' && !version.startsWith('v')) version = 'v' + version;
-        var idx = versions.indexOf(version);
-        if (idx > -1) {
-            version = versions[idx];
-        }
-        else {
-            // Fallback version is HEAD-min
-            version = 'HEAD-min';
-        }
-        if(version === 'head-min') version = 'HEAD-min';
-        return version;
+  'use strict';
+  window.onload = function () {
+
+    var version;
+    var uri = new URI(window.location.href);
+    var search = uri.search(true);
+    var url = '{{ viewURL }}';
+    var tplVersion = '{{ version }}';
+    if (search.viewURL) {
+        url = search.viewURL;
     }
-    window.onload = function () {
-        var prom;
-        // Weird but will avoid javascript error if this param is not what we expect
-        {% if selfContained %}
-            prom = $.Deferred(); prom.resolve([]);
-        {% else %}
-            prom = $.getJSON('{{ config.cdn }}/visualizer/versions.json');
-        {% endif %}
-
-        prom.then(function (versions) {
-            var version;
-            var uri = new URI(window.location.href);
-            var search = uri.search(true);
-            var url = '{{ viewURL }}';
-            var tplVersion = '{{ version }}';
-            var fallbackVersion = '{{ version }}';
-            if (search.viewURL) {
-                url = search.viewURL;
-            }
-            // Get version in the following priority order
-            // In url, in template, fallback
-            if (search.v) {
-                version = checkVersion(versions, search.v);
-            }
-            if (!version) {
-                version = checkVersion(versions, tplVersion);
-            }
-            if (!version) {
-                version = checkVersion(versions, fallbackVersion);
-            }
-            if (!search.loadversion)
-                addVisualizer(version, search);
-            else {
-                $.ajax({
-                    url: url,
-                    dataType: 'json',
-                    type: 'GET',
-                    success: function (data) {
-                        addVisualizer(checkVersion(versions, data.version), search);
-                    },
-                    error: function (err) {
-                        console.log('error', err);
-                    }
-                })
-            }
-        });
-
-        function addVisualizer(version, search) {
-            var cdn = '{{config.cdn}}';
-            var direct = '{{config.direct}}';
-            var visualizer = document.createElement('script');
-            var baseUrl;
-
-            {% if selfContained %}
-                baseUrl = '{{ version | visualizer(reldir, flavor) }}';
-            {% else %}
-                baseUrl = (search.direct ? direct : cdn) + '/visualizer/' + version;
-            {% endif %}
-
-            visualizer.setAttribute('data-main', baseUrl+ '/init');
-            visualizer.setAttribute('src', baseUrl + '/components/requirejs/require.js');
-            document.head.appendChild(visualizer);
-        }
+    // Get version in the following priority order
+    // In url, in template, fallback
+    if (search.v) {
+        version = search.v;
     }
+    if (!version) {
+        version = tplVersion;
+    }
+    if (!search.loadversion)
+        addVisualizer(version, search);
+    else {
+        $.ajax({
+            url: url,
+            dataType: 'json',
+            type: 'GET',
+            success: function (data) {
+                addVisualizer(data.version, search);
+            },
+            error: function (err) {
+                console.log('error', err);
+            }
+        })
+    }
+
+
+      function addVisualizer(version, search) {
+          var cdn = '{{config.cdn}}';
+          var direct = '{{config.direct}}';
+          var visualizer = document.createElement('script');
+          var baseUrl;
+
+          {% if selfContained %}
+              baseUrl = '{{ version | visualizer(reldir, flavor) }}';
+          {% else %}
+              baseUrl = (search.direct ? direct : cdn) + '/visualizer/' + version;
+          {% endif %}
+
+          visualizer.setAttribute('data-main', baseUrl+ '/init');
+          visualizer.setAttribute('src', baseUrl + '/components/requirejs/require.js');
+          document.head.appendChild(visualizer);
+      }
+  }
 </script>
 <div id="errorMessage"></div>
 <tr>
-    <td class="left"></td>
-    <td colspan="3">
+  <td class="left"></td>
+  <td colspan="3">
         <div id="ci-visualizer" {% if dataURL %} data-ci-data="{{ dataURL }}" {% endif %} data-ci-view="{{ viewURL }}"
              data-ci-config="{{ readConfig }}"/>
     </td>
