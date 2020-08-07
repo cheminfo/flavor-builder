@@ -2,6 +2,15 @@
   'use strict';
   window.onload = function () {
 
+    function checkVersion(v) {
+    if (typeof v === 'string') {
+      if (v[0] >= '0' && v[0] <= '9') {
+        return 'v' + v;
+      }
+    }
+    return v;
+  }
+
     var version;
     var uri = new URI(window.location.href);
     var search = uri.search(true);
@@ -36,6 +45,7 @@
 
 
       function addVisualizer(version, search) {
+          version = checkVersion(version);
           var cdn = '{{config.cdn}}';
           var direct = '{{config.direct}}';
           var visualizer = document.createElement('script');
