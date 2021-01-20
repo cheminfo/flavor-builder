@@ -25,7 +25,7 @@
     "minimist": "^1.2.0",
     "request": "^2.79.0",
     "swig": "^1.4.2",
-    "visualizer-on-tabs": "git+https://github.com/cheminfo/visualizer-on-tabs#1bec533debe1ee08352a4dec178575df812b552e"
+    "visualizer-on-tabs": "git+https://github.com/cheminfo/visualizer-on-tabs#3a433a29441a7397352b3d03aa48bf769f4f980b"
   },
   "devDependencies": {
     "eslint": "^4.5.0",
