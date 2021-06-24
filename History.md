@@ -1,3 +1,10 @@
+## [4.1.0](https://github.com/cheminfo/flavor-builder/compare/v4.0.5...v4.1.0) (2021-06-24)
+
+
+### Features
+
+* add Docker image CI ([d37c792](https://github.com/cheminfo/flavor-builder/commit/d37c792e476b1125723b8c8105957d03dff8deee))
+
 # [3.2.0](https://github.com/cheminfo/flavor-builder/compare/v3.1.1...v3.2.0) (2019-01-18)
 
 
