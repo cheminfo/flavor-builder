@@ -9,13 +9,13 @@ module.exports = function (filename) {
   let running;
   try {
     const pid = fs.readFileSync(filename, 'utf8');
-    running = isRunning(pid);
+    running = pid && isRunning(Number(pid));
     if (!running) {
-      fs.writeFileSync(filename, process.pid);
+      fs.writeFileSync(filename, String(process.pid));
     }
   } catch (e) {
     if (e.code === 'ENOENT') {
-      fs.writeFileSync(filename, process.pid);
+      fs.writeFileSync(filename, String(process.pid));
       running = false;
     } else {
       throw e;
