@@ -9,7 +9,7 @@ module.exports = function (filename) {
   let running;
   try {
     const pid = fs.readFileSync(filename, 'utf8');
-    running = isRunning(pid);
+    running = pid && isRunning(Number(pid));
     if (!running) {
       fs.writeFileSync(filename, String(process.pid));
     }
