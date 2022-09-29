@@ -1,0 +1,22 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  NODE_VERSION: 16.x
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get package name
+        run: echo "PACKAGE_NAME=$(jq .name package.json | tr -d '"')" >> $GITHUB_ENV
+      - uses: GoogleCloudPlatform/release-please-action@v2
+        id: release
+        with:
+          token: ${{ secrets.BOT_TOKEN }}
+          release-type: node
+          package-name: ${{ env.PACKAGE_NAME }}
