@@ -1,0 +1,12 @@
+{% extends './layout.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block head %}
+{% parent %}
+<!--Base libraries-->
+<script src="{{ config.cdn | concat('/lib/lodash/3.4.0/lodash.min.js') | processUrl(reldir, flavor) }}"></script>
+{% endblock %}
+
+{% block content %}
+{% endblock %}

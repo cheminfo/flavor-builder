@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+
+    {% if keywords %}
+    <meta name="keywords" content="{{keywords}}">
+    {% endif %}
+    <meta description="{{description}}">
+    <title>{% block title %} {{title}} {% endblock %}</title>
+
+    <script src="{{ config.cdn | concat('/lib/jquery/2.1.1/jquery.min.js') | processUrl(reldir, flavor) }}"></script>
+    <script src="{{ config.cdn | concat('/lib/uri.js/1.14.1/URI.min.js') | processUrl(reldir, flavor) }}"></script>
+    <script>
+        window.addEventListener('load', function () {
+            $('.navmenu').show();
+        });
+    </script>
+
+    {% block head %}
+
+    {% endblock %}
+
+</head>
+<body>
+
+<header>
+    <nav>
+        {% block menu %}
+        {{ menuHtml|safe }}
+        {% endblock %}
+    </nav>
+</header>
+
+{% if config.useSSI %}
+<!--#if expr="%{HTTP_USER_AGENT} =~ /bot/" -->
+{{ botHtml | safe }}
+<!--#endif -->
+{% endif %}
+
+{% if config.useSSI %}
+<!--#if expr="%{HTTP_USER_AGENT} !~ /bot/" -->
+{% endif %}
+
+{% block content %}{% endblock %}
+
+{% block visualizer %}
+{% if viewURL %}
+{% include "../visualizer.html" %}
+{% endif %}
+{% endblock %}
+{% if config.useSSI %}
+<!--#endif -->
+{% endif %}
+
+
+
+</body>
+</html>

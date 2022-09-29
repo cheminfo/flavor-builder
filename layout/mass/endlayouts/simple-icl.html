@@ -1,0 +1,21 @@
+{% extends '../simple-menu.html' %}
+
+{% block head %}
+{% parent %}
+<link rel="stylesheet" href="{{ reldir }}/themes/simplemenu/normal.css"/>
+{% endblock head %}
+
+{% block content %}
+<script>
+
+$.ajax('https://mydb.cheminfo.org/auth/session', {xhrFields: {withCredentials: true}, crossDomain: true})
+	.then(function(res){
+		if (!res.authenticated) {
+			window.location.href = 'https://mydb.cheminfo.org/auth/login?continue=' + encodeURIComponent(window.location.href);
+		} else if (res.username.indexOf('cheminfo') === -1) {
+			document.body.innerHTML = '<h2 style="margin:10px">Please access this website with a Cheminfo login.</h2><h3 style="margin-left: 10px">You can use an incognito Window or switch to another Chrome user.</h3>';
+		}
+	});
+
+</script>
+{% endblock content%}
