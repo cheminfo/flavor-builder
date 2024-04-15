@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.2.0](https://www.github.com/cheminfo/flavor-builder/compare/v4.1.0...v4.2.0) (2024-04-15)
+
+
+### Features
+
+* track access with umami and update deps ([#70](https://www.github.com/cheminfo/flavor-builder/issues/70)) ([afe6785](https://www.github.com/cheminfo/flavor-builder/commit/afe6785d7dce02060b2f0ddf0d3d9be04d0acc0e))
+
+
+### Bug Fixes
+
+* ensure that isLocked save string and load number ([b03a52a](https://www.github.com/cheminfo/flavor-builder/commit/b03a52af4991f16e3493aaaef5e4eff9725ada63))
+
 ## [4.1.0](https://github.com/cheminfo/flavor-builder/compare/v4.0.5...v4.1.0) (2021-06-24)
 
 
@@ -282,6 +294,3 @@ unspecified or the versions does not exist in lactame.
 
 <a name="0.1.0"></a>
 # 0.1.0 (2015-02-24)
-
-
-
