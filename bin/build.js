@@ -13,10 +13,10 @@ for (let i = 0; i < configs.length; i++) {
 }
 
 Promise.all(prom)
-  .then(function () {
+  .then(() => {
     console.log('done build');
   })
-  .catch(function (e) {
+  .catch((e) => {
     console.error('Error building with flavor-builder', e, e.stack);
     process.exit(1);
   });

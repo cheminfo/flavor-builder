@@ -9,7 +9,7 @@
     var $auth = $('#roc-auth');
     function checkSession() {
         $.ajax(url + '/auth/session', {xhrFields: {withCredentials: true}, crossDomain: true})
-                .then(function (res) {
+                .then((res) => {
                     if(res.authenticated) {
                         $auth.html(res.username + '(<a href="#">Logout</a>)');
                         $auth.find('a').on('click', function () {
