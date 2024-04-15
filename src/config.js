@@ -6,7 +6,7 @@ const _ = require('lodash');
 const minimist = require('minimist');
 
 const args = minimist(process.argv.slice(2));
-exports = module.exports = function (configArg) {
+exports = module.exports = function buildConfig (configArg) {
   configArg = configArg || 'config.json';
   let config;
   if (typeof configArg === 'string') {
@@ -87,7 +87,7 @@ exports = module.exports = function (configArg) {
     }
   }
 
-  config.isSelfContained = function (flavor) {
+  config.isSelfContained = (flavor) => {
     if (!config.selfContained) return false;
     else if (config.selfContained === true) return true;
     else return config.selfContained[flavor];

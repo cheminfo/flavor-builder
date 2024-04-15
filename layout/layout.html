@@ -2,6 +2,9 @@
 <html>
 
 <head>
+    {% if config.umamiTracking %}
+    <script defer src="{{config.umamiTracking.scriptSrc}}" data-website-id="{{config.umamiTracking.id}}"></script>
+    {% endif %}
     <meta charset="utf-8">
 
     {% if keywords %}

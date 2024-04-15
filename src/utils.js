@@ -7,7 +7,7 @@ let request = require('request');
 
 let writeFile = require('./writeFile');
 
-module.exports.checkAuth = function (config, options, url) {
+module.exports.checkAuth = function checkAuth (config, options, url) {
   url = module.exports.rewriteUrl(url);
   let parsedUrl = urlLib.parse(url);
   if (config.httpAuth && config.httpAuth[parsedUrl.hostname]) {
@@ -20,7 +20,7 @@ module.exports.checkAuth = function (config, options, url) {
   return options;
 };
 
-module.exports.getAuthUrl = function (config, url) {
+module.exports.getAuthUrl = function getAuthUrl(config, url) {
   let options = {};
   module.exports.checkAuth(config, options, url);
   let parsedUrl = urlLib.parse(url);
@@ -30,7 +30,7 @@ module.exports.getAuthUrl = function (config, url) {
   return parsedUrl.format();
 };
 
-module.exports.checkVersion = function (version) {
+module.exports.checkVersion = function checkVersion(version) {
   if (
     version &&
     version[0] >= '0' &&
@@ -42,7 +42,7 @@ module.exports.checkVersion = function (version) {
   return version;
 };
 
-module.exports.cacheUrl = function (config, url, flavorName, addExtension) {
+module.exports.cacheUrl = function cacheUrl(config, url, flavorName, addExtension) {
   let options = {
     encoding: null,
   };
@@ -59,10 +59,10 @@ module.exports.cacheUrl = function (config, url, flavorName, addExtension) {
   url = module.exports.rewriteUrl(url, addExtension);
   if (config.isSelfContained(flavorName)) {
     return writeFile(url, writePath, options)
-      .then(null, function () {
+      .then(null, ()=> {
         return writeFile(`${url}.js`, `${writePath}.js`, options);
       })
-      .catch(function (err) {
+      .catch((err) => {
         console.error('error fetching file', url, err);
       });
   } else {
@@ -70,18 +70,18 @@ module.exports.cacheUrl = function (config, url, flavorName, addExtension) {
   }
 };
 
-module.exports.cacheDir = function (config, url, flavorName, addExtension) {
-  return new Promise(function (resolve) {
+module.exports.cacheDir = function cacheDir(config, url, flavorName, addExtension) {
+  return new Promise((resolve) => {
     let prom = [];
     let options = {};
     // Add authentification if necessary
     module.exports.checkAuth(config, options, url);
-    request.get(urlLib.resolve(url, 'files.txt'), options, function (err, res) {
+    request.get(urlLib.resolve(url, 'files.txt'), options, (err, res) => {
       if (res && res.statusCode === 200) {
-        let files = res.body.split('\n').filter(function (val) {
+        let files = res.body.split('\n').filter((val) => {
           return val;
         });
-        prom = files.map(function (file) {
+        prom = files.map((file) => {
           return module.exports.cacheUrl(
             config,
             urlLib.resolve(url, file),
@@ -98,7 +98,7 @@ module.exports.cacheDir = function (config, url, flavorName, addExtension) {
   });
 };
 
-module.exports.getLocalUrl = function (config, url, reldir, addExtension) {
+module.exports.getLocalUrl = function getLocalUrl(config, url, reldir, addExtension) {
   url = url.replace(/^\/\//, 'https://');
   let parsedUrl = urlLib.parse(url);
   let parsedPath = path.parse(parsedUrl.path);
@@ -110,7 +110,7 @@ module.exports.getLocalUrl = function (config, url, reldir, addExtension) {
   return path.join(reldir, p);
 };
 
-module.exports.fromVisuLocalUrl = function (config, url) {
+module.exports.fromVisuLocalUrl = function fromVisuLocalUrl(config, url) {
   url = url.replace(/^\/\//, 'https://');
   let localUrl = module.exports.getLocalUrl(config, url, '.', false);
   // Never put js extension when local url
@@ -118,7 +118,7 @@ module.exports.fromVisuLocalUrl = function (config, url) {
   return path.join('../../../..', localUrl);
 };
 
-module.exports.rewriteUrl = function (url, addExtension) {
+module.exports.rewriteUrl = function rewriteUrl(url, addExtension) {
   url = url.replace(/^\/\//, 'https://');
   if (!addExtension) {
     return url;

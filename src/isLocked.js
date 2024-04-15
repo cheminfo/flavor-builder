@@ -4,7 +4,7 @@ const fs = require('fs');
 
 const isRunning = require('is-running');
 
-module.exports = function (filename) {
+module.exports = function isLocked(filename) {
   // try to read the file
   let running;
   try {

@@ -58,11 +58,11 @@ function call(configArg) {
   }
 
   return {
-    build: function () {
+    build () {
       init(configArg);
       return build();
     },
-    getFlavors: function () {
+    getFlavors () {
       init(configArg);
       return getFlavors();
     },
@@ -94,7 +94,7 @@ function call(configArg) {
       swig.setFilter(key, filters[key]);
     }
 
-    return co(function* () {
+    return co(function* buildAsync () {
       try {
         sitemaps = readSiteMaps();
         debug('get versions');
@@ -165,7 +165,7 @@ function call(configArg) {
         path.join(config.dir, 'sitemap.txt'),
         'utf-8',
       );
-      content.split('\n').forEach(function (el) {
+      content.split('\n').forEach((el) => {
         el = el.replace(config.rootUrl, '');
         el = el.replace(/^\//, '');
         r[el] = true;
@@ -225,7 +225,7 @@ function call(configArg) {
       throw new Error('No visualizer on tabs configuration found');
     }
 
-    yield flavorUtils.traverseTree(viewTree, function (el) {
+    yield flavorUtils.traverseTree(viewTree, (el) => {
       if (el.__name === config.home) {
         const outDir = path.join(flavorDir, el.__parents.join('/'));
         const indexPage = path.relative(
@@ -262,7 +262,7 @@ function call(configArg) {
   // returns an array of flavors for which the md5 has changed
   function filterFlavorsByMd5(flavors) {
     debug('filter flavors by md5');
-    return getFlavorMD5(flavors).then(function (result) {
+    return getFlavorMD5(flavors).then((result) => {
       if (config.forceUpdate) {
         debug('force update, no flavor filtering');
         return Object.keys(result);
@@ -288,7 +288,7 @@ function call(configArg) {
 
   function getFlavors() {
     debug('get list of flavors');
-    return flavorUtils.getFlavors().then(function (flavors) {
+    return flavorUtils.getFlavors().then((flavors) => {
       return processFlavors(flavors);
     });
   }
@@ -299,7 +299,7 @@ function call(configArg) {
       for (let i = 0; i < flavors.length; i++) {
         prom.push(getFlavorMD5(flavors[i]));
       }
-      return Promise.all(prom).then(function (md5s) {
+      return Promise.all(prom).then((md5s) => {
         let result = {};
         for (let j = 0; j < md5s.length; j++) {
           result[flavors[j]] = md5s[j];
@@ -308,13 +308,13 @@ function call(configArg) {
       });
     } else {
       return flavorUtils.getFlavor({ flavor: flavors }, false).then(
-        function (result) {
+        (result) => {
           return crypto
             .createHash('md5')
             .update(JSON.stringify(result.rows))
             .digest('hex');
         },
-        function (err) {
+        (err) => {
           throw err;
         },
       );
@@ -394,7 +394,7 @@ function call(configArg) {
     let hasDeleted = false;
     const flavorIds = {};
 
-    yield flavorUtils.traverseTree(viewTree, function (el) {
+    yield flavorUtils.traverseTree(viewTree, (el) => {
       flavorIds[el.__id] = 1;
       if (!revisionById[flavorName] || !revisionById[flavorName][el.__id]) {
         hasNew = true;
@@ -447,7 +447,7 @@ function call(configArg) {
   }
 
   function updateRevision(cb, flavorName) {
-    return function (el) {
+    return (el) => {
       logProcessView(el, flavorName);
       let prom = cb(el);
       if (!revisionById[flavorName]) revisionById[flavorName] = {};
@@ -461,7 +461,7 @@ function call(configArg) {
   }
 
   function checkRevisionChanged(cb, flavorName) {
-    return function (el) {
+    return function checkFlavorRevisionChanged(el) {
       let prom = Promise.resolve();
       let id = el.__id;
       let rev = el.__rev;
@@ -494,14 +494,14 @@ function call(configArg) {
 
   function* getVersionsFromTree(tree) {
     let v = [];
-    yield flavorUtils.traverseTree(tree, function (el) {
+    yield flavorUtils.traverseTree(tree, (el) => {
       v.push(el.__version);
     });
     return _.uniq(v);
   }
 
   function generateHtml(flavorName, rootStructure) {
-    return function (el) {
+    return function generateFlavorHtml(el) {
       let isHome = el.__id && el.__name === config.home;
       let basePath = path.parse(el.__path).dir;
       let flavorDir = getFlavorDir(flavorName);
@@ -544,20 +544,20 @@ function call(configArg) {
       }
 
       let finalProm = Promise.resolve();
-      finalProm = finalProm.then(function () {
+      finalProm = finalProm.then(() => {
         let prom = [];
 
         // Now that the file is written the directory exists
 
         if (el.__view) {
           prom.push(
-            new Promise(function (resolve, reject) {
+            new Promise((resolve, reject) => {
               let viewPath = path.join(basePath, 'view.json');
               let prom = Promise.resolve();
               request(
                 getViewUrl(el, 'local'),
                 config.couchReqOptions,
-                function (err, response, body) {
+                (err, response, body) => {
                   if (err) {
                     reject(err);
                   } else {
@@ -602,20 +602,20 @@ function call(configArg) {
         }
         if (el.__data) {
           prom.push(
-            new Promise(function (resolve, reject) {
+            new Promise((resolve, reject) => {
               let read = request(
                 getDataUrl(el, 'local'),
                 config.couchReqOptions,
               );
               let viewPath = path.join(basePath, 'data.json');
               let write = fs.createWriteStream(viewPath);
-              write.on('finish', function () {
+              write.on('finish', () => {
                 return resolve();
               });
-              write.on('error', function (err) {
+              write.on('error', (err) => {
                 return reject(err);
               });
-              read.on('error', function (err) {
+              read.on('error', (err) => {
                 return reject(err);
               });
               read.pipe(write);
@@ -636,10 +636,10 @@ function call(configArg) {
   }
 
   function doPath(dir) {
-    return function (el) {
+    return function doDirPath(el) {
       el.__filename = el.__name.replace(pathCharactersRegExp, '_');
       el.__path = el.__parents
-        .map(function (parent) {
+        .map((parent) => {
           return parent.replace(pathCharactersRegExp, '_');
         })
         .join('/');
@@ -682,7 +682,7 @@ function call(configArg) {
     let view = fs.readJsonSync(viewPath);
     eachModule(
       view,
-      function (module) {
+      (module) => {
         try {
           let libs = module.configuration.groups.libs[0];
           for (let i = 0; i < libs.length; i++) {
@@ -702,7 +702,7 @@ function call(configArg) {
       ['filter_editor', 'code_executor'],
     );
 
-    eachModule(view, function (module) {
+    eachModule(view, (module) => {
       if (libraryNeedsProcess(module.url)) {
         prom.push(utils.cacheDir(config, module.url, flavorName, true));
         module.url = utils.fromVisuLocalUrl(config, module.url);
@@ -858,7 +858,7 @@ function call(configArg) {
       fs.statSync(extractDir);
       return Promise.resolve();
     } catch (e) {
-      return new Promise(function (resolve, reject) {
+      return new Promise((resolve, reject) => {
         debug('copying visualizer', version);
         fs.mkdirpSync(extractDir);
         url = utils.getAuthUrl(config, url.href);
@@ -868,7 +868,7 @@ function call(configArg) {
           {
             cwd: extractDir,
           },
-          function (err) {
+          (err) => {
             if (err) reject(err);
             resolve();
           },
@@ -879,10 +879,10 @@ function call(configArg) {
 }
 
 exports = module.exports = {
-  build: function (config) {
+  build(config) {
     return call(config).build();
   },
-  getFlavors: function (config) {
+  getFlavors(config) {
     return call(config).getFlavors();
   },
 };

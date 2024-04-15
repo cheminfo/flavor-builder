@@ -113,7 +113,7 @@ let generalPrompt = [
     type: 'password',
     required: false,
     message: "What the couchdb user's password?",
-    when: function (answers) {
+    when:  (answers) => {
       return !!answers.couchUsername;
     },
   },
@@ -161,19 +161,19 @@ function main() {
     .then(addFlavors)
     .then(postProcess)
     .then(writeConfig)
-    .catch(function (e) {
+    .catch((e) => {
       console.error('error', e);
     });
 }
 
 function general() {
-  return inquirer.prompt(generalPrompt).then(function (answer) {
+  return inquirer.prompt(generalPrompt).then((answer) => {
     Object.assign(config, answer);
   });
 }
 
 function overwrite() {
-  return inquirer.prompt(overwritePrompt).then(function (answer) {
+  return inquirer.prompt(overwritePrompt).then((answer) => {
     if (!answer.overwrite) {
       return filePath();
     }
@@ -200,7 +200,7 @@ function createDirectory(dir, cb) {
     name: 'createDir',
     message: `The directory ${dir} does not exist, would you like to create it?`,
   };
-  return inquirer.prompt(createDirectoryPrompt).then(function (answer) {
+  return inquirer.prompt(createDirectoryPrompt).then((answer) => {
     if (answer.createDir) {
       fs.mkdirpSync(dir);
     } else {
@@ -211,7 +211,7 @@ function createDirectory(dir, cb) {
 
 function dirPath(options) {
   options = Object.assign({}, dirPathPrompt, options);
-  return inquirer.prompt(options).then(function (answer) {
+  return inquirer.prompt(options).then((answer) => {
     let dir = path.resolve(process.cwd(), answer[options.name]);
     config[options.name] = dir;
     try {
@@ -223,7 +223,7 @@ function dirPath(options) {
 }
 
 function filePath() {
-  return inquirer.prompt(filePathPrompt).then(function (answer) {
+  return inquirer.prompt(filePathPrompt).then((answer) => {
     configPath = path.resolve(process.cwd(), answer.configPath);
     try {
       fs.statSync(configPath);
@@ -247,11 +247,11 @@ function updateFlavorPrompt() {
 }
 
 function addFlavor() {
-  return inquirer.prompt(addFlavorPrompt).then(function (answer) {
+  return inquirer.prompt(addFlavorPrompt).then((answer) => {
     let prom = Promise.resolve();
     if (answer.login) {
       prom = prom.then(() =>
-        inquirer.prompt(loginPrompt).then(function (ans) {
+        inquirer.prompt(loginPrompt).then((ans) => {
           answer.login = ans;
           return answer;
         }),
@@ -260,11 +260,11 @@ function addFlavor() {
     if (answer.layout === 'visualizer-on-tabs') {
       prom = prom
         .then(() => inquirer.prompt(visualizerOnTabsPrompt))
-        .then(function (ans) {
+        .then((ans) => {
           answer.visualizerOnTabs = ans;
         });
     }
-    return prom.then(function () {
+    return prom.then(() => {
       if (!answer.login) delete answer.login;
       return answer;
     });
@@ -279,9 +279,9 @@ function addFlavors() {
       message: 'Would you like to add another flavor configuration?',
       required: true,
     })
-    .then(function (ans) {
+    .then((ans) => {
       if (ans.continue) {
-        return addFlavor().then(function (answer) {
+        return addFlavor().then((answer) => {
           config.flavors.push(answer);
           return addFlavors();
         });
