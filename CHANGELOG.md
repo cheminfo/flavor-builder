@@ -1,5 +1,12 @@
 # Changelog
 
+### [4.1.1](https://www.github.com/cheminfo/flavor-builder/compare/v4.1.0...v4.1.1) (2024-04-15)
+
+
+### Bug Fixes
+
+* ensure that isLocked save string and load number ([b03a52a](https://www.github.com/cheminfo/flavor-builder/commit/b03a52af4991f16e3493aaaef5e4eff9725ada63))
+
 ## [4.1.0](https://github.com/cheminfo/flavor-builder/compare/v4.0.5...v4.1.0) (2021-06-24)
 
 
@@ -282,6 +289,3 @@ unspecified or the versions does not exist in lactame.
 
 <a name="0.1.0"></a>
 # 0.1.0 (2015-02-24)
-
-
-
