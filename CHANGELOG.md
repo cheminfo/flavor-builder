@@ -1,5 +1,12 @@
 # Changelog
 
+### [4.2.1](https://www.github.com/cheminfo/flavor-builder/compare/v4.2.0...v4.2.1) (2024-04-16)
+
+
+### Bug Fixes
+
+* remove co dep and update visualizer-on-tabs ([#72](https://www.github.com/cheminfo/flavor-builder/issues/72)) ([f2e41f3](https://www.github.com/cheminfo/flavor-builder/commit/f2e41f381ac353423c9406e204ec6ba29a5d5aaa))
+
 ## [4.2.0](https://www.github.com/cheminfo/flavor-builder/compare/v4.1.0...v4.2.0) (2024-04-15)
 
 
