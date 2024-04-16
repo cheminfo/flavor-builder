@@ -3,7 +3,7 @@
 'use strict';
 
 let args = require('minimist')(process.argv.slice(2));
-
+const log = require('../src/log');
 let flavorBuilder = require('../src/index');
 
 let configs = args.config.split(',');
@@ -14,7 +14,7 @@ for (let i = 0; i < configs.length; i++) {
 
 Promise.all(prom)
   .then(() => {
-    console.log('done build');
+    log.info('done build');
   })
   .catch((e) => {
     console.error('Error building with flavor-builder', e, e.stack);
