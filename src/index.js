@@ -8,7 +8,6 @@ const crypto = require('crypto');
 const path = require('path');
 const urlLib = require('url');
 
-const debug = require('debug')('flavor-builder:main');
 const FlavorUtils = require('flavor-utils');
 const fs = require('fs-extra');
 const _ = require('lodash');
@@ -17,6 +16,7 @@ const swig = require('swig');
 const visualizerOnTabs = require('visualizer-on-tabs');
 
 const utils = require('./utils');
+const log = require('./log');
 
 const URL = urlLib.URL;
 
@@ -68,7 +68,7 @@ function call(configArg) {
   };
 
   async function build() {
-    debug('start build');
+    log.info('start build');
     revisionById = checkFile(config.revisionByIdPath);
     md5 = checkFile(config.md5Path);
 
@@ -95,15 +95,15 @@ function call(configArg) {
 
     try {
       sitemaps = readSiteMaps();
-      debug('get versions');
+      log.trace('get versions');
       if (config.flavor) {
         // Build single flavor
         let exists = await hasFlavor(config.flavor);
         if (!exists) {
-          debug('Flavor not found');
+          log.info(`Flavor ${config.flavor} not found`);
           return;
         }
-        debug('get flavor');
+        log.trace('get flavor');
         if (config.flavorLayouts[config.flavor] === 'visualizer-on-tabs') {
           await handleVisualizerOnTabs(config.flavor);
         } else {
@@ -116,7 +116,7 @@ function call(configArg) {
         let flavors = await getFlavors();
         // Filter flavors to get only those that have changed
         flavors = await filterFlavorsByMd5(flavors);
-        debug(`Processing ${flavors.length} flavors: ${flavors}`);
+        log.info(`Processing ${flavors.length} flavors: ${flavors}`);
         for (let i = 0; i < flavors.length; i++) {
           if (config.flavorLayouts[flavors[i]] === 'visualizer-on-tabs') {
             await handleVisualizerOnTabs(flavors[i]);
@@ -129,12 +129,12 @@ function call(configArg) {
       }
       writeSiteMaps();
     } catch (e) {
-      debug('error occured', e);
+      log.info('error occured', e);
     }
   }
 
   function checkFile(path) {
-    debug(`check that ${path} can be written`);
+    log.trace(`check that ${path} can be written`);
     try {
       let fid = fs.openSync(path, 'a+');
       fs.closeSync(fid);
@@ -155,7 +155,7 @@ function call(configArg) {
   }
 
   function readSiteMaps() {
-    debug('write site maps');
+    log.trace('write site maps');
     try {
       let r = {};
       let content = fs.readFileSync(
@@ -175,10 +175,10 @@ function call(configArg) {
 
   function writeSiteMaps() {
     if (!config.rootUrl) {
-      debug('No root url specified, not creating sitemap.txt');
+      log.info('No root url specified, not creating sitemap.txt');
       return;
     }
-    debug('write site maps');
+    log.trace('write site maps');
     fs.writeFileSync(
       path.join(config.dir, 'sitemap.txt'),
       Object.keys(sitemaps)
@@ -258,10 +258,10 @@ function call(configArg) {
 
   // returns an array of flavors for which the md5 has changed
   function filterFlavorsByMd5(flavors) {
-    debug('filter flavors by md5');
+    log.trace('filter flavors by md5');
     return getFlavorMD5(flavors).then((result) => {
       if (config.forceUpdate) {
-        debug('force update, no flavor filtering');
+        log.info('force update, no flavor filtering');
         return Object.keys(result);
       }
       if (JSON.stringify(md5) === '{}') {
@@ -271,11 +271,11 @@ function call(configArg) {
       let keys = [];
       for (let key in result) {
         if (result[key] !== md5[key]) {
-          debug(`flavor ${key} has changed, add to the list`);
+          log.trace(`flavor ${key} has changed, add to the list`);
           md5[key] = result[key];
           keys.push(key);
         } else {
-          debug(`flavor ${key} has not changed, ignoring it`);
+          log.trace(`flavor ${key} has not changed, ignoring it`);
         }
       }
       fs.writeJSONSync(config.md5Path, md5);
@@ -284,7 +284,7 @@ function call(configArg) {
   }
 
   function getFlavors() {
-    debug('get list of flavors');
+    log.trace('get list of flavors');
     return flavorUtils.getFlavors().then((flavors) => {
       return processFlavors(flavors);
     });
@@ -370,21 +370,21 @@ function call(configArg) {
   // data: the
   async function handleFlavor(flavorName) {
     let viewsList = await getFlavor(flavorName);
-    debug(`handle flavor ${flavorName}`);
+    log.info(`build flavor ${flavorName}`);
     const flavorDir = getFlavorDir(flavorName, true);
 
     // Transforms the array-representation of a flavor's views as returned by couchdb
     // into a tree representation that reflects the views' hierarchy in a flavor
-    debug('get tree');
+    log.trace('get tree');
     let viewTree = await flavorUtils.getTree(viewsList);
     // Set the path of each view to end up to
-    debug('do path on tree');
+    log.trace('do path on tree');
     await flavorUtils.traverseTree(viewTree, doPath(flavorDir));
     // For each view fix version number
-    debug('fix version on tree');
+    log.trace('fix version on tree');
     await flavorUtils.traverseTree(viewTree, fixVersion);
     // For each view generate the html in the appropriate directory
-    debug('generate html on tree');
+    log.trace('generate html on tree');
 
     let hasNew = false;
     let nameChanged = false;
@@ -440,7 +440,7 @@ function call(configArg) {
   }
 
   function logProcessView(el, flavorName) {
-    debug(`process view - flavor: ${flavorName}, id: ${el.__id}`);
+    log.info(`process view - flavor: ${flavorName}, id: ${el.__id}`);
   }
 
   function updateRevision(cb, flavorName) {
@@ -824,9 +824,9 @@ function call(configArg) {
   }
 
   function copyFiles() {
-    debug('copy files');
+    log.trace('copy files');
     for (let i = 0; i < toCopy.length; i++) {
-      debug(`copy ${toCopy[i].src} to ${toCopy[i].dest}`);
+      log.trace(`copy ${toCopy[i].src} to ${toCopy[i].dest}`);
       fs.copySync(toCopy[i].src, toCopy[i].dest);
     }
   }
@@ -856,7 +856,7 @@ function call(configArg) {
       return Promise.resolve();
     } catch (e) {
       return new Promise((resolve, reject) => {
-        debug('copying visualizer', version);
+        log.trace('copying visualizer', version);
         fs.mkdirpSync(extractDir);
         url = utils.getAuthUrl(config, url.href);
 
