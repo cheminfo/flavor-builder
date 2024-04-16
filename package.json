@@ -20,7 +20,6 @@
     "node": "20.12.2"
   },
   "dependencies": {
-    "co": "^4.6.0",
     "debug": "^4.3.4",
     "flavor-utils": "^3.2.0",
     "fs-extra": "^11.2.0",
@@ -30,7 +29,7 @@
     "minimst": "^0.0.1-security",
     "request": "^2.79.0",
     "swig": "^1.4.2",
-    "visualizer-on-tabs": "git+https://github.com/cheminfo/visualizer-on-tabs#3a433a29441a7397352b3d03aa48bf769f4f980b"
+    "visualizer-on-tabs": "git+https://github.com/cheminfo/visualizer-on-tabs#b4fb6a736728ca73097b8feae3c3aa24e2a291ff"
   },
   "devDependencies": {
     "eslint": "^7.29.0",
