@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.3.0](https://www.github.com/cheminfo/flavor-builder/compare/v4.2.1...v4.3.0) (2024-04-16)
+
+
+### Features
+
+* separate logs in 2 categories: info and trace ([#74](https://www.github.com/cheminfo/flavor-builder/issues/74)) ([dfc0a4b](https://www.github.com/cheminfo/flavor-builder/commit/dfc0a4baa0a61eb9dc79d0597fe44311ed8df2c3))
+
 ### [4.2.1](https://www.github.com/cheminfo/flavor-builder/compare/v4.2.0...v4.2.1) (2024-04-16)
 
 
