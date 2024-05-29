@@ -1,0 +1,7 @@
+services:
+  httpd:
+    image: httpd:2-alpine
+    volumes:
+      - ./build/out:/usr/local/apache2/htdocs
+    ports:
+      - 6060:80
