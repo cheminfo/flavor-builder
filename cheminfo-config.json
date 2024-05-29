@@ -1,0 +1,155 @@
+{
+  "revisionByIdPath": "./build/cheminfo-revisions.json",
+  "md5Path": "./build/cheminfo-md5.json",
+  "pidFile": "./build/cheminfo-flavor-builder.pid",
+  "useSSI": true,
+  "rootUrl": "http://www.cheminfo.org/",
+  "couchurl": "https://couch.cheminfo.org/",
+  "couchLocalUrl": "https://couch.cheminfo.org/",
+  "couchDatabase": "cheminfo-public",
+  "dir": "./build/out",
+  "home": "Home",
+  "forceUpdate": false,
+  "flavorUsername": "admin@cheminfo.org",
+  "editRedirect": "https://my.cheminfo.org",
+  "cdn": "https://www.lactame.com",
+  "designDoc": "app",
+  "direct": "http://direct.lactame.com",
+  "layouts": {
+    "default": "simplemenu/endlayouts/simplemenu.html",
+    "bootstrap": "bootstrap/endlayouts/bootstrap.html",
+    "cheminformatics": "bootstrap/endlayouts/cheminformatics.html",
+    "chromeapp": "bootstrap/endlayouts/chromeapp.html",
+    "chrome-app": "bootstrap/endlayouts/chrome-app.html",
+    "simple": "simplemenu/endlayouts/simple.html",
+    "mass": "mass/endlayouts/simple.html",
+    "standalone": "nomenu/nomenu.html",
+    "menu-copy": "simplemenu/endlayouts/menu-copy.html"
+  },
+  "flavorLayouts": {
+    "eln-standalone": "standalone",
+    "1024": "simple",
+    "720p": "simple",
+    "biooriented": "simple",
+    "cheminformatics": "simple",
+    "chromeapp": "simple",
+    "csdb": "simple",
+    "demo": "visualizer-on-tabs",
+    "eln": "visualizer-on-tabs",
+    "hackuarium": "simple",
+    "wiley": "visualizer-on-tabs",
+    "malaria": "simple",
+    "mass": "simple",
+    "mstools": "standalone",
+    "metabolomics": "simple",
+    "nmredata": "simple",
+    "molbank": "standalone",
+    "tools": "standalone",
+    "nmr": "simple",
+    "octanis": "simple",
+    "organicChemistry": "visualizer-on-tabs",
+    "rest-on-couch": "simple",
+    "solar": "simple",
+    "spectrophotometer": "chromeapp",
+    "structuralAnalysis": "simple",
+    "swissdecode": "simple",
+    "gymnase": "visualizer-on-tabs",
+    "heiafr": "visualizer-on-tabs",
+    "mpi": "visualizer-on-tabs",
+    "acimmune": "visualizer-on-tabs"
+  },
+  "libFolder": "UX4AFL9KTPDES",
+  "selfContained": false,
+  "rocLogin": {
+    "eln-standalone": {
+      "url": "https://mydb.cheminfo.org/",
+      "auto": "true"
+    }
+  },
+  "visualizerOnTabs": {
+    "_default": {
+      "rocLogin": {
+        "url": "https://mydb.cheminfo.org"
+      },
+      "rewriteRules": [
+        {
+          "reg": "^([a-z0-9]+)\\?(.*)$",
+          "replace": "https://couch.cheminfo.org/cheminfo-public/$1/view.json?$2"
+        },
+        {
+          "reg": "^[a-z0-9]+$",
+          "replace": "https://couch.cheminfo.org/cheminfo-public/$&/view.json"
+        },
+        {
+          "reg": "^[a-z0-9]+/view.json\\?.*",
+          "replace": "https://couch.cheminfo.org/cheminfo-public/$&"
+        }
+      ]
+    },
+    "eln": {
+      "rocLogin": {
+        "url": "https://mydb.cheminfo.org"
+      },
+      "title": "C6H6 - Electronic laboratory notebook",
+      "rewriteRules": [
+        {
+          "reg": "^([a-z0-9]+)\\?(.*)$",
+          "replace": "https://couch.cheminfo.org/cheminfo-public/$1/view.json?$2"
+        },
+        {
+          "reg": "^[a-z0-9]+$",
+          "replace": "https://couch.cheminfo.org/cheminfo-public/$&/view.json"
+        },
+        {
+          "reg": "^[a-z0-9]+/view.json\\?.*",
+          "replace": "https://couch.cheminfo.org/cheminfo-public/$&"
+        }
+      ]
+    },
+    "mpi": {
+      "rocLogin": {
+        "url": "https://mydb.cheminfo.org",
+        "auto": true
+      },
+      "rewriteRules": [
+        {
+          "reg": "^[^/]+$",
+          "replace": "http://couch.cheminfo.org/cheminfo-public/$&/view.json"
+        },
+        {
+          "reg": "^([^/]+)\\?(.*)$",
+          "replace": "https://couch.cheminfo.org/cheminfo-public/$1/view.json?$2"
+        },
+        {
+          "reg": "^[^/]+/[^/]+$",
+          "replace": "http://couch.cheminfo.org/$&/view.json"
+        },
+        {
+          "reg": "^[^/]+/view.json.*",
+          "replace": "http://couch.cheminfo.org/cheminfo-public/$&"
+        },
+        {
+          "reg": "^[^/]+/[^/]+/view.json.*",
+          "replace": "http://couch.cheminfo.org/$&"
+        }
+      ]
+    },
+    "wiley": {
+      "rocLogin": {
+        "url": "https://mydb.cheminfo.org",
+        "auto": true
+      },
+      "possibleViews": {
+        "Selection": {
+          "url": "0d7a79a24a1c9433d8286365841c14e0"
+        }
+      },
+      "rewriteRules": [
+        {
+          "reg": "^[^/]+$",
+          "replace": "https://couch.cheminfo.org/cheminfo-public/$&/view.json"
+        }
+      ]
+    }
+  }
+}
