@@ -30,14 +30,6 @@ And visit `http://localhost:6060`, and `http://localhost:6060` for the visualize
 
 The admin page or the `on-tabs` pages build by the flavor-builder are not expected to work with this setup.
 
-## Config
-
-To create a configuration file, run:
-```bash
-npm run create-config
-```
-It will prompt you with questions and create the configuration file with your answers.
-
 ## CLI usage
 
 To force the rebuild you should add the option `--forceUpdate`.
