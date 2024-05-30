@@ -1,5 +1,12 @@
 # Changelog
 
+### [5.0.1](https://www.github.com/cheminfo/flavor-builder/compare/v5.0.0...v5.0.1) (2024-05-30)
+
+
+### Bug Fixes
+
+* update visualizer-on-tabs ([b92aff6](https://www.github.com/cheminfo/flavor-builder/commit/b92aff691602258ecdeb5f34813ebec7d30d7bb0))
+
 ## [5.0.0](https://www.github.com/cheminfo/flavor-builder/compare/v4.3.0...v5.0.0) (2024-05-29)
 
 
