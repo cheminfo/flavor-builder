@@ -15,8 +15,8 @@ const request = require('request');
 const swig = require('swig');
 const visualizerOnTabs = require('visualizer-on-tabs');
 
-const utils = require('./utils');
 const log = require('./log');
+const utils = require('./utils');
 
 const URL = urlLib.URL;
 

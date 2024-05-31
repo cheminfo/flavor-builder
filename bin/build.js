@@ -3,8 +3,9 @@
 'use strict';
 
 let args = require('minimist')(process.argv.slice(2));
-const log = require('../src/log');
+
 let flavorBuilder = require('../src/index');
+const log = require('../src/log');
 
 let configs = args.config.split(',');
 let prom = [];
