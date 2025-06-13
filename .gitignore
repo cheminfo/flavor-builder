@@ -2,3 +2,6 @@ build
 config.json
 layouts.json
 node_modules
+coverage
+
+
