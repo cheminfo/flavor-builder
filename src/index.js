@@ -6,7 +6,6 @@ import path from 'node:path';
 import { URL } from 'node:url';
 
 import FlavorUtils from 'flavor-utils';
-import { isUndefined, uniq } from 'lodash-es';
 import request from 'request';
 import swig from 'swig';
 import visualizerOnTabs from 'visualizer-on-tabs';
@@ -459,7 +458,7 @@ function call(configArg) {
     await flavorUtils.traverseTree(tree, (el) => {
       v.push(el.__version);
     });
-    return uniq(v);
+    return Array.from(new Set(v));
   }
 
   function generateHtml(flavorName, rootStructure) {
@@ -812,7 +811,7 @@ function checkFile(path) {
 
 function processFlavors(data) {
   let result;
-  if (data && data.rows && !isUndefined(data.rows.length)) {
+  if (data && Array.isArray(data.rows)) {
     result = data.rows.flat();
     result = result.flatMap((r) => r.value);
   }

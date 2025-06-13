@@ -1,7 +1,6 @@
 import path from 'node:path';
 import process from 'node:process';
 
-import { cloneDeep } from 'lodash-es';
 import minimist from 'minimist';
 
 const args = minimist(process.argv.slice(2));
@@ -24,7 +23,7 @@ export async function buildConfig(configArg = 'config.json') {
     // Make sure we have another reference
     // To avoid the config being changed from
     // outside during a build
-    config = cloneDeep(configArg);
+    config = structuredClone(configArg);
   } else {
     throw new TypeError('Incorrect argument');
   }
