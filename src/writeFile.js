@@ -1,13 +1,11 @@
-'use strict';
+import fs from 'node:fs';
+import path from 'node:path';
 
-let path = require('path');
-
-let fs = require('fs-extra');
-let request = require('request');
+import request from 'request';
 
 let filesWriting = {};
 
-exports = module.exports = function writeFile(url, p, options) {
+export function writeFile(url, p, options) {
   options = options || {};
   return new Promise(function writeFilePromiseCallback(resolve, reject) {
     if (filesWriting[p]) {
@@ -20,7 +18,7 @@ exports = module.exports = function writeFile(url, p, options) {
       resolve();
       return;
     }
-    fs.mkdirpSync(path.parse(p).dir);
+    fs.mkdirSync(path.parse(p).dir, { recursive: true });
     let read = request.get(url, options);
 
     read.on('response', function onReadResponse(res) {
@@ -30,7 +28,7 @@ exports = module.exports = function writeFile(url, p, options) {
       }
 
       let write = fs.createWriteStream(p);
-      write.on('error', function onWriteError (e) {
+      write.on('error', function onWriteError(e) {
         reject(e);
       });
 
@@ -40,8 +38,8 @@ exports = module.exports = function writeFile(url, p, options) {
       read.pipe(write);
     });
 
-    read.on('error', function onReadError (e) {
+    read.on('error', function onReadError(e) {
       reject(e);
     });
   });
-};
+}

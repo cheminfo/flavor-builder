@@ -4,9 +4,12 @@
   "description": "Make an indexable website from a flavor (a bunch of views in the visualizer)",
   "main": "src/index.js",
   "bin": "bin/build.js",
+  "type": "module",
   "scripts": {
     "eslint": "eslint src bin",
     "eslint-fix": "npm run eslint -- --fix",
+    "prettier": "prettier --check ./",
+    "prettier-write": "prettier --write ./",
     "test": "npm run eslint"
   },
   "keywords": [
@@ -19,19 +22,19 @@
     "node": "20.12.2"
   },
   "dependencies": {
-    "debug": "^4.3.4",
+    "debug": "^4.4.1",
     "flavor-utils": "^3.2.0",
-    "fs-extra": "^11.2.0",
     "is-running": "^2.1.0",
-    "lodash": "^4.17.21",
-    "minimist": "^1.2.5",
-    "request": "^2.79.0",
+    "lodash-es": "^4.17.21",
+    "minimist": "^1.2.8",
+    "request": "^2.88.2",
     "swig": "^1.4.2",
     "visualizer-on-tabs": "git+https://github.com/cheminfo/visualizer-on-tabs#ba568861e66854a75546702ec68762c35b00dd66"
   },
   "devDependencies": {
-    "eslint": "^7.29.0",
-    "eslint-config-cheminfo": "^5.2.4"
+    "eslint": "^9.28.0",
+    "eslint-config-cheminfo": "^14.1.1",
+    "prettier": "^3.5.3"
   },
   "repository": {
     "type": "git",

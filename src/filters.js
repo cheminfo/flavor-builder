@@ -1,17 +1,14 @@
-'use strict';
+import path from 'node:path';
 
-let path = require('path');
-let urlLib = require('url');
+import { cacheUrl, checkVersion, getLocalUrl, rewriteUrl } from './utils.js';
 
-let utils = require('./utils');
+function concat(a, b) {
+  if (b === undefined) return a;
+  return a + b;
+}
 
-function filters(config) {
+export function getFilters(config) {
   let plist = [];
-
-  function concat(a, b) {
-    if (b === undefined) return a;
-    return a + b;
-  }
 
   function processUrl(url, reldir, flavorName) {
     if (!config.isSelfContained(flavorName)) {
@@ -19,16 +16,16 @@ function filters(config) {
       return url;
     }
 
-    url = utils.rewriteUrl(url);
-    plist.push(utils.cacheUrl(config, url, flavorName));
-    return utils.getLocalUrl(config, url, reldir);
+    url = rewriteUrl(url);
+    plist.push(cacheUrl(config, url, flavorName));
+    return getLocalUrl(config, url, reldir);
   }
 
   function visualizer(version, reldir, flavorName) {
     if (!config.isSelfContained(flavorName)) return null;
-    version = utils.checkVersion(version);
+    version = checkVersion(version);
     let visualizerUrl = `${config.cdn}/visualizer`.replace(/^\/\//, 'https://');
-    let parsedUrl = urlLib.parse(visualizerUrl);
+    const parsedUrl = new URL(visualizerUrl);
 
     return path.join(
       reldir,
@@ -40,9 +37,9 @@ function filters(config) {
   }
 
   let r = {
-    concat: concat,
-    processUrl: processUrl,
-    visualizer: visualizer,
+    concat,
+    processUrl,
+    visualizer,
   };
 
   Object.defineProperty(r, 'plist', {
@@ -51,5 +48,3 @@ function filters(config) {
   });
   return r;
 }
-
-exports = module.exports = filters;

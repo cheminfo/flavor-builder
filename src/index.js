@@ -1,24 +1,30 @@
-'use strict';
+import { exec } from 'node:child_process';
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import fsAsync from 'node:fs/promises';
+import path from 'node:path';
+import { URL } from 'node:url';
+
+import FlavorUtils from 'flavor-utils';
+import { isUndefined, uniq } from 'lodash-es';
+import request from 'request';
+import swig from 'swig';
+import visualizerOnTabs from 'visualizer-on-tabs';
+
+import { getFilters } from './filters.js';
+import { readJsonSync, writeJsonSync } from './fs.js';
+import { isLocked } from './isLocked.js';
+import log from './log.js';
+import {
+  cacheDir,
+  cacheUrl,
+  checkVersion,
+  fromVisuLocalUrl,
+  getAuthUrl,
+} from './utils.js';
 
 const DEFAULT_FLAVOR = 'default';
 const READ_CONFIG = './static/readConfig.json';
-
-const exec = require('child_process').exec;
-const crypto = require('crypto');
-const path = require('path');
-const urlLib = require('url');
-
-const FlavorUtils = require('flavor-utils');
-const fs = require('fs-extra');
-const _ = require('lodash');
-const request = require('request');
-const swig = require('swig');
-const visualizerOnTabs = require('visualizer-on-tabs');
-
-const log = require('./log');
-const utils = require('./utils');
-
-const URL = urlLib.URL;
 
 const pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
 
@@ -33,18 +39,19 @@ function call(configArg) {
     revisionById,
     md5;
 
-  function init(configArg) {
-    config = require('./config')(configArg);
+  async function init(configArg) {
+    const { buildConfig } = await import('./config.js');
+    config = await buildConfig(configArg);
     if (config.pidFile) {
-      let isLocked = require('./isLocked')(
-        path.resolve(path.join(__dirname, '..'), config.pidFile),
+      let isProcessLocked = isLocked(
+        path.resolve(path.join(import.meta.dirname, '..'), config.pidFile),
       );
-      if (isLocked) {
+      if (isProcessLocked) {
         throw new Error('flavor-builder already running');
       }
     }
 
-    filters = require('./filters')(config);
+    filters = getFilters(config);
     layouts = config.layouts;
     flavorUtils = new FlavorUtils({
       username: config.flavorUsername,
@@ -57,12 +64,12 @@ function call(configArg) {
   }
 
   return {
-    build() {
-      init(configArg);
+    async build() {
+      await init(configArg);
       return build();
     },
-    getFlavors() {
-      init(configArg);
+    async getFlavors() {
+      await init(configArg);
       return getFlavors();
     },
   };
@@ -74,15 +81,15 @@ function call(configArg) {
 
     toCopy = [
       {
-        src: path.join(__dirname, '../lib'),
+        src: path.join(import.meta.dirname, '../lib'),
         dest: path.join(config.dir, './lib'),
       },
       {
-        src: path.join(__dirname, '../themes'),
+        src: path.join(import.meta.dirname, '../themes'),
         dest: path.join(config.dir, './themes'),
       },
       {
-        src: path.join(__dirname, '../static'),
+        src: path.join(import.meta.dirname, '../static'),
         dest: path.join(config.dir, './static'),
       },
     ];
@@ -128,29 +135,8 @@ function call(configArg) {
         }
       }
       writeSiteMaps();
-    } catch (e) {
-      log.info('error occured', e);
-    }
-  }
-
-  function checkFile(path) {
-    log.trace(`check that ${path} can be written`);
-    try {
-      let fid = fs.openSync(path, 'a+');
-      fs.closeSync(fid);
-      try {
-        return fs.readJSONSync(path);
-      } catch (e) {
-        return {};
-      }
-    } catch (e) {
-      if (e.code === 'ENOENT') {
-        fs.writeJSONSync(path, {});
-        return {};
-      } else {
-        // propagate the error
-        throw e;
-      }
+    } catch (error) {
+      log.info('error occured', error);
     }
   }
 
@@ -160,15 +146,15 @@ function call(configArg) {
       let r = {};
       let content = fs.readFileSync(
         path.join(config.dir, 'sitemap.txt'),
-        'utf-8',
+        'utf8',
       );
-      content.split('\n').forEach((el) => {
+      for (let el of content.split('\n')) {
         el = el.replace(config.rootUrl, '');
         el = el.replace(/^\//, '');
         r[el] = true;
-      });
+      }
       return r;
-    } catch (e) {
+    } catch {
       return {};
     }
   }
@@ -204,7 +190,7 @@ function call(configArg) {
       flavorDir = path.join(config.dir, 'flavor', flavorName);
     }
     if (create) {
-      fs.mkdirpSync(flavorDir);
+      fs.mkdirSync(flavorDir, { recursive: true });
     }
     return flavorDir;
   }
@@ -246,7 +232,7 @@ function call(configArg) {
         );
         homePages.push({
           outDir,
-          config: Object.assign({}, tabsConfig, customConfig),
+          config: { ...tabsConfig, ...customConfig },
         });
       }
     });
@@ -265,7 +251,7 @@ function call(configArg) {
         return Object.keys(result);
       }
       if (JSON.stringify(md5) === '{}') {
-        fs.writeJSONSync(config.md5Path, result);
+        writeJsonSync(config.md5Path, result);
         return Object.keys(result);
       }
       let keys = [];
@@ -278,7 +264,7 @@ function call(configArg) {
           log.trace(`flavor ${key} has not changed, ignoring it`);
         }
       }
-      fs.writeJSONSync(config.md5Path, md5);
+      writeJsonSync(config.md5Path, md5);
       return keys;
     });
   }
@@ -291,7 +277,7 @@ function call(configArg) {
   }
 
   function getFlavorMD5(flavors) {
-    if (flavors instanceof Array) {
+    if (Array.isArray(flavors)) {
       let prom = [];
       for (let i = 0; i < flavors.length; i++) {
         prom.push(getFlavorMD5(flavors[i]));
@@ -311,40 +297,31 @@ function call(configArg) {
             .update(JSON.stringify(result.rows))
             .digest('hex');
         },
-        (err) => {
-          throw err;
+        (error) => {
+          throw error;
         },
       );
     }
   }
 
-  function processFlavors(data) {
-    let result;
-    if (data && data.rows && !_.isUndefined(data.rows.length)) {
-      result = _.flatten(data.rows);
-      result = _.flatten(result.map((r) => r.value));
-    }
-    return result;
-  }
-
   function getFlavor(flavor) {
     // Returns sorted flavor views
-    return flavorUtils.getFlavor({ flavor: flavor }, true);
+    return flavorUtils.getFlavor({ flavor }, true);
   }
 
   function getViewUrl(el, type) {
     return el.__view
       ? `${getCouchUrlByType(type)}/${config.couchDatabase}/${
-        el.__id
-      }/view.json?rev=${el.__rev}`
+          el.__id
+        }/view.json?rev=${el.__rev}`
       : undefined;
   }
 
   function getDataUrl(el, type) {
     return el.__data
       ? `${getCouchUrlByType(type)}/${config.couchDatabase}/${
-        el.__id
-      }/data.json?rev=${el.__rev}`
+          el.__id
+        }/data.json?rev=${el.__rev}`
       : undefined;
   }
 
@@ -411,7 +388,7 @@ function call(configArg) {
       }
     }
 
-    fs.writeJsonSync(config.revisionByIdPath, revisionById);
+    writeJsonSync(config.revisionByIdPath, revisionById);
 
     if (!hasNew && !nameChanged && !hasDeleted) {
       // Generate only for views that changed
@@ -434,13 +411,9 @@ function call(configArg) {
       }
     }
     // Copy static files
-    copyFiles();
+    await copyFiles();
     // Process non view-specific swig
     swigFiles();
-  }
-
-  function logProcessView(el, flavorName) {
-    log.info(`process view - flavor: ${flavorName}, id: ${el.__id}`);
   }
 
   function updateRevision(cb, flavorName) {
@@ -452,7 +425,7 @@ function call(configArg) {
         rev: el.__rev,
         name: el.__name,
       };
-      fs.writeJsonSync(config.revisionByIdPath, revisionById);
+      writeJsonSync(config.revisionByIdPath, revisionById);
       return prom;
     };
   }
@@ -475,18 +448,10 @@ function call(configArg) {
           rev: el.__rev,
           name: el.__name,
         };
-        fs.writeJsonSync(config.revisionByIdPath, revisionById);
+        writeJsonSync(config.revisionByIdPath, revisionById);
       }
       return prom;
     };
-  }
-
-  function fixVersion(el) {
-    if (el.__version) {
-      if (!el.__version.startsWith('v')) {
-        el.__version = `v${el.__version}`;
-      }
-    }
   }
 
   async function getVersionsFromTree(tree) {
@@ -494,7 +459,7 @@ function call(configArg) {
     await flavorUtils.traverseTree(tree, (el) => {
       v.push(el.__version);
     });
-    return _.uniq(v);
+    return uniq(v);
   }
 
   function generateHtml(flavorName, rootStructure) {
@@ -507,7 +472,7 @@ function call(configArg) {
       sitemaps[pathFromDir(flavorName, el.__path)] = true;
 
       // Create directory
-      fs.mkdirpSync(basePath);
+      fs.mkdirSync(basePath, { recursive: true });
 
       let data = {
         viewURL: selfContained
@@ -525,7 +490,7 @@ function call(configArg) {
         meta: el.__meta,
         keywords: el.__keywords,
         structure: rootStructure,
-        config: config,
+        config,
         menuHtml: doMenu(rootStructure, basePath, flavorName),
         reldir: relativePath,
         readConfig: path.join(relativePath, READ_CONFIG),
@@ -560,12 +525,12 @@ function call(configArg) {
                   } else {
                     data.botHtml = getBotContent(body);
                     data.description = data.botHtml
-                      .replace(/<[^>]*>/g, ' ')
-                      .replace('"', '\'');
+                      .replaceAll(/<[^>]*>/g, ' ')
+                      .replace('"', "'");
                     let layoutFile =
                       layouts[
-                      config.flavorLayouts[flavorName] || DEFAULT_FLAVOR
-                        ];
+                        config.flavorLayouts[flavorName] || DEFAULT_FLAVOR
+                      ];
                     writeFile(layoutFile, el.__path, data);
                     if (config.isSelfContained(flavorName)) {
                       fs.writeFileSync(viewPath, body);
@@ -620,7 +585,7 @@ function call(configArg) {
           );
         }
 
-        fs.writeJsonSync(path.join(basePath, 'couch.json'), {
+        writeJsonSync(path.join(basePath, 'couch.json'), {
           id: el.__id,
           rev: el.__rev,
           database: `${config.couchurl}/${config.couchDatabase}`,
@@ -634,10 +599,10 @@ function call(configArg) {
 
   function doPath(dir) {
     return function doDirPath(el) {
-      el.__filename = el.__name.replace(pathCharactersRegExp, '_');
+      el.__filename = el.__name.replaceAll(pathCharactersRegExp, '_');
       el.__path = el.__parents
         .map((parent) => {
-          return parent.replace(pathCharactersRegExp, '_');
+          return parent.replaceAll(pathCharactersRegExp, '_');
         })
         .join('/');
       el.__path = path.join(dir, el.__path);
@@ -651,32 +616,9 @@ function call(configArg) {
     };
   }
 
-  function writeFile(readpath, writepath, data) {
-    // Compile a file and store it, rendering it later
-    let tpl = swig.compileFile(readpath);
-    let htmlcontent = tpl(data);
-    fs.writeFileSync(writepath, htmlcontent);
-  }
-
-  function getBotContent(viewContent) {
-    let content = JSON.parse(viewContent);
-    if (content.modules) {
-      let modules = content.modules.filter((m) => {
-        // eslint-disable-next-line prefer-named-capture-group
-        return m.url.match(/\/(rich_text|postit)/);
-      });
-      return modules
-        .map((m) => {
-          return m.richtext || m.text || '';
-        })
-        .join('');
-    }
-    return '';
-  }
-
   function processViewForLibraries(viewPath, flavorName, out) {
     let prom = [];
-    let view = fs.readJsonSync(viewPath);
+    let view = readJsonSync(viewPath);
     eachModule(
       view,
       (module) => {
@@ -684,15 +626,15 @@ function call(configArg) {
           let libs = module.configuration.groups.libs[0];
           for (let i = 0; i < libs.length; i++) {
             if (libraryNeedsProcess(libs[i].lib)) {
-              prom.push(utils.cacheUrl(config, libs[i].lib, flavorName, true));
-              libs[i].lib = utils.fromVisuLocalUrl(config, libs[i].lib);
+              prom.push(cacheUrl(config, libs[i].lib, flavorName, true));
+              libs[i].lib = fromVisuLocalUrl(config, libs[i].lib);
             }
           }
-        } catch (e) {
+        } catch (error) {
           console.error(
             'Error  while processing view to change libraries',
-            e,
-            e.stack,
+            error,
+            error.stack,
           );
         }
       },
@@ -701,8 +643,8 @@ function call(configArg) {
 
     eachModule(view, (module) => {
       if (libraryNeedsProcess(module.url)) {
-        prom.push(utils.cacheDir(config, module.url, flavorName, true));
-        module.url = utils.fromVisuLocalUrl(config, module.url);
+        prom.push(cacheDir(config, module.url, flavorName, true));
+        module.url = fromVisuLocalUrl(config, module.url);
       }
     });
 
@@ -711,61 +653,24 @@ function call(configArg) {
         for (let i = 0; i < view.aliases.length; i++) {
           let lib = view.aliases[i].path;
           if (libraryNeedsProcess(lib)) {
-            prom.push(utils.cacheUrl(config, lib, flavorName, true));
-            view.aliases[i].path = utils.fromVisuLocalUrl(config, lib);
+            prom.push(cacheUrl(config, lib, flavorName, true));
+            view.aliases[i].path = fromVisuLocalUrl(config, lib);
           }
         }
       }
-    } catch (e) {
+    } catch (error) {
       console.error(
         'Error while processing view to change library urls (general preferences)',
-        e,
-        e.stack,
+        error,
+        error.stack,
       );
     }
 
     out = out || viewPath;
-    fs.mkdirpSync(path.parse(out).dir);
-    fs.writeJsonSync(out, view);
+    fs.mkdirSync(path.parse(out).dir, { recursive: true });
+    writeJsonSync(out, view);
 
     return Promise.all(prom);
-  }
-
-  function libraryNeedsProcess(url) {
-    return /^https?:\/\/|^\.|^\/\//.test(url);
-  }
-
-  function eachModule(view, callback, moduleNames) {
-    if (view.modules) {
-      if (typeof moduleNames === 'string') {
-        moduleNames = [moduleNames];
-      } else if (!Array.isArray(moduleNames)) {
-        moduleNames = [''];
-      }
-      let i = 0;
-      let ii = view.modules.length;
-      let module;
-      let url;
-      let j;
-      let jj = moduleNames.length;
-      for (; i < ii; i++) {
-        module = view.modules[i];
-
-        url = module.url;
-        if (url) {
-          if (!moduleNames) {
-            callback(module);
-            continue;
-          }
-          for (j = 0; j < jj; j++) {
-            if (String(url).indexOf(moduleNames[j]) >= 0) {
-              callback(module);
-              break;
-            }
-          }
-        }
-      }
-    }
   }
 
   function getFlavorConfig(flavorName) {
@@ -804,7 +709,7 @@ function call(configArg) {
     } else {
       let link = structure.__homeChild
         ? path.relative(cpath, structure.__homeChild.__path) +
-        buildQueryString(structure.__homeChild, flavorName)
+          buildQueryString(structure.__homeChild, flavorName)
         : '#';
 
       if (structure.__name) {
@@ -823,11 +728,11 @@ function call(configArg) {
     return html;
   }
 
-  function copyFiles() {
+  async function copyFiles() {
     log.trace('copy files');
     for (let i = 0; i < toCopy.length; i++) {
       log.trace(`copy ${toCopy[i].src} to ${toCopy[i].dest}`);
-      fs.copySync(toCopy[i].src, toCopy[i].dest);
+      await fsAsync.cp(toCopy[i].src, toCopy[i].dest, { recursive: true });
     }
   }
 
@@ -838,7 +743,7 @@ function call(configArg) {
   }
 
   function copyVisualizer(version) {
-    version = utils.checkVersion(version);
+    version = checkVersion(version);
     let url = new URL('visualizer', config.cdn);
     let extractDir = path.join(
       config.dir,
@@ -854,11 +759,11 @@ function call(configArg) {
     try {
       fs.statSync(extractDir);
       return Promise.resolve();
-    } catch (e) {
+    } catch {
       return new Promise((resolve, reject) => {
         log.trace('copying visualizer', version);
-        fs.mkdirpSync(extractDir);
-        url = utils.getAuthUrl(config, url.href);
+        fs.mkdirSync(extractDir, { recursive: true });
+        url = getAuthUrl(config, url.href);
 
         exec(
           `curl ${url} | tar -xz`,
@@ -875,7 +780,7 @@ function call(configArg) {
   }
 }
 
-exports = module.exports = {
+export default {
   build(config) {
     return call(config).build();
   },
@@ -883,3 +788,103 @@ exports = module.exports = {
     return call(config).getFlavors();
   },
 };
+
+function checkFile(path) {
+  log.trace(`check that ${path} can be written`);
+  try {
+    let fid = fs.openSync(path, 'a+');
+    fs.closeSync(fid);
+    try {
+      return readJsonSync(path);
+    } catch {
+      return {};
+    }
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      writeJsonSync(path, {});
+      return {};
+    } else {
+      // propagate the error
+      throw error;
+    }
+  }
+}
+
+function processFlavors(data) {
+  let result;
+  if (data && data.rows && !isUndefined(data.rows.length)) {
+    result = data.rows.flat();
+    result = result.flatMap((r) => r.value);
+  }
+  return result;
+}
+
+function logProcessView(el, flavorName) {
+  log.info(`process view - flavor: ${flavorName}, id: ${el.__id}`);
+}
+
+function fixVersion(el) {
+  if (el.__version && !el.__version.startsWith('v')) {
+    el.__version = `v${el.__version}`;
+  }
+}
+
+function writeFile(readpath, writepath, data) {
+  // Compile a file and store it, rendering it later
+  let tpl = swig.compileFile(readpath);
+  let htmlcontent = tpl(data);
+  fs.writeFileSync(writepath, htmlcontent);
+}
+
+function getBotContent(viewContent) {
+  let content = JSON.parse(viewContent);
+  if (content.modules) {
+    let modules = content.modules.filter((m) => {
+      // eslint-disable-next-line prefer-named-capture-group
+      return m.url.match(/\/(rich_text|postit)/);
+    });
+    return modules
+      .map((m) => {
+        return m.richtext || m.text || '';
+      })
+      .join('');
+  }
+  return '';
+}
+
+function libraryNeedsProcess(url) {
+  return /^https?:\/\/|^\.|^\/\//.test(url);
+}
+
+function eachModule(view, callback, moduleNames) {
+  if (view.modules) {
+    if (typeof moduleNames === 'string') {
+      moduleNames = [moduleNames];
+    } else if (!Array.isArray(moduleNames)) {
+      moduleNames = [''];
+    }
+    let i = 0;
+    let ii = view.modules.length;
+    let module;
+    let url;
+    let j;
+    let jj = moduleNames.length;
+    for (; i < ii; i++) {
+      module = view.modules[i];
+
+      url = module.url;
+      if (url) {
+        if (!moduleNames) {
+          callback(module);
+          continue;
+        }
+        for (j = 0; j < jj; j++) {
+          if (String(url).includes(moduleNames[j])) {
+            callback(module);
+            break;
+          }
+        }
+      }
+    }
+  }
+}

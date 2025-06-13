@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
-'use strict';
+import process from 'node:process';
 
-let args = require('minimist')(process.argv.slice(2));
+import minimist from 'minimist';
 
-let flavorBuilder = require('../src/index');
-const log = require('../src/log');
+import flavorBuilder from '../src/index.js';
+import log from '../src/log.js';
+
+let args = minimist(process.argv.slice(2));
 
 let configs = args.config.split(',');
 let prom = [];
@@ -13,11 +15,5 @@ for (let i = 0; i < configs.length; i++) {
   prom.push(flavorBuilder.build(configs[i]));
 }
 
-Promise.all(prom)
-  .then(() => {
-    log.info('done build');
-  })
-  .catch((e) => {
-    console.error('Error building with flavor-builder', e, e.stack);
-    process.exit(1);
-  });
+await Promise.all(prom);
+log.info('done build');

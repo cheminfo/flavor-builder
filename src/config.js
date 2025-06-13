@@ -1,26 +1,34 @@
-'use strict';
+import path from 'node:path';
+import process from 'node:process';
 
-const path = require('path');
-
-const _ = require('lodash');
-const minimist = require('minimist');
+import { cloneDeep } from 'lodash-es';
+import minimist from 'minimist';
 
 const args = minimist(process.argv.slice(2));
-exports = module.exports = function buildConfig (configArg) {
-  configArg = configArg || 'config.json';
+
+/**
+ * Build the final configuration object.
+ * @param  {string|object} configArg - The path to the config file or the config object itself.
+ * @returns {*} The final configuration object.
+ */
+export async function buildConfig(configArg = 'config.json') {
   let config;
   if (typeof configArg === 'string') {
     let configFile = path.resolve(configArg);
-    config = require(configFile);
+
+    const { default: jsonConfig } = await import(configFile, {
+      with: { type: 'json' },
+    });
+    config = jsonConfig;
   } else if (typeof configArg === 'object') {
     // Make sure we have another reference
     // To avoid the config being changed from
     // outside during a build
-    config = _.cloneDeep(configArg);
+    config = cloneDeep(configArg);
   } else {
     throw new TypeError('Incorrect argument');
   }
-  // Config given in the command line takes precendence
+  // Config given in the command line takes precedence
   for (let key in args) {
     config[key] = args[key];
   }
@@ -50,11 +58,14 @@ exports = module.exports = function buildConfig (configArg) {
   }
 
   if (!config.revisionByIdPath) {
-    config.revisionByIdPath = path.resolve(__dirname, '../revisionById.json');
+    config.revisionByIdPath = path.resolve(
+      import.meta.dirname,
+      '../revisionById.json',
+    );
   }
 
   if (!config.md5Path) {
-    config.md5Path = path.resolve(__dirname, '../md5.json');
+    config.md5Path = path.resolve(import.meta.dirname, '../md5.json');
   }
 
   config.couchReqOptions = config.couchPassword
@@ -80,7 +91,7 @@ exports = module.exports = function buildConfig (configArg) {
   if (config.layouts) {
     for (let key in config.layouts) {
       config.layouts[key] = path.join(
-        __dirname,
+        import.meta.dirname,
         '../layout',
         config.layouts[key],
       );
@@ -98,4 +109,4 @@ exports = module.exports = function buildConfig (configArg) {
   config.designDoc = config.designDoc || 'customApp';
 
   return config;
-};
+}

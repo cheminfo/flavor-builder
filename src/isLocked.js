@@ -1,10 +1,10 @@
-'use strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
 
-const fs = require('fs');
+import isRunning from 'is-running';
 
-const isRunning = require('is-running');
-
-module.exports = function isLocked(filename) {
+export function isLocked(filename) {
   // try to read the file
   let running;
   try {
@@ -13,14 +13,16 @@ module.exports = function isLocked(filename) {
     if (!running) {
       fs.writeFileSync(filename, String(process.pid));
     }
-  } catch (e) {
-    if (e.code === 'ENOENT') {
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      const dir = path.dirname(filename);
+      fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(filename, String(process.pid));
       running = false;
     } else {
-      throw e;
+      throw error;
     }
   }
 
   return running;
-};
+}
