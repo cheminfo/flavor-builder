@@ -19,7 +19,7 @@
   "author": "Daniel Kostro",
   "license": "MIT",
   "volta": {
-    "node": "20.12.2"
+    "node": "22.16.0"
   },
   "dependencies": {
     "debug": "^4.4.1",
