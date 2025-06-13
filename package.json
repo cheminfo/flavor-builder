@@ -25,7 +25,6 @@
     "is-running": "^2.1.0",
     "lodash": "^4.17.21",
     "minimist": "^1.2.5",
-    "minimst": "^0.0.1-security",
     "request": "^2.79.0",
     "swig": "^1.4.2",
     "visualizer-on-tabs": "git+https://github.com/cheminfo/visualizer-on-tabs#ba568861e66854a75546702ec68762c35b00dd66"
