@@ -1,12 +1,13 @@
+import assert from 'node:assert';
 import { exec } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import fsAsync from 'node:fs/promises';
 import path from 'node:path';
+import { pipeline } from 'node:stream/promises';
 import { URL } from 'node:url';
 
 import FlavorUtils from 'flavor-utils';
-import request from 'request';
 import swig from 'swig';
 import visualizerOnTabs from 'visualizer-on-tabs';
 
@@ -504,95 +505,71 @@ function call(configArg) {
         data.home = '.';
       }
 
-      let finalProm = Promise.resolve();
-      finalProm = finalProm.then(() => {
-        let prom = [];
+      let prom = [];
 
-        // Now that the file is written the directory exists
+      // Now that the file is written, the directory exists
 
-        if (el.__view) {
-          prom.push(
-            new Promise((resolve, reject) => {
-              let viewPath = path.join(basePath, 'view.json');
-              let prom = Promise.resolve();
-              request(
-                getViewUrl(el, 'local'),
-                config.couchReqOptions,
-                (err, response, body) => {
-                  if (err) {
-                    reject(err);
-                  } else {
-                    data.botHtml = getBotContent(body);
-                    data.description = data.botHtml
-                      .replaceAll(/<[^>]*>/g, ' ')
-                      .replace('"', "'");
-                    let layoutFile =
-                      layouts[
-                        config.flavorLayouts[flavorName] || DEFAULT_FLAVOR
-                      ];
-                    writeFile(layoutFile, el.__path, data);
-                    if (config.isSelfContained(flavorName)) {
-                      fs.writeFileSync(viewPath, body);
-                      if (config.flatViews) {
-                        prom = prom.then(
-                          processViewForLibraries(
-                            viewPath,
-                            flavorName,
-                            path.join(
-                              config.flatViews.outdir,
-                              el.__id,
-                              'view.json',
-                            ),
-                          ),
-                        );
-                        prom = prom.then(
-                          processViewForLibraries(viewPath, flavorName),
-                        );
-                      } else {
-                        prom = prom.then(
-                          processViewForLibraries(viewPath, flavorName),
-                        );
-                      }
-                    }
-                    prom.then(resolve);
-                  }
-                },
-              );
-            }),
-          );
-        }
-        if (el.__data) {
-          prom.push(
-            new Promise((resolve, reject) => {
-              let read = request(
-                getDataUrl(el, 'local'),
-                config.couchReqOptions,
-              );
-              let viewPath = path.join(basePath, 'data.json');
-              let write = fs.createWriteStream(viewPath);
-              write.on('finish', () => {
-                return resolve();
-              });
-              write.on('error', (err) => {
-                return reject(err);
-              });
-              read.on('error', (err) => {
-                return reject(err);
-              });
-              read.pipe(write);
-            }),
-          );
-        }
+      if (el.__view) {
+        prom.push(
+          (async function processView() {
+            let viewPath = path.join(basePath, 'view.json');
+            const viewResponse = await fetch(
+              getViewUrl(el, 'local'),
+              config.fetchReqOptions,
+            );
+            assert.ok(
+              viewResponse.ok,
+              `Failed to fetch view for ${el.__id}: ${viewResponse.statusText}`,
+            );
+            const body = await viewResponse.text();
+            data.botHtml = getBotContent(body);
+            data.description = data.botHtml
+              .replaceAll(/<[^>]*>/g, ' ')
+              .replace('"', "'");
+            let layoutFile =
+              layouts[config.flavorLayouts[flavorName] || DEFAULT_FLAVOR];
+            writeFile(layoutFile, el.__path, data);
+            if (config.isSelfContained(flavorName)) {
+              fs.writeFileSync(viewPath, body);
+              if (config.flatViews) {
+                await processViewForLibraries(
+                  viewPath,
+                  flavorName,
+                  path.join(config.flatViews.outdir, el.__id, 'view.json'),
+                );
+                await processViewForLibraries(viewPath, flavorName);
+              } else {
+                await processViewForLibraries(viewPath, flavorName);
+              }
+            }
+          })(),
+        );
+      }
+      if (el.__data) {
+        prom.push(
+          (async function processData() {
+            const response = await fetch(
+              getDataUrl(el, 'local'),
+              config.fetchReqOptions,
+            );
+            assert.ok(
+              response.ok,
+              `Failed to fetch data for ${el.__id}: ${response.statusText}`,
+            );
 
-        writeJsonSync(path.join(basePath, 'couch.json'), {
-          id: el.__id,
-          rev: el.__rev,
-          database: `${config.couchurl}/${config.couchDatabase}`,
-        });
-        return Promise.all(prom);
+            let dataPath = path.join(basePath, 'data.json');
+            const fileStream = fs.createWriteStream(dataPath);
+            await pipeline(response.body, fileStream);
+          })(),
+        );
+      }
+
+      writeJsonSync(path.join(basePath, 'couch.json'), {
+        id: el.__id,
+        rev: el.__rev,
+        database: `${config.couchurl}/${config.couchDatabase}`,
       });
-
-      return finalProm;
+      return Promise.all(prom);
     };
   }
 

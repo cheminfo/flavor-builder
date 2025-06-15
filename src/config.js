@@ -1,3 +1,4 @@
+import Buffer from 'node:buffer';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -74,6 +75,14 @@ export async function buildConfig(configArg = 'config.json') {
           pass: config.couchPassword,
           sendImmediately: true,
         },
+      }
+    : {};
+
+  config.fetchReqOptions = config.couchPassword
+    ? {
+        Authorization: `Basic ${Buffer.from(
+          `${config.couchUsername}:${config.couchPassword}`,
+        ).toString('base64')}`,
       }
     : {};
 
