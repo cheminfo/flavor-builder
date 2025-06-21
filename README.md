@@ -7,7 +7,7 @@ Visualizer website generator
 To test the build, run:
 
 ```bash
-DEBUG=flavor-builder:info node bin/build.js  --config=./cheminfo-config.json
+DEBUG=flavor-builder:info node bin/build.js  --config=./configs/cheminfo-config.json
 ```
 
 As configured by `cheminfo-config.json`, this will write to the `build` directory:
@@ -20,7 +20,7 @@ Build the admin page by running:
 
 ```bash
 mkdir build/out/on-tabs
-node node_modules/visualizer-on-tabs/bin/build.js --outDir=$(realpath ./build/out/on-tabs/) --config=$(realpath ./on-tabs-config.json)
+node node_modules/visualizer-on-tabs/bin/build.js --outDir=$(realpath ./build/out/on-tabs/) --config=$(realpath ./configs/on-tabs-config.json)
 ```
 
 To test the built website using apache, run:
@@ -30,10 +30,14 @@ docker compose up -d
 ```
 
 Home page: `http://localhost:6060`
-`on-tabs` admin page: `http://localhost:6060/on-tabs/`
 Example of on-tabs page: `http://localhost:6060/flavor/eln/reaction/index.html`
 
+If you built the admin page, you can access it at: `http://localhost:6060/on-tabs/`
+
 `on-tabs` pages are not expected to fully work with this setup.
+
+TODO: example with couch authentication.
+TODO: example with flat views
 
 ## CLI usage
 

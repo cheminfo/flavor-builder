@@ -1,0 +1,59 @@
+{
+  "revisionByIdPath": "./build/cheminfo-revisions.json",
+  "md5Path": "./build/cheminfo-md5.json",
+  "flavor": "gymnase",
+  "pidFile": "./build/cheminfo-flavor-builder.pid",
+  "useSSI": true,
+  "rootUrl": "http://www.cheminfo.org/",
+  "couchurl": "https://couch.cheminfo.org/",
+  "couchLocalUrl": "https://couch.cheminfo.org/",
+  "couchDatabase": "cheminfo-public",
+  "dir": "./build/out",
+  "home": "Home",
+  "forceUpdate": false,
+  "flavorUsername": "admin@cheminfo.org",
+  "editRedirect": "https://my.cheminfo.org",
+  "cdn": "https://www.lactame.com",
+  "designDoc": "app",
+  "direct": "http://direct.lactame.com",
+  "layouts": {
+    "default": "simplemenu/endlayouts/simplemenu.html",
+    "bootstrap": "bootstrap/endlayouts/bootstrap.html",
+    "cheminformatics": "bootstrap/endlayouts/cheminformatics.html",
+    "chromeapp": "bootstrap/endlayouts/chromeapp.html",
+    "chrome-app": "bootstrap/endlayouts/chrome-app.html",
+    "simple": "simplemenu/endlayouts/simple.html",
+    "mass": "mass/endlayouts/simple.html",
+    "standalone": "nomenu/nomenu.html",
+    "menu-copy": "simplemenu/endlayouts/menu-copy.html"
+  },
+  "libFolder": "UX4AFL9KTPDES",
+  "selfContained": true,
+  "rocLogin": {
+    "eln-standalone": {
+      "url": "https://mydb.cheminfo.org/",
+      "auto": "true"
+    }
+  },
+  "visualizerOnTabs": {
+    "_default": {
+      "rocLogin": {
+        "url": "https://mydb.cheminfo.org"
+      },
+      "rewriteRules": [
+        {
+          "reg": "^([a-z0-9]+)\\?(.*)$",
+          "replace": "https://couch.cheminfo.org/cheminfo-public/$1/view.json?$2"
+        },
+        {
+          "reg": "^[a-z0-9]+$",
+          "replace": "https://couch.cheminfo.org/cheminfo-public/$&/view.json"
+        },
+        {
+          "reg": "^[a-z0-9]+/view.json\\?.*",
+          "replace": "https://couch.cheminfo.org/cheminfo-public/$&"
+        }
+      ]
+    }
+  }
+}

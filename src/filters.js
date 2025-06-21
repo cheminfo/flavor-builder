@@ -31,7 +31,7 @@ export function getFilters(config) {
       reldir,
       config.libFolder,
       parsedUrl.hostname,
-      parsedUrl.path,
+      parsedUrl.pathname,
       version,
     );
   }

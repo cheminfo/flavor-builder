@@ -1,7 +1,6 @@
+import Buffer from 'node:buffer';
 import path from 'node:path';
 import urlLib from 'node:url';
-
-import request from 'request';
 
 import { writeFile } from './writeFile.js';
 
@@ -9,23 +8,33 @@ export function checkAuth(config, options, url) {
   url = rewriteUrl(url);
   let parsedUrl = new URL(url);
   if (config.httpAuth && config.httpAuth[parsedUrl.hostname]) {
-    options.auth = {
-      user: config.httpAuth[parsedUrl.hostname].user,
-      pass: config.httpAuth[parsedUrl.hostname].pass,
-      sendImmediately: true,
+    options.headers = {
+      ...getAuthorizationHeader(
+        config.httpAuth[parsedUrl.hostname].user,
+        config.httpAuth[parsedUrl.hostname].pass,
+      ),
     };
   }
   return options;
+}
+
+export function getAuthorizationHeader(username, password) {
+  return {
+    Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString(
+      'base64',
+    )}`,
+  };
 }
 
 export function getAuthUrl(config, url) {
   let options = {};
   checkAuth(config, options, url);
   let parsedUrl = new URL(url);
-  if (!parsedUrl.auth && options.auth) {
-    parsedUrl.auth = `${options.auth.user}:${options.auth.pass}`;
+  if (!parsedUrl.password && options.auth) {
+    parsedUrl.username = options.auth.user;
+    parsedUrl.password = options.auth.pass;
   }
-  return parsedUrl.format();
+  return parsedUrl.toString();
 }
 
 export function checkVersion(version) {
@@ -41,9 +50,7 @@ export function checkVersion(version) {
 }
 
 export function cacheUrl(config, url, flavorName, addExtension) {
-  let options = {
-    encoding: null,
-  };
+  const options = {};
 
   // Add authentification if necessary
   checkAuth(config, options, url);
@@ -63,38 +70,44 @@ export function cacheUrl(config, url, flavorName, addExtension) {
   }
 }
 
-export function cacheDir(config, url, flavorName, addExtension) {
-  return new Promise((resolve) => {
-    let prom = [];
-    let options = {};
-    // Add authentification if necessary
-    checkAuth(config, options, url);
-    request.get(urlLib.resolve(url, 'files.txt'), options, (err, res) => {
-      if (res && res.statusCode === 200) {
-        let files = res.body.split('\n').filter(Boolean);
-        prom = files.map((file) => {
-          return cacheUrl(
-            config,
-            urlLib.resolve(url, file),
-            flavorName,
-            addExtension,
-          );
-        });
-        return resolve(Promise.all(prom));
-      } else {
-        console.error(err);
-        return resolve();
-      }
+export async function cacheDir(config, url, flavorName, addExtension) {
+  let prom = [];
+  let options = {};
+  // Add authentification if necessary
+  checkAuth(config, options, url);
+  try {
+    const response = await fetch(urlLib.resolve(url, 'files.txt'), options);
+    if (response.status !== 200) {
+      console.error(
+        'cacheDir: Failed to fetch files.txt from',
+        url,
+        'with status',
+        response.statusText,
+      );
+      return;
+    }
+    const txtResponse = await response.text();
+    const files = txtResponse.split('\n').filter(Boolean);
+    prom = files.map((file) => {
+      return cacheUrl(
+        config,
+        urlLib.resolve(url, file),
+        flavorName,
+        addExtension,
+      );
     });
-  });
+    return Promise.all(prom);
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 export function getLocalUrl(config, url, reldir, addExtension) {
   url = url.replace(/^\/\//, 'https://');
   let parsedUrl = new URL(url);
-  let parsedPath = path.parse(parsedUrl.path);
+  let parsedPath = path.parse(parsedUrl.pathname);
 
-  let p = path.join(config.libFolder, parsedUrl.hostname, parsedUrl.path);
+  let p = path.join(config.libFolder, parsedUrl.hostname, parsedUrl.pathname);
   if (addExtension) {
     p += parsedPath.ext ? '' : '.js';
   }
@@ -115,6 +128,6 @@ export function rewriteUrl(url, addExtension) {
     return url;
   }
   let parsedUrl = new URL(url);
-  let parsedPath = path.parse(parsedUrl.path);
+  let parsedPath = path.parse(parsedUrl.pathname);
   return parsedPath.ext ? url : `${url}.js`;
 }

@@ -1,8 +1,9 @@
-import Buffer from 'node:buffer';
 import path from 'node:path';
 import process from 'node:process';
 
 import minimist from 'minimist';
+
+import { getAuthorizationHeader } from './utils.js';
 
 const args = minimist(process.argv.slice(2));
 
@@ -68,21 +69,11 @@ export async function buildConfig(configArg = 'config.json') {
     config.md5Path = path.resolve(import.meta.dirname, '../md5.json');
   }
 
-  config.couchReqOptions = config.couchPassword
-    ? {
-        auth: {
-          user: config.couchUsername,
-          pass: config.couchPassword,
-          sendImmediately: true,
-        },
-      }
-    : {};
-
   config.fetchReqOptions = config.couchPassword
     ? {
-        Authorization: `Basic ${Buffer.from(
-          `${config.couchUsername}:${config.couchPassword}`,
-        ).toString('base64')}`,
+        headers: {
+          ...getAuthorizationHeader(config.couchUsername, config.couchPassword),
+        },
       }
     : {};
 

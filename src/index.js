@@ -608,7 +608,7 @@ function call(configArg) {
           }
         } catch (error) {
           console.error(
-            'Error  while processing view to change libraries',
+            'Error while processing view to change libraries',
             error,
             error.stack,
           );
@@ -737,7 +737,7 @@ function call(configArg) {
       return Promise.resolve();
     } catch {
       return new Promise((resolve, reject) => {
-        log.trace('copying visualizer', version);
+        log.info('copying visualizer', version);
         fs.mkdirSync(extractDir, { recursive: true });
         url = getAuthUrl(config, url.href);
 
