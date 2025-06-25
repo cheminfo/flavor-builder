@@ -1,6 +1,7 @@
 services:
   httpd:
-    image: httpd:2-alpine
+    build:
+      dockerfile: ./apache.Dockerfile
     volumes:
       - ./build/out:/usr/local/apache2/htdocs
     ports:
