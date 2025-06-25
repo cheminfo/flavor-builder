@@ -97,12 +97,6 @@ export async function buildConfig(configArg = 'config.json') {
     }
   }
 
-  config.isSelfContained = (flavor) => {
-    if (!config.selfContained) return false;
-    else if (config.selfContained === true) return true;
-    else return config.selfContained[flavor];
-  };
-
   config.rocLogin = config.rocLogin || {};
 
   config.designDoc = config.designDoc || 'customApp';

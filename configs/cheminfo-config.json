@@ -59,7 +59,6 @@
     "acimmune": "visualizer-on-tabs"
   },
   "libFolder": "UX4AFL9KTPDES",
-  "selfContained": false,
   "rocLogin": {
     "eln-standalone": {
       "url": "https://mydb.cheminfo.org/",

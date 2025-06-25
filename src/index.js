@@ -1,11 +1,9 @@
 import assert from 'node:assert';
-import { exec } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import fsAsync from 'node:fs/promises';
 import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
-import { URL } from 'node:url';
 
 import FlavorUtils from 'flavor-utils';
 import swig from 'swig';
@@ -15,13 +13,6 @@ import { getFilters } from './filters.js';
 import { readJsonSync, writeJsonSync } from './fs.js';
 import { isLocked } from './isLocked.js';
 import log from './log.js';
-import {
-  cacheDir,
-  cacheUrl,
-  checkVersion,
-  fromVisuLocalUrl,
-  getAuthUrl,
-} from './utils.js';
 
 const DEFAULT_FLAVOR = 'default';
 const READ_CONFIG = './static/readConfig.json';
@@ -51,7 +42,7 @@ function call(configArg) {
       }
     }
 
-    filters = getFilters(config);
+    filters = getFilters();
     layouts = config.layouts;
     flavorUtils = new FlavorUtils({
       username: config.flavorUsername,
@@ -116,7 +107,6 @@ function call(configArg) {
         } else {
           await handleFlavor(config.flavor);
         }
-        await Promise.all(filters.plist);
       } else {
         // Build all flavors
         // Get a list of all available flavors
@@ -130,8 +120,6 @@ function call(configArg) {
           } else {
             await handleFlavor(flavors[i]);
           }
-          // Some swig filter are asynchronous, wait for them to finish
-          await Promise.all(filters.plist);
         }
       }
       writeSiteMaps();
@@ -403,13 +391,6 @@ function call(configArg) {
         updateRevision(generateHtml(flavorName, viewTree), flavorName),
       );
     }
-    // Copy visualizer from cdn
-    if (config.isSelfContained(flavorName)) {
-      let versions = await getVersionsFromTree(viewTree);
-      for (let i = 0; i < versions.length; i++) {
-        await copyVisualizer(versions[i]);
-      }
-    }
     // Copy static files
     await copyFiles();
     // Process non view-specific swig
@@ -454,37 +435,20 @@ function call(configArg) {
     };
   }
 
-  async function getVersionsFromTree(tree) {
-    let v = [];
-    await flavorUtils.traverseTree(tree, (el) => {
-      v.push(el.__version);
-    });
-    return Array.from(new Set(v));
-  }
-
   function generateHtml(flavorName, rootStructure) {
     return function generateFlavorHtml(el) {
       let isHome = el.__id && el.__name === config.home;
       let basePath = path.parse(el.__path).dir;
       let flavorDir = getFlavorDir(flavorName);
       let relativePath = path.relative(basePath, config.dir) || '.';
-      let selfContained = config.isSelfContained(flavorName);
       sitemaps[pathFromDir(flavorName, el.__path)] = true;
 
       // Create directory
       fs.mkdirSync(basePath, { recursive: true });
 
       let data = {
-        viewURL: selfContained
-          ? el.__view
-            ? './view.json'
-            : undefined
-          : getViewUrl(el, 'public'),
-        dataURL: selfContained
-          ? el.__data
-            ? './data.json'
-            : undefined
-          : getDataUrl(el, 'public'),
+        viewURL: getViewUrl(el, 'public'),
+        dataURL: getDataUrl(el, 'public'),
         queryString: buildQueryString(el),
         version: el.__version,
         meta: el.__meta,
@@ -497,7 +461,6 @@ function call(configArg) {
         title: el.__title === 'No title' ? el.__name : el.__title,
         home: path.join(relativePath, path.relative(config.dir, flavorDir)),
         flavor: flavorName,
-        selfContained,
         rocLogin: config.rocLogin[flavorName],
       };
 
@@ -512,7 +475,6 @@ function call(configArg) {
       if (el.__view) {
         prom.push(
           (async function processView() {
-            let viewPath = path.join(basePath, 'view.json');
             const viewResponse = await fetch(
               getViewUrl(el, 'local'),
               config.fetchReqOptions,
@@ -529,19 +491,6 @@ function call(configArg) {
             let layoutFile =
               layouts[config.flavorLayouts[flavorName] || DEFAULT_FLAVOR];
             writeFile(layoutFile, el.__path, data);
-            if (config.isSelfContained(flavorName)) {
-              fs.writeFileSync(viewPath, body);
-              if (config.flatViews) {
-                await processViewForLibraries(
-                  viewPath,
-                  flavorName,
-                  path.join(config.flatViews.outdir, el.__id, 'view.json'),
-                );
-                await processViewForLibraries(viewPath, flavorName);
-              } else {
-                await processViewForLibraries(viewPath, flavorName);
-              }
-            }
           })(),
         );
       }
@@ -590,63 +539,6 @@ function call(configArg) {
         el.__path = path.join(el.__path, el.__filename, 'index.html');
       }
     };
-  }
-
-  function processViewForLibraries(viewPath, flavorName, out) {
-    let prom = [];
-    let view = readJsonSync(viewPath);
-    eachModule(
-      view,
-      (module) => {
-        try {
-          let libs = module.configuration.groups.libs[0];
-          for (let i = 0; i < libs.length; i++) {
-            if (libraryNeedsProcess(libs[i].lib)) {
-              prom.push(cacheUrl(config, libs[i].lib, flavorName, true));
-              libs[i].lib = fromVisuLocalUrl(config, libs[i].lib);
-            }
-          }
-        } catch (error) {
-          console.error(
-            'Error while processing view to change libraries',
-            error,
-            error.stack,
-          );
-        }
-      },
-      ['filter_editor', 'code_executor'],
-    );
-
-    eachModule(view, (module) => {
-      if (libraryNeedsProcess(module.url)) {
-        prom.push(cacheDir(config, module.url, flavorName, true));
-        module.url = fromVisuLocalUrl(config, module.url);
-      }
-    });
-
-    try {
-      if (view.aliases) {
-        for (let i = 0; i < view.aliases.length; i++) {
-          let lib = view.aliases[i].path;
-          if (libraryNeedsProcess(lib)) {
-            prom.push(cacheUrl(config, lib, flavorName, true));
-            view.aliases[i].path = fromVisuLocalUrl(config, lib);
-          }
-        }
-      }
-    } catch (error) {
-      console.error(
-        'Error while processing view to change library urls (general preferences)',
-        error,
-        error.stack,
-      );
-    }
-
-    out = out || viewPath;
-    fs.mkdirSync(path.parse(out).dir, { recursive: true });
-    writeJsonSync(out, view);
-
-    return Promise.all(prom);
   }
 
   function getFlavorConfig(flavorName) {
@@ -715,43 +607,6 @@ function call(configArg) {
   function swigFiles() {
     for (let i = 0; i < toSwig.length; i++) {
       writeFile(toSwig[i].src, toSwig[i].dest, toSwig[i].data);
-    }
-  }
-
-  function copyVisualizer(version) {
-    version = checkVersion(version);
-    let url = new URL('visualizer', config.cdn);
-    let extractDir = path.join(
-      config.dir,
-      config.libFolder,
-      url.hostname,
-      url.pathname,
-      version,
-    );
-
-    url.pathname += `/${version}.tar.gz`;
-
-    // Check if already exists
-    try {
-      fs.statSync(extractDir);
-      return Promise.resolve();
-    } catch {
-      return new Promise((resolve, reject) => {
-        log.info('copying visualizer', version);
-        fs.mkdirSync(extractDir, { recursive: true });
-        url = getAuthUrl(config, url.href);
-
-        exec(
-          `curl ${url} | tar -xz`,
-          {
-            cwd: extractDir,
-          },
-          (err) => {
-            if (err) reject(err);
-            resolve();
-          },
-        );
-      });
     }
   }
 }
@@ -826,41 +681,4 @@ function getBotContent(viewContent) {
       .join('');
   }
   return '';
-}
-
-function libraryNeedsProcess(url) {
-  return /^https?:\/\/|^\.|^\/\//.test(url);
-}
-
-function eachModule(view, callback, moduleNames) {
-  if (view.modules) {
-    if (typeof moduleNames === 'string') {
-      moduleNames = [moduleNames];
-    } else if (!Array.isArray(moduleNames)) {
-      moduleNames = [''];
-    }
-    let i = 0;
-    let ii = view.modules.length;
-    let module;
-    let url;
-    let j;
-    let jj = moduleNames.length;
-    for (; i < ii; i++) {
-      module = view.modules[i];
-
-      url = module.url;
-      if (url) {
-        if (!moduleNames) {
-          callback(module);
-          continue;
-        }
-        for (j = 0; j < jj; j++) {
-          if (String(url).includes(moduleNames[j])) {
-            callback(module);
-            break;
-          }
-        }
-      }
-    }
-  }
 }

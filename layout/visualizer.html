@@ -49,13 +49,7 @@
           var cdn = '{{config.cdn}}';
           var direct = '{{config.direct}}';
           var visualizer = document.createElement('script');
-          var baseUrl;
-
-          {% if selfContained %}
-              baseUrl = '{{ version | visualizer(reldir, flavor) }}';
-          {% else %}
-              baseUrl = (search.direct ? direct : cdn) + '/visualizer/' + version;
-          {% endif %}
+          var baseUrl = (search.direct ? direct : cdn) + '/visualizer/' + version;
 
           visualizer.setAttribute('data-main', baseUrl+ '/init');
           visualizer.setAttribute('src', baseUrl + '/components/requirejs/require.js');

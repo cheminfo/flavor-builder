@@ -37,7 +37,6 @@ If you built the admin page, you can access it at: `http://localhost:6060/on-tab
 `on-tabs` pages are not expected to fully work with this setup.
 
 TODO: example with couch authentication.
-TODO: example with flat views
 
 ## CLI usage
 
