@@ -14,7 +14,7 @@ RUN touch /var/log/cron.log
 COPY start.sh /start.sh
 RUN chmod 744 /start.sh
 
-COPY on-tabs-config.json /on-tabs-config.json
+COPY ./configs/on-tabs.json /on-tabs-config.json
 
 COPY ./ ./
 

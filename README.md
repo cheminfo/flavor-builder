@@ -7,10 +7,10 @@ Visualizer website generator
 To test the build, run:
 
 ```bash
-DEBUG=flavor-builder:info node bin/build.js  --config=./configs/cheminfo-config.json
+DEBUG=flavor-builder:info node bin/build.js  --config=./configs/cheminfo.json
 ```
 
-As configured by `cheminfo-config.json`, this will write to the `build` directory:
+As configured by `configs/cheminfo.json`, this will write to the `build` directory:
 
 - `cheminfo-revisions.json` and `cheminfo-md5.json` which keep track of what has been updated.
 - `cheminfo-flavor-builder.pid` which is used as a lock to know if a build is already in progress.
@@ -20,7 +20,7 @@ Build the admin page by running:
 
 ```bash
 mkdir build/out/on-tabs
-node node_modules/visualizer-on-tabs/bin/build.js --outDir=$(realpath ./build/out/on-tabs/) --config=$(realpath ./configs/on-tabs-config.json)
+node node_modules/visualizer-on-tabs/bin/build.js --outDir=$(realpath ./build/out/on-tabs/) --config=$(realpath ./configs/on-tabs.json)
 ```
 
 To test the built website using apache, run:
@@ -34,7 +34,11 @@ Example of on-tabs page: `http://localhost:6060/flavor/eln/reaction/index.html`
 
 If you built the admin page, you can access it at: `http://localhost:6060/on-tabs/`
 
-`on-tabs` pages are not expected to fully work with this setup.
+> **Warning**
+> The `on-tabs` page is not fully functional in this setup.
+
+> [!WARNING]  
+> Critical content demanding immediate user attention due to potential risks.
 
 TODO: example with couch authentication.
 
