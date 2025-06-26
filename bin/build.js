@@ -7,8 +7,8 @@ import process from 'node:process';
 import minimist from 'minimist';
 
 import { build, buildConfig } from '../src/index.js';
-import { isLocked } from '../src/isLocked.js';
 import log from '../src/log.js';
+import { acquireLock, releaseLock } from '../src/processLock.js';
 
 let args = minimist(process.argv.slice(2));
 let configFiles = [];
@@ -19,9 +19,7 @@ if (typeof args.config === 'string') {
 }
 
 const pidFile = path.join(tmpdir(), 'flavor-builder.pid');
-let isProcessLocked = isLocked(
-  path.resolve(path.join(import.meta.dirname, '..'), pidFile),
-);
+let isProcessLocked = acquireLock(pidFile);
 if (isProcessLocked) {
   throw new Error('flavor-builder already running');
 }
@@ -30,5 +28,7 @@ for (let i = 0; i < configFiles.length; i++) {
   const config = await buildConfig(configFiles[i]);
   await build(config);
 }
+
+await releaseLock(pidFile);
 
 log.info('done build');
