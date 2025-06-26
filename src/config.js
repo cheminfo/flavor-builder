@@ -3,7 +3,7 @@ import process from 'node:process';
 
 import minimist from 'minimist';
 
-import { getAuthorizationHeader } from './utils.js';
+import { getAuthorizationHeader } from './auth.js';
 
 const args = minimist(process.argv.slice(2));
 
@@ -34,24 +34,7 @@ export async function buildConfig(configArg = 'config.json') {
     config[key] = args[key];
   }
 
-  // Check mandatory parameters
-  let mandatory = [
-    'dir',
-    'cdn',
-    'direct',
-    'home',
-    'couchurl',
-    'couchLocalUrl',
-    'flavorUsername',
-    'couchDatabase',
-    'layouts',
-    'libFolder',
-  ];
-  for (let i = 0; i < mandatory.length; i++) {
-    if (config[mandatory[i]] === undefined) {
-      throw new Error(`${mandatory[i]} is mandatory`);
-    }
-  }
+  checkConfig(config);
 
   if (process.env.COUCHDB_USER) {
     config.couchUsername = process.env.COUCHDB_USER;
@@ -102,4 +85,29 @@ export async function buildConfig(configArg = 'config.json') {
   config.designDoc = config.designDoc || 'customApp';
 
   return config;
+}
+
+export function checkConfig(config) {
+  if (typeof config !== 'object') {
+    throw new TypeError('Config must be an object');
+  }
+
+  // Check mandatory parameters
+  let mandatory = [
+    'dir',
+    'cdn',
+    'direct',
+    'home',
+    'couchurl',
+    'couchLocalUrl',
+    'flavorUsername',
+    'couchDatabase',
+    'layouts',
+    'libFolder',
+  ];
+  for (let i = 0; i < mandatory.length; i++) {
+    if (config[mandatory[i]] === undefined) {
+      throw new Error(`${mandatory[i]} is mandatory`);
+    }
+  }
 }
