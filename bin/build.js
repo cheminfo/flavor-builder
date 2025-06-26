@@ -11,12 +11,8 @@ import log from '../src/log.js';
 import { acquireLock, releaseLock } from '../src/processLock.js';
 
 let args = minimist(process.argv.slice(2));
-let configFiles = [];
-if (typeof args.config === 'string') {
-  configFiles = args.config.split(',');
-} else {
-  configFiles = args.config;
-}
+const configFiles =
+  typeof args.config === 'string' ? args.config.split(',') : args.config;
 
 const pidFile = path.join(tmpdir(), 'flavor-builder.pid');
 let isProcessLocked = acquireLock(pidFile);

@@ -54,8 +54,8 @@ export class RevisionHelper {
   /**
    * Checks if the views have been updated in a way which needs to regenerate the menu.
    * The menu needs updating if there are new views, views which name has changed, or deleted views.
-   * @param tree - The tree of views to check for changes
-   * @param flavorName - The name of the flavor we are processing
+   * @param {object} tree - The tree of views to check for changes
+   * @param {string} flavorName - The name of the flavor we are processing
    * @returns {Promise<boolean>} Returns true if there are changes impacting the menu.
    */
   async menuNeedsUpdate(tree, flavorName) {
