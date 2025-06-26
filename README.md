@@ -10,6 +10,8 @@ To test the build, run:
 DEBUG=flavor-builder:info node bin/build.js  --config=./configs/cheminfo.json
 ```
 
+There are other build configurations available in the `configs` directory to test.
+
 As configured by `configs/cheminfo.json`, this will write to the `build` directory:
 
 - `cheminfo-revisions.json` and `cheminfo-md5.json` which keep track of what has been updated.
@@ -20,7 +22,7 @@ Build the admin page by running:
 
 ```bash
 mkdir build/out/on-tabs
-node node_modules/visualizer-on-tabs/bin/build.js --outDir=$(realpath ./build/out/on-tabs/) --config=$(realpath ./configs/on-tabs.json)
+node node_modules/visualizer-on-tabs/bin/build.js --outDir=$(realpath ./build/cheminfo/out/on-tabs/) --config=$(realpath ./configs/on-tabs.json)
 ```
 
 To test the built website using apache, run:
@@ -33,6 +35,17 @@ Home page: `http://localhost:6060`
 Example of on-tabs page: `http://localhost:6060/flavor/eln/reaction/index.html`
 
 If you built the admin page, you can access it at: `http://localhost:6060/on-tabs/`
+
+## Test an alternative build
+
+Use your own configuration or build from one of the existing ones in the `configs` directory.
+
+```bash
+DEBUG=flavor-builder:info node bin/build.js  --config=./configs/flavor-1024.json
+# Will serve build/flavor-1024/out/ on port 6060
+SERVE_DIR=flavor-1024 docker compose up -d
+open http://localhost:6060/
+```
 
 > **Warning**
 > The `on-tabs` page is not fully functional in this setup.

@@ -3,6 +3,6 @@ services:
     build:
       dockerfile: ./apache.Dockerfile
     volumes:
-      - ./build/out:/usr/local/apache2/htdocs
+      - ./build/${SERVE_DIR-cheminfo}/out:/usr/local/apache2/htdocs
     ports:
       - 6060:80

@@ -7,4 +7,4 @@ FROM httpd:2-alpine
 # `Options ... Includes`: Enables SSI in the specified directory.
 # `AddType` and `AddOutputFilter`: Ensures .html files are parsed for SSI.
 
-COPY ./configs/httpd.conf /usr/local/apache2/conf/httpd.conf
+COPY ./httpd.conf /usr/local/apache2/conf/httpd.conf
