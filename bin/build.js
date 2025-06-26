@@ -6,9 +6,9 @@ import process from 'node:process';
 
 import minimist from 'minimist';
 
-import { build, buildConfig } from '../src/index.js';
+import { build } from '../src/index.js';
+import { acquireLock, releaseLock } from '../src/lock.js';
 import log from '../src/log.js';
-import { acquireLock, releaseLock } from '../src/processLock.js';
 
 let args = minimist(process.argv.slice(2));
 const configFiles =
@@ -21,8 +21,7 @@ if (isProcessLocked) {
 }
 
 for (let i = 0; i < configFiles.length; i++) {
-  const config = await buildConfig(configFiles[i]);
-  await build(config);
+  await build(configFiles[i]);
 }
 
 await releaseLock(pidFile);

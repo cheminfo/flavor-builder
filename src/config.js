@@ -87,7 +87,7 @@ export async function buildConfig(configArg = 'config.json') {
   return config;
 }
 
-export function checkConfig(config) {
+function checkConfig(config) {
   if (typeof config !== 'object') {
     throw new TypeError('Config must be an object');
   }

@@ -9,7 +9,7 @@ import { FlavorHelper } from './FlavorHelper.js';
 import { RevisionHelper } from './RevisionHelper.js';
 import { SiteMapHelper } from './SiteMapsHelper.js';
 import { UrlHelper } from './UrlHelper.js';
-import { checkConfig } from './config.js';
+import { buildConfig } from './config.js';
 import { DEFAULT_FLAVOR, READ_CONFIG } from './constants.js';
 import { copyFiles, writeJsonSync } from './fs.js';
 import log from './log.js';
@@ -18,12 +18,12 @@ import { swigWriteFile } from './swig.js';
 
 const pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
 
-export async function build(config) {
-  checkConfig(config);
+export async function build(configArg) {
+  log.info('start build');
+  const config = await buildConfig(configArg);
   const flavorHelper = new FlavorHelper(config);
   const revisionHelper = new RevisionHelper(config);
   const sitemapsHelper = new SiteMapHelper(config);
-  log.info('start build');
 
   try {
     const sitemaps = sitemapsHelper.read();
@@ -322,8 +322,8 @@ function doMenu(config, structure, cpath, flavorName) {
   return html;
 }
 
-export function getFlavors(config) {
-  checkConfig(config);
+export function getFlavors(configArg) {
+  const config = buildConfig(configArg);
   const flavorHelper = new FlavorHelper(config);
   return flavorHelper.utils.getFlavors();
 }
