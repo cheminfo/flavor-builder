@@ -2,7 +2,7 @@
   "name": "flavor-builder",
   "version": "5.0.2",
   "description": "Make an indexable website from a flavor (a bunch of views in the visualizer)",
-  "main": "src/index.js",
+  "exports": "./src/index.js",
   "bin": "bin/build.js",
   "type": "module",
   "scripts": {
