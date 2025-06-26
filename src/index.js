@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
 
-import swig from 'swig';
 import visualizerOnTabs from 'visualizer-on-tabs';
 
 import { FlavorHelper } from './FlavorHelper.js';
@@ -12,7 +11,6 @@ import { SiteMapHelper } from './SiteMapsHelper.js';
 import { UrlHelper } from './UrlHelper.js';
 import { checkConfig } from './config.js';
 import { DEFAULT_FLAVOR, READ_CONFIG } from './constants.js';
-import { getFilters } from './filters.js';
 import { copyFiles, writeJsonSync } from './fs.js';
 import log from './log.js';
 import { getFlavorDir, pathFromDir } from './paths.js';
@@ -26,10 +24,6 @@ export async function build(config) {
   const revisionHelper = new RevisionHelper(config);
   const sitemapsHelper = new SiteMapHelper(config);
   log.info('start build');
-
-  for (let [key, value] of Object.entries(getFilters())) {
-    swig.setFilter(key, value);
-  }
 
   try {
     const sitemaps = sitemapsHelper.read();

@@ -3,7 +3,7 @@
   "md5Path": "./build/cheminfo-md5.json",
   "pidFile": "./build/cheminfo-flavor-builder.pid",
   "useSSI": true,
-  "rootUrl": "http://www.cheminfo.org/",
+  "rootUrl": "https://www.cheminfo.org/",
   "couchurl": "https://couch.cheminfo.org/",
   "couchLocalUrl": "https://couch.cheminfo.org/",
   "couchDatabase": "cheminfo-public",
