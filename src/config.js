@@ -72,7 +72,7 @@ export async function buildConfig(configArg = 'config.json') {
   config.flavorLayouts = config.flavorLayouts || {};
   if (config.layouts) {
     for (let key in config.layouts) {
-      config.layouts[key] = path.join(
+      config.layouts[key] = path.resolve(
         import.meta.dirname,
         '../layout',
         config.layouts[key],
