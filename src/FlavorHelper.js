@@ -7,6 +7,7 @@ import log from './log.js';
 
 export class FlavorHelper {
   constructor(config) {
+    this.config = config;
     this.utils = new FlavorUtils({
       username: config.flavorUsername,
       couchUrl: config.couchLocalUrl,
@@ -66,7 +67,7 @@ export class FlavorHelper {
     if (Array.isArray(flavors)) {
       let prom = [];
       for (let i = 0; i < flavors.length; i++) {
-        prom.push(this.getFlavorMD5(flavors[i]));
+        prom.push(this.#getFlavorMD5(flavors[i]));
       }
       return Promise.all(prom).then((md5s) => {
         let result = {};

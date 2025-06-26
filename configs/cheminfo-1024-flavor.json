@@ -15,6 +15,7 @@
   "cdn": "https://www.lactame.com",
   "designDoc": "app",
   "direct": "http://direct.lactame.com",
+  "flavor": "1024",
   "layouts": {
     "default": "simplemenu/endlayouts/simplemenu.html",
     "bootstrap": "bootstrap/endlayouts/bootstrap.html",

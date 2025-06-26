@@ -37,7 +37,7 @@ export async function build(configArg) {
       }
       log.trace('get flavor');
       if (config.flavorLayouts[config.flavor] === 'visualizer-on-tabs') {
-        await handleVisualizerOnTabs(config, sitemaps);
+        await handleVisualizerOnTabs(config, config.flavor, sitemaps);
       } else {
         await handleFlavor(config, config.flavor, sitemaps, revisionHelper);
       }
@@ -48,7 +48,7 @@ export async function build(configArg) {
       log.info(`Processing ${flavors.length} flavors: ${flavors}`);
       for (let i = 0; i < flavors.length; i++) {
         if (config.flavorLayouts[flavors[i]] === 'visualizer-on-tabs') {
-          await handleVisualizerOnTabs(flavors[i], sitemaps);
+          await handleVisualizerOnTabs(config, flavors[i], sitemaps);
         } else {
           await handleFlavor(config, flavors[i], sitemaps, revisionHelper);
         }
@@ -60,10 +60,9 @@ export async function build(configArg) {
   }
 }
 
-async function handleVisualizerOnTabs(config, sitemaps) {
+async function handleVisualizerOnTabs(config, flavorName, sitemaps) {
   const flavorHelper = new FlavorHelper(config);
   const urlHelper = new UrlHelper(config);
-  const flavorName = config.flavor;
   assert.ok(
     flavorName,
     'Flavor name must be defined to handle visualizer on tabs',
