@@ -1,4 +1,4 @@
-import { FlavorHelper } from './flavorUtils.js';
+import { FlavorHelper } from './FlavorHelper.js';
 import { createOrReadJson, writeJsonSync } from './fs.js';
 import log from './log.js';
 

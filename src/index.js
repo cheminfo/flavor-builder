@@ -6,16 +6,16 @@ import { pipeline } from 'node:stream/promises';
 import swig from 'swig';
 import visualizerOnTabs from 'visualizer-on-tabs';
 
+import { FlavorHelper } from './FlavorHelper.js';
 import { RevisionHelper } from './RevisionHelper.js';
+import { SiteMapHelper } from './SiteMapsHelper.js';
 import { UrlHelper } from './UrlHelper.js';
 import { checkConfig } from './config.js';
 import { DEFAULT_FLAVOR, READ_CONFIG } from './constants.js';
 import { getFilters } from './filters.js';
-import { FlavorHelper } from './flavorUtils.js';
-import { copyFiles, createOrReadJson, writeJsonSync } from './fs.js';
+import { copyFiles, writeJsonSync } from './fs.js';
 import log from './log.js';
 import { getFlavorDir, pathFromDir } from './paths.js';
-import { readSiteMaps, writeSiteMaps } from './sitemaps.js';
 import { swigWriteFile } from './swig.js';
 
 const pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
@@ -24,6 +24,7 @@ export async function build(config) {
   checkConfig(config);
   const flavorHelper = new FlavorHelper(config);
   const revisionHelper = new RevisionHelper(config);
+  const sitemapsHelper = new SiteMapHelper(config);
   log.info('start build');
 
   for (let [key, value] of Object.entries(getFilters())) {
@@ -31,7 +32,7 @@ export async function build(config) {
   }
 
   try {
-    const sitemaps = readSiteMaps();
+    const sitemaps = sitemapsHelper.read();
     log.trace('get versions');
     if (config.flavor) {
       // Build single flavor
@@ -48,10 +49,8 @@ export async function build(config) {
       }
     } else {
       // Build all flavors
-      // Get a list of all available flavors
-      let flavors = await flavorHelper.getFlavors();
       // Filter flavors to get only those that have changed
-      flavors = await filterFlavorsByMd5(config, flavors);
+      const flavors = await flavorHelper.getChangedFlavors();
       log.info(`Processing ${flavors.length} flavors: ${flavors}`);
       for (let i = 0; i < flavors.length; i++) {
         if (config.flavorLayouts[flavors[i]] === 'visualizer-on-tabs') {
@@ -61,7 +60,7 @@ export async function build(config) {
         }
       }
     }
-    writeSiteMaps(config, sitemaps);
+    sitemapsHelper.write(sitemaps);
   } catch (error) {
     log.info('error occured', error);
   }
@@ -98,7 +97,7 @@ async function handleVisualizerOnTabs(config, sitemaps) {
       let customConfig = {
         possibleViews: {},
       };
-      sitemaps[indexPage] = true;
+      sitemaps.add(indexPage);
 
       customConfig.possibleViews[el.__name] = {
         url: urlHelper.getViewUrl(el, 'public'),
@@ -119,35 +118,6 @@ async function handleVisualizerOnTabs(config, sitemaps) {
   for (let i = 0; i < homePages.length; i++) {
     await visualizerOnTabs(homePages[i]);
   }
-}
-
-// returns an array of flavors for which the md5 has changed
-async function filterFlavorsByMd5(config, flavors) {
-  log.trace('filter flavors by md5');
-  const flavorHelper = new FlavorHelper(config);
-  const md5 = createOrReadJson(config.md5Path);
-  return flavorHelper.getFlavorMD5(flavors).then((result) => {
-    if (config.forceUpdate) {
-      log.info('force update, no flavor filtering');
-      return Object.keys(result);
-    }
-    if (JSON.stringify(md5) === '{}') {
-      writeJsonSync(config.md5Path, result);
-      return Object.keys(result);
-    }
-    let keys = [];
-    for (let key in result) {
-      if (result[key] !== md5[key]) {
-        log.trace(`flavor ${key} has changed, add to the list`);
-        md5[key] = result[key];
-        keys.push(key);
-      } else {
-        log.trace(`flavor ${key} has not changed, ignoring it`);
-      }
-    }
-    writeJsonSync(config.md5Path, md5);
-    return keys;
-  });
 }
 
 async function handleFlavor(config, flavorName, sitemaps, revisionHelper) {
@@ -221,7 +191,7 @@ function generateHtml(config, flavorName, rootStructure, sitemaps) {
     let basePath = path.parse(el.__path).dir;
     let flavorDir = getFlavorDir(config, flavorName);
     let relativePath = path.relative(basePath, config.dir) || '.';
-    sitemaps[pathFromDir(config, flavorName, el.__path)] = true;
+    sitemaps.add(pathFromDir(config, flavorName, el.__path));
     // Create directory
     fs.mkdirSync(basePath, { recursive: true });
 
