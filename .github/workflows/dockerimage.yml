@@ -2,20 +2,14 @@ name: Docker Image CI
 
 on:
   workflow_dispatch:
-    inputs:
-      ref:
-        description: 'GitHub ref to checkout'
-        required: true
-        default: main
-      tag:
-        description: 'Docker tag to push (do NOT use "latest" or version numbers)'
-        required: true
-        default: 'HEAD'
   push:
+    branches:
+      - main
     tags:
       - v*
 
 env:
+  DOCKER_BUILDKIT: 1
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -24,10 +18,7 @@ jobs:
     name: Build and push image to registry
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.inputs.ref }}
-
+      - uses: actions/checkout@v4
       - name: Build image
         run: docker build . --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
 
@@ -35,12 +26,12 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
 
       - name: Push image (manual)
-        if: github.event_name == 'workflow_dispatch'
+        if: startsWith(github.ref, 'refs/heads/') || github.event_name == 'workflow_dispatch'
         run: |
           IMAGE_ID="${REGISTRY}/${IMAGE_NAME}"
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-          TAG=${{ github.event.inputs.tag }}
+          TAG=${{ github.ref_name }}
 
           echo IMAGE_ID=$IMAGE_ID
           echo TAG=$TAG
@@ -49,7 +40,7 @@ jobs:
           docker push $IMAGE_ID:$TAG
 
       - name: Push image (release)
-        if: github.event_name != 'workflow_dispatch'
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         run: |
           IMAGE_ID="${REGISTRY}/${IMAGE_NAME}"
           # Change all uppercase to lowercase
@@ -58,7 +49,7 @@ jobs:
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
           # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          VERSION=$(echo $VERSION | sed -e 's/^v//')
           VERSION_START=${VERSION%%.*}
 
           echo IMAGE_ID=$IMAGE_ID
@@ -67,9 +58,9 @@ jobs:
           # Push latest
           docker tag $IMAGE_NAME $IMAGE_ID:latest
           docker push $IMAGE_ID:latest
-          # Push full version
+          # Push full version, (e.g., 5.0.2)
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
-          # Push short version
+          # Push short version (e.g. 5)
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION_START
           docker push $IMAGE_ID:$VERSION_START
