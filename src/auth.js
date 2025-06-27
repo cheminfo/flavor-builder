@@ -1,7 +1,11 @@
-export function getAuthorizationHeader(username, password) {
-  return {
-    Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString(
-      'base64',
-    )}`,
-  };
+export function getAuthorizationHeader(config) {
+  if (config.couchUsername && config.couchPassword) {
+    return {
+      Authorization: `Basic ${Buffer.from(
+        `${config.couchUsername}:${config.couchPassword}`,
+      ).toString('base64')}`,
+    };
+  } else {
+    return {};
+  }
 }

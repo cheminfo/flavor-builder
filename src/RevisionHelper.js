@@ -19,7 +19,9 @@ export class RevisionHelper {
         rev: el.__rev,
         name: el.__name,
       };
-      writeJsonSync(this.config.revisionByIdPath, this.revisionById);
+      prom = prom.then(() => {
+        writeJsonSync(this.config.revisionByIdPath, this.revisionById);
+      });
       return prom;
     };
   }
@@ -45,7 +47,9 @@ export class RevisionHelper {
           rev: el.__rev,
           name: el.__name,
         };
-        writeJsonSync(this.config.revisionByIdPath, this.revisionById);
+        prom = prom.then(() => {
+          writeJsonSync(this.config.revisionByIdPath, this.revisionById);
+        });
       }
       return prom;
     };
