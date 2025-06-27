@@ -1,9 +1,14 @@
-'use strict';
+import debug from 'debug';
 
-const logInfo = require('debug')('flavor-builder:info');
-const logTrace = require('debug')('flavor-builder:trace');
+const info = debug('flavor-builder:info');
+const trace = debug('flavor-builder:trace');
 
-module.exports = {
-  info: logInfo,
-  trace: logTrace,
+export default {
+  info,
+  trace,
+  logProcess,
+};
+
+function logProcess(message, el, flavorName) {
+  info(`${message} - flavor: ${flavorName}, id: ${el.__id}`);
 }

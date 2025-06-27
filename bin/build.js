@@ -1,23 +1,29 @@
 #!/usr/bin/env node
 
-'use strict';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import process from 'node:process';
 
-let args = require('minimist')(process.argv.slice(2));
+import minimist from 'minimist';
 
-let flavorBuilder = require('../src/index');
-const log = require('../src/log');
+import { build } from '../src/index.js';
+import { acquireLock, releaseLock } from '../src/lock.js';
+import log from '../src/log.js';
 
-let configs = args.config.split(',');
-let prom = [];
-for (let i = 0; i < configs.length; i++) {
-  prom.push(flavorBuilder.build(configs[i]));
+let args = minimist(process.argv.slice(2));
+const configFiles =
+  typeof args.config === 'string' ? args.config.split(',') : args.config;
+
+const pidFile = path.join(tmpdir(), 'flavor-builder.pid');
+let isProcessLocked = acquireLock(pidFile);
+if (isProcessLocked) {
+  throw new Error('flavor-builder already running');
 }
 
-Promise.all(prom)
-  .then(() => {
-    log.info('done build');
-  })
-  .catch((e) => {
-    console.error('Error building with flavor-builder', e, e.stack);
-    process.exit(1);
-  });
+for (let i = 0; i < configFiles.length; i++) {
+  await build(configFiles[i]);
+}
+
+await releaseLock(pidFile);
+
+log.info('done build');

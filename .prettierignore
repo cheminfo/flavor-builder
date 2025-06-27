@@ -1,1 +1,4 @@
 *.html
+themes
+lib
+CHANGELOG.md

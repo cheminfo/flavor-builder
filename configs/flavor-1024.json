@@ -1,13 +1,12 @@
 {
-  "revisionByIdPath": "./build/cheminfo-revisions.json",
-  "md5Path": "./build/cheminfo-md5.json",
-  "pidFile": "./build/cheminfo-flavor-builder.pid",
+  "revisionByIdPath": "./build/flavor-1024/revisions.json",
+  "md5Path": "./build/flavor-1024/md5.json",
   "useSSI": true,
-  "rootUrl": "http://www.cheminfo.org/",
+  "rootUrl": "https://www.cheminfo.org/",
   "couchurl": "https://couch.cheminfo.org/",
   "couchLocalUrl": "https://couch.cheminfo.org/",
   "couchDatabase": "cheminfo-public",
-  "dir": "./build/out",
+  "dir": "./build/flavor-1024/out",
   "home": "Home",
   "forceUpdate": false,
   "flavorUsername": "admin@cheminfo.org",
@@ -15,6 +14,7 @@
   "cdn": "https://www.lactame.com",
   "designDoc": "app",
   "direct": "http://direct.lactame.com",
+  "flavor": "1024",
   "layouts": {
     "default": "simplemenu/endlayouts/simplemenu.html",
     "bootstrap": "bootstrap/endlayouts/bootstrap.html",
@@ -59,7 +59,6 @@
     "acimmune": "visualizer-on-tabs"
   },
   "libFolder": "UX4AFL9KTPDES",
-  "selfContained": false,
   "rocLogin": {
     "eln-standalone": {
       "url": "https://mydb.cheminfo.org/",

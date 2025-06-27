@@ -30,7 +30,6 @@
     }
   ],
   "modules": {
-    "folders":["modules/types"]
+    "folders": ["modules/types"]
   }
-
 }

@@ -1,4 +1,4 @@
-FROM node:20-slim
+FROM node:22-slim
 
 RUN apt-get update && apt-get install -y cron git
 
@@ -14,7 +14,7 @@ RUN touch /var/log/cron.log
 COPY start.sh /start.sh
 RUN chmod 744 /start.sh
 
-COPY on-tabs-config.json /on-tabs-config.json
+COPY ./configs/on-tabs.json /on-tabs-config.json
 
 COPY ./ ./
 

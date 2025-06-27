@@ -1,3 +1,0 @@
-extends: cheminfo
-rules:
-  no-console: off
