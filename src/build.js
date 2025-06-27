@@ -1,7 +1,6 @@
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
-import { pipeline } from 'node:stream/promises';
 
 import visualizerOnTabs from 'visualizer-on-tabs';
 
@@ -179,7 +178,7 @@ async function handleFlavor(config, flavorName, sitemaps, revisionHelper) {
 
 function generateHtml(config, flavorName, rootStructure, sitemaps) {
   const urlHelper = new UrlHelper(config);
-  return function generateFlavorHtml(el) {
+  return async function generateFlavorHtml(el) {
     let isHome = el.__id && el.__name === config.home;
     let basePath = path.parse(el.__path).dir;
     let flavorDir = getFlavorDir(config, flavorName);
@@ -210,51 +209,26 @@ function generateHtml(config, flavorName, rootStructure, sitemaps) {
       data.home = '.';
     }
 
-    let prom = [];
-
     // Now that the file is written, the directory exists
 
     if (el.__view) {
-      prom.push(
-        (async function processView() {
-          log.trace('fetch view', el.__id);
-          const viewResponse = await fetch(
-            urlHelper.getViewUrl(el, 'local'),
-            config.fetchReqOptions,
-          );
-          assert.ok(
-            viewResponse.ok,
-            `Failed to fetch view for ${el.__id}: ${viewResponse.statusText}`,
-          );
-          const body = await viewResponse.text();
-          data.botHtml = getBotContent(body);
-          data.description = data.botHtml
-            .replaceAll(/<[^>]*>/g, ' ')
-            .replace('"', "'");
-          let layoutFile =
-            config.layouts[config.flavorLayouts[flavorName] || DEFAULT_FLAVOR];
-          swigWriteFile(layoutFile, el.__path, data);
-        })(),
+      log.trace('fetch view', el.__id);
+      const viewResponse = await fetch(
+        urlHelper.getViewUrl(el, 'local'),
+        config.fetchReqOptions,
       );
-    }
-    if (el.__data) {
-      prom.push(
-        (async function processData() {
-          log.trace('fetch data view data', el.__id);
-          const response = await fetch(
-            urlHelper.getDataUrl(el, 'local'),
-            config.fetchReqOptions,
-          );
-          assert.ok(
-            response.ok,
-            `Failed to fetch data for ${el.__id}: ${response.statusText}`,
-          );
-
-          let dataPath = path.join(basePath, 'data.json');
-          const fileStream = fs.createWriteStream(dataPath);
-          await pipeline(response.body, fileStream);
-        })(),
+      assert.ok(
+        viewResponse.ok,
+        `Failed to fetch view for ${el.__id}: ${viewResponse.statusText}`,
       );
+      const body = await viewResponse.text();
+      data.botHtml = getBotContent(body);
+      data.description = data.botHtml
+        .replaceAll(/<[^>]*>/g, ' ')
+        .replace('"', "'");
+      let layoutFile =
+        config.layouts[config.flavorLayouts[flavorName] || DEFAULT_FLAVOR];
+      swigWriteFile(layoutFile, el.__path, data);
     }
 
     log.trace('write couch.json file', path.join(basePath, 'couch.json'));
@@ -263,7 +237,6 @@ function generateHtml(config, flavorName, rootStructure, sitemaps) {
       rev: el.__rev,
       database: `${config.couchurl}/${config.couchDatabase}`,
     });
-    return Promise.all(prom);
   };
 }
 
