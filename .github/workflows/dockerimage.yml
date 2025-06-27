@@ -25,7 +25,7 @@ jobs:
       - name: Log in to registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
 
-      - name: Push image (manual)
+      - name: Push image (branch or workflow dispatch)
         if: startsWith(github.ref, 'refs/heads/') || github.event_name == 'workflow_dispatch'
         run: |
           IMAGE_ID="${REGISTRY}/${IMAGE_NAME}"
