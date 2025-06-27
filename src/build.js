@@ -52,6 +52,7 @@ export async function build(configArg) {
           await handleFlavor(config, flavors[i], sitemaps, revisionHelper);
         }
       }
+      await flavorHelper.writeFlavorHashes();
     }
     sitemapsHelper.write(sitemaps);
   } catch (error) {

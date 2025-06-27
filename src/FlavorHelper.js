@@ -1,27 +1,19 @@
 import crypto from 'node:crypto';
 
-import FlavorUtils from 'flavor-utils';
-
+import { FlavorUtils } from './FlavorUtils.js';
 import { createOrReadJson, writeJsonSync } from './fs.js';
 import log from './log.js';
 
 export class FlavorHelper {
   constructor(config) {
     this.config = config;
-    this.utils = new FlavorUtils({
-      username: config.flavorUsername,
-      couchUrl: config.couchLocalUrl,
-      couchDatabase: config.couchDatabase,
-      couchUsername: config.couchUsername,
-      couchPassword: config.couchPassword,
-      designDoc: config.designDoc,
-    });
+    this.utils = new FlavorUtils(this.config);
     this.md5 = createOrReadJson(config.md5Path);
   }
 
   getFlavor(flavor) {
     // Returns list of documents in a given flavor
-    return this.utils.getFlavor({ flavor }, true);
+    return this.utils.getFlavor(flavor, true);
   }
 
   // Get which flavors have changed since the last time we checked, based on hashes.
@@ -35,23 +27,25 @@ export class FlavorHelper {
         return Object.keys(result);
       }
       if (JSON.stringify(this.md5) === '{}') {
-        writeJsonSync(this.config.md5Path, result);
+        this.md5 = result;
         return Object.keys(result);
       }
       let keys = [];
-      const newMd5 = structuredClone(this.md5);
       for (let key in result) {
         if (result[key] !== this.md5[key]) {
           log.trace(`flavor ${key} has changed, add to the list`);
-          newMd5[key] = result[key];
+          this.md5[key] = result[key];
           keys.push(key);
         } else {
           log.trace(`flavor ${key} has not changed, ignoring it`);
         }
       }
-      writeJsonSync(this.config.md5Path, newMd5);
       return keys;
     });
+  }
+
+  async writeFlavorHashes() {
+    writeJsonSync(this.config.md5Path, this.md5);
   }
 
   async hasFlavor(flavor) {
@@ -63,21 +57,21 @@ export class FlavorHelper {
     return flavorIdx !== -1;
   }
 
-  #getFlavorMD5(flavors) {
-    if (Array.isArray(flavors)) {
+  #getFlavorMD5(flavor) {
+    if (Array.isArray(flavor)) {
       let prom = [];
-      for (let i = 0; i < flavors.length; i++) {
-        prom.push(this.#getFlavorMD5(flavors[i]));
+      for (let i = 0; i < flavor.length; i++) {
+        prom.push(this.#getFlavorMD5(flavor[i]));
       }
       return Promise.all(prom).then((md5s) => {
         let result = {};
         for (let j = 0; j < md5s.length; j++) {
-          result[flavors[j]] = md5s[j];
+          result[flavor[j]] = md5s[j];
         }
         return result;
       });
     } else {
-      return this.utils.getFlavor({ flavor: flavors }, false).then(
+      return this.utils.getFlavor(flavor, false).then(
         (result) => {
           return crypto
             .createHash('md5')

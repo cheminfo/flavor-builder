@@ -52,13 +52,14 @@ export async function buildConfig(configArg = 'config.json') {
     config.md5Path = path.resolve(import.meta.dirname, '../md5.json');
   }
 
-  config.fetchReqOptions = config.couchPassword
-    ? {
-        headers: {
-          ...getAuthorizationHeader(config.couchUsername, config.couchPassword),
-        },
-      }
-    : {};
+  config.fetchReqOptions =
+    config.couchUsername && config.couchPassword
+      ? {
+          headers: {
+            ...getAuthorizationHeader(config),
+          },
+        }
+      : {};
 
   config.couchurl = config.couchurl.replace(/\/$/, '');
   if (config.rootUrl) {
@@ -66,6 +67,7 @@ export async function buildConfig(configArg = 'config.json') {
   }
 
   if (config.couchLocalUrl) {
+    // Remove the trailing slash if it exists
     config.couchLocalUrl = config.couchLocalUrl.replace(/\/$/, '');
   }
   config.dir = path.resolve(config.dir);

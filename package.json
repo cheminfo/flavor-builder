@@ -23,7 +23,6 @@
   },
   "dependencies": {
     "debug": "^4.4.1",
-    "flavor-utils": "^3.2.0",
     "is-running": "^2.1.0",
     "minimist": "^1.2.8",
     "swig": "^1.4.2",
