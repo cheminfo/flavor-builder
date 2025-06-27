@@ -1,5 +1,21 @@
 # Changelog
 
+## [6.0.0](https://github.com/cheminfo/flavor-builder/compare/v5.0.2...v6.0.0) (2025-06-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* update deps, refactor, remove selfContained and more ([#84](https://github.com/cheminfo/flavor-builder/issues/84))
+
+### Features
+
+* update deps, refactor, remove selfContained and more ([#84](https://github.com/cheminfo/flavor-builder/issues/84)) ([f534f4c](https://github.com/cheminfo/flavor-builder/commit/f534f4ca2c92d8721f90a5248bbfd4d61eba83a5))
+
+
+### Bug Fixes
+
+* do not write flavor hashes before all flavors have been processed ([4d199f2](https://github.com/cheminfo/flavor-builder/commit/4d199f28358d97ef7320446b7fc90c3c1524bf61))
+
 ### [5.0.2](https://www.github.com/cheminfo/flavor-builder/compare/v5.0.1...v5.0.2) (2024-05-31)
 
 
