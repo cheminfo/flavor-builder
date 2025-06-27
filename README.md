@@ -15,7 +15,6 @@ There are other build configurations available in the `configs` directory to tes
 As configured by `configs/cheminfo.json`, this will write to the `build` directory:
 
 - `cheminfo-revisions.json` and `cheminfo-md5.json` which keep track of what has been updated.
-- `cheminfo-flavor-builder.pid` which is used as a lock to know if a build is already in progress.
 - `out` directory which contains the result of the build
 
 Build the admin page by running:
@@ -36,6 +35,18 @@ Example of on-tabs page: `http://localhost:6060/flavor/eln/reaction/index.html`
 
 If you built the admin page, you can access it at: `http://localhost:6060/on-tabs/`
 
+## Build with couchdb authentication
+
+If access to the CouchDB database is protected, use the `COUCHDB_USER` and `COUCHDB_PASSWORD` environment variables to provide the credentials.
+
+For example, assuming you have a working couchdb instance on `localhost:5984`, you could run:
+
+```bash
+DEBUG=flavor-builder:info COUCHDB_USER=admin COUCHDB_PASSWORD=<FILL_PASSWORD_HERE> node bin/build.js --config=./configs/scipeaks.json
+```
+
+````bash
+
 ## Test an alternative build
 
 Use your own configuration or build from one of the existing ones in the `configs` directory.
@@ -45,7 +56,7 @@ DEBUG=flavor-builder:info node bin/build.js  --config=./configs/flavor-1024.json
 # Will serve build/flavor-1024/out/ on port 6060
 SERVE_DIR=flavor-1024 docker compose up -d
 open http://localhost:6060/
-```
+````
 
 > **Warning**
 > The `on-tabs` page is not fully functional in this setup.
