@@ -10,7 +10,7 @@
     "eslint-fix": "npm run eslint -- --fix",
     "prettier": "prettier --check ./",
     "prettier-write": "prettier --write ./",
-    "test": "npm run eslint"
+    "test": "npm run prettier && npm run eslint"
   },
   "keywords": [
     "visualizer",
