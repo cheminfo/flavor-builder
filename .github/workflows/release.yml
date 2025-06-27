@@ -5,18 +5,12 @@ on:
     branches:
       - main
 
-env:
-  NODE_VERSION: 20.x
-
 jobs:
-  release-please:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get package name
-        run: echo "PACKAGE_NAME=$(jq .name package.json | tr -d '"')" >> $GITHUB_ENV
-      - uses: GoogleCloudPlatform/release-please-action@v2
-        id: release
-        with:
-          token: ${{ secrets.BOT_TOKEN }}
-          release-type: node
-          package-name: ${{ env.PACKAGE_NAME }}
+  release:
+    # Documentation: https://github.com/zakodium/workflows#release
+    uses: zakodium/workflows/.github/workflows/release.yml@release-v1
+    with:
+      npm: true
+    secrets:
+      github-token: ${{ secrets.BOT_TOKEN }}
+      npm-token: ${{ secrets.NPM_BOT_TOKEN }}
