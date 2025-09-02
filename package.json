@@ -19,18 +19,18 @@
   "author": "Daniel Kostro",
   "license": "MIT",
   "volta": {
-    "node": "22.16.0"
+    "node": "24.7.0"
   },
   "dependencies": {
     "debug": "^4.4.1",
     "is-running": "^2.1.0",
     "minimist": "^1.2.8",
     "swig": "^1.4.2",
-    "visualizer-on-tabs": "git+https://github.com/cheminfo/visualizer-on-tabs#e8e4d35f21069d55ce997e373a3dec6d4526cde1"
+    "visualizer-on-tabs": "^1.0.1"
   },
   "devDependencies": {
     "eslint": "^9.28.0",
-    "eslint-config-cheminfo": "^14.1.1",
+    "eslint-config-cheminfo": "^15.0.2",
     "globals": "^16.2.0",
     "prettier": "^3.5.3"
   },
