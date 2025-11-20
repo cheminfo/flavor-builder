@@ -79,3 +79,34 @@ It is responsible for building static assets but not for running a web server li
 - The outputs of the builds are written to `/var/www/html/` base directory on the container.
 - Runs a command when the container starts that builds the visualizer admin page to the `on-tabs` directory, based on the `/on-tabs-config.json` configuration file.
 - Runs a command every minute which builds pages to the base directory based on the `/flavor-config.json` configuration file.
+
+## Configuring the docker image
+
+Example of configuration with some hints:
+
+```yml
+services:
+  flavor-builder:
+    # Replace with a fixed version
+    image: ghcr.io/cheminfo/flavor-builder:latest
+    # Wrap with a process which handles SIGTERM signals.
+    init: true
+    environment:
+      DEBUG: 'flavor-builder:info'
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: ${COUCHDB_ADMIN_PASSWORD}
+    volumes:
+      # Used to build static pages periodically.
+      - ./config/flavor-builder-config.json:/flavor-config.json:ro
+      # Used to build the /on-tabs/ page.
+      - ./config/on-tabs-config.json:/on-tabs-config.json:ro
+      # Output directory, usually needed so that another service can serve the built files.
+      - ./www:/var/www/html
+    depends_on:
+      # Recommended to prevent the build from failing if couchdb is not ready.
+      - couchdb
+```
+
+
+
+
