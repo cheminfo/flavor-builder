@@ -106,7 +106,3 @@ services:
       # Recommended to prevent the build from failing if couchdb is not ready.
       - couchdb
 ```
-
-
-
-
