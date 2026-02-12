@@ -1,16 +1,18 @@
 import path from 'node:path';
 import process from 'node:process';
-
-import minimist from 'minimist';
+import { parseArgs } from 'node:util';
 
 import { getAuthorizationHeader } from './auth.js';
 
-const args = minimist(process.argv.slice(2));
+const args = parseArgs({
+  strict: false,
+  allowNegative: true,
+}).values;
 
 /**
  * Build the final configuration object.
  * @param  {string|object} configArg - The path to the config file or the config object itself.
- * @returns {*} The final configuration object.
+ * @returns {Promise<any>} The final configuration object.
  */
 export async function buildConfig(configArg = 'config.json') {
   let config;

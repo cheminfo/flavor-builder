@@ -19,20 +19,20 @@
   "author": "Daniel Kostro",
   "license": "MIT",
   "volta": {
-    "node": "24.7.0"
+    "node": "24.13.1"
   },
   "dependencies": {
-    "debug": "^4.4.1",
+    "debug": "^4.4.3",
     "is-running": "^2.1.0",
-    "minimist": "^1.2.8",
     "swig": "^1.4.2",
-    "visualizer-on-tabs": "^1.0.1"
+    "visualizer-on-tabs": "^1.0.2"
   },
   "devDependencies": {
-    "eslint": "^9.28.0",
-    "eslint-config-cheminfo": "^15.0.2",
-    "globals": "^16.2.0",
-    "prettier": "^3.5.3"
+    "@types/node": "^24.10.13",
+    "eslint": "^9.39.2",
+    "eslint-config-cheminfo": "^17.1.0",
+    "globals": "^17.3.0",
+    "prettier": "^3.8.1"
   },
   "repository": {
     "type": "git",
