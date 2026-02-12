@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.1.1](https://github.com/cheminfo/flavor-builder/compare/v6.1.0...v6.1.1) (2026-02-12)
+
+
+### Bug Fixes
+
+* update deps ([90528f7](https://github.com/cheminfo/flavor-builder/commit/90528f722373fd3512c9f574f60f01cdf64a7fdc))
+
 ## [6.1.0](https://github.com/cheminfo/flavor-builder/compare/v6.0.1...v6.1.0) (2025-09-02)
 
 
