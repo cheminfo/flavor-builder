@@ -3,9 +3,9 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block head %}
-{% parent %}
+{{ super() }}
 <!--Base libraries-->
-<script src="{{ config.cdn | concat('/lib/lodash/3.4.0/lodash.min.js') }}"></script>
+<script src="{{ config.cdn }}/lib/lodash/3.4.0/lodash.min.js"></script>
 {% endblock %}
 
 {% block content %}
