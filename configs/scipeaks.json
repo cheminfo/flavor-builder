@@ -12,7 +12,6 @@
   "flavorUsername": "admin@cheminfo.org",
   "cdn": "https://www.lactame.com",
   "direct": "https://direct.lactame.com",
-  "libFolder": "Q92ELCJKTIDXB",
   "layouts": {
     "default": "simplemenu/endlayouts/simplemenu.html"
   },

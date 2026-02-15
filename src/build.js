@@ -163,10 +163,6 @@ async function handleFlavor(config, flavorName, sitemaps, revisionHelper) {
   log.trace('copy files');
   await copyFiles([
     {
-      src: path.join(import.meta.dirname, '../lib'),
-      dest: path.join(config.dir, './lib'),
-    },
-    {
       src: path.join(import.meta.dirname, '../themes'),
       dest: path.join(config.dir, './themes'),
     },

@@ -16,14 +16,9 @@
   "direct": "http://direct.lactame.com",
   "layouts": {
     "default": "simplemenu/endlayouts/simplemenu.html",
-    "bootstrap": "bootstrap/endlayouts/bootstrap.html",
-    "cheminformatics": "bootstrap/endlayouts/cheminformatics.html",
     "chromeapp": "bootstrap/endlayouts/chromeapp.html",
-    "chrome-app": "bootstrap/endlayouts/chrome-app.html",
     "simple": "simplemenu/endlayouts/simple.html",
-    "mass": "mass/endlayouts/simple.html",
-    "standalone": "nomenu/nomenu.html",
-    "menu-copy": "simplemenu/endlayouts/menu-copy.html"
+    "standalone": "nomenu/nomenu.html"
   },
   "flavorLayouts": {
     "eln-standalone": "standalone",
@@ -57,7 +52,6 @@
     "mpi": "visualizer-on-tabs",
     "acimmune": "visualizer-on-tabs"
   },
-  "libFolder": "UX4AFL9KTPDES",
   "rocLogin": {
     "eln-standalone": {
       "url": "https://mydb.cheminfo.org/",

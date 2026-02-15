@@ -107,7 +107,6 @@ function checkConfig(config) {
     'flavorUsername',
     'couchDatabase',
     'layouts',
-    'libFolder',
   ];
   for (let i = 0; i < mandatory.length; i++) {
     if (config[mandatory[i]] === undefined) {
