@@ -12,8 +12,8 @@ import { buildConfig } from './config.js';
 import { DEFAULT_FLAVOR, READ_CONFIG } from './constants.js';
 import { copyFiles, writeJsonSync } from './fs.js';
 import log from './log.js';
+import { nunjucksWriteFile } from './nunjucks.js';
 import { getFlavorDir, pathFromDir } from './paths.js';
-import { swigWriteFile } from './swig.js';
 
 const pathCharactersRegExp = /[^A-Za-z0-9.-]/g;
 
@@ -229,7 +229,7 @@ function generateHtml(config, flavorName, rootStructure, sitemaps) {
         .replace('"', "'");
       let layoutFile =
         config.layouts[config.flavorLayouts[flavorName] || DEFAULT_FLAVOR];
-      swigWriteFile(layoutFile, el.__path, data);
+      nunjucksWriteFile(layoutFile, el.__path, data);
     }
 
     log.trace('write couch.json file', path.join(basePath, 'couch.json'));

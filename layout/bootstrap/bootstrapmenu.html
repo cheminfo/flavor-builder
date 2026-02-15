@@ -3,7 +3,7 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block head %}
-{% parent %}
+{{ super() }}
 <script>
     window.addEventListener('load', function() {
         var $el = $('body').find('.navbar-collapse');
