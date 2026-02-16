@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.1.2](https://github.com/cheminfo/flavor-builder/compare/v6.1.1...v6.1.2) (2026-02-16)
+
+
+### Bug Fixes
+
+* cleanup unused files and unused templates ([e4c714d](https://github.com/cheminfo/flavor-builder/commit/e4c714d697cf1455150e2547b1a7ae912ad80e53))
+
 ## [6.1.1](https://github.com/cheminfo/flavor-builder/compare/v6.1.0...v6.1.1) (2026-02-12)
 
 
