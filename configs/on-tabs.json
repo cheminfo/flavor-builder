@@ -84,7 +84,9 @@
       "replace": "https://couch.cheminfo.org/cheminfo-public/$&"
     }
   ],
-  "visualizerFallbackVersion": "latest",
-  "visualizerVersion": "latest",
-  "visualizerCDN": "/visualizer"
+  "visualizer": {
+    "fallbackVersion": "latest",
+    "loadversion": "latest-major",
+    "cdn": "/visualizer"
+  }
 }
