@@ -25,11 +25,11 @@
     "debug": "^4.4.3",
     "is-running": "^2.1.0",
     "nunjucks": "^3.2.4",
-    "visualizer-on-tabs": "^1.0.2"
+    "visualizer-on-tabs": "^2.0.0"
   },
   "devDependencies": {
-    "@types/node": "^24.10.13",
-    "eslint": "^9.39.2",
+    "@types/node": "^24.10.14",
+    "eslint": "^9.39.3",
     "eslint-config-cheminfo": "^17.1.0",
     "globals": "^17.3.0",
     "prettier": "^3.8.1"
