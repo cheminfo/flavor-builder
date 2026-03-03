@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.0.1](https://github.com/cheminfo/flavor-builder/compare/v7.0.0...v7.0.1) (2026-03-03)
+
+
+### Bug Fixes
+
+* upgrade visualizer-on-tabs with bug fixes ([1349103](https://github.com/cheminfo/flavor-builder/commit/1349103d70d4c191c6dd869ae602900d0e57b02d))
+
 ## [7.0.0](https://github.com/cheminfo/flavor-builder/compare/v6.1.2...v7.0.0) (2026-02-26)
 
 
