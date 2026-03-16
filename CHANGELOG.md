@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.0.2](https://github.com/cheminfo/flavor-builder/compare/v7.0.1...v7.0.2) (2026-03-16)
+
+
+### Bug Fixes
+
+* generate a namespace for each on-tabs home page ([#104](https://github.com/cheminfo/flavor-builder/issues/104)) ([99e683a](https://github.com/cheminfo/flavor-builder/commit/99e683a7971cc1e92383c8b483a0623540fc23d2))
+
 ## [7.0.1](https://github.com/cheminfo/flavor-builder/compare/v7.0.0...v7.0.1) (2026-03-03)
 
 
