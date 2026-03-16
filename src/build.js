@@ -87,23 +87,24 @@ async function handleVisualizerOnTabs(config, flavorName, sitemaps) {
         path.join(outDir, 'index.html'),
       );
 
-      let customConfig = {
-        possibleViews: {},
-      };
+      const possibleViews = {};
       sitemaps.add(indexPage);
 
-      customConfig.possibleViews[el.__name] = {
+      possibleViews[el.__name] = {
         url: urlHelper.getViewUrl(el, 'public'),
         closable: false,
       };
 
-      customConfig.possibleViews = Object.assign(
-        customConfig.possibleViews,
-        tabsConfig ? tabsConfig.possibleViews : {},
-      );
       homePages.push({
         outDir,
-        config: { ...tabsConfig, ...customConfig },
+        config: {
+          storageNamespace: el.__parents.join('/'),
+          ...tabsConfig,
+          possibleViews: {
+            ...possibleViews,
+            ...tabsConfig?.possibleViews,
+          },
+        },
       });
     }
   });
