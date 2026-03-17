@@ -87,6 +87,7 @@ async function handleVisualizerOnTabs(config, flavorName, sitemaps) {
         path.join(outDir, 'index.html'),
       );
 
+      console.log(el);
       const possibleViews = {};
       sitemaps.add(indexPage);
 
@@ -98,7 +99,7 @@ async function handleVisualizerOnTabs(config, flavorName, sitemaps) {
       homePages.push({
         outDir,
         config: {
-          storageNamespace: el.__parents.join('/'),
+          storageNamespace: [flavorName, ...el.__parents].join('/'),
           ...tabsConfig,
           possibleViews: {
             ...possibleViews,
