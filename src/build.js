@@ -87,7 +87,6 @@ async function handleVisualizerOnTabs(config, flavorName, sitemaps) {
         path.join(outDir, 'index.html'),
       );
 
-      console.log(el);
       const possibleViews = {};
       sitemaps.add(indexPage);
 
