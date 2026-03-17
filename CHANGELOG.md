@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.0.4](https://github.com/cheminfo/flavor-builder/compare/v7.0.3...v7.0.4) (2026-03-17)
+
+
+### Bug Fixes
+
+* remove log ([49d23fc](https://github.com/cheminfo/flavor-builder/commit/49d23fcd743c57504b604e9f54cff2e16b462929))
+
 ## [7.0.3](https://github.com/cheminfo/flavor-builder/compare/v7.0.2...v7.0.3) (2026-03-17)
 
 
