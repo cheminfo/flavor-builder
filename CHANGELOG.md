@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.0.3](https://github.com/cheminfo/flavor-builder/compare/v7.0.2...v7.0.3) (2026-03-17)
+
+
+### Bug Fixes
+
+* add flavor name to storage namespace for on-tabs ([37458ca](https://github.com/cheminfo/flavor-builder/commit/37458ca88b4ed1cfa89a6f4522991431f28d07ab))
+
 ## [7.0.2](https://github.com/cheminfo/flavor-builder/compare/v7.0.1...v7.0.2) (2026-03-16)
 
 
