@@ -6,39 +6,44 @@
     }
   },
   "visualizer": {
-    "modules": {
-      "folders": ["modules/types"]
-    },
-    "header": {
-      "height": "30px",
-      "elements": [
-        {
-          "type": "versionselector",
-          "label": "Switch version",
-          "url": "https://www.lactame.com/visualizer/versions.json",
-          "queryType": "fragment",
-          "minVersion": "v2.60.0"
-        },
-
-        {
-          "type": "roc-views",
-          "label": "View manager",
-          "url": "../roc",
-          "database": "visualizer"
-        },
-        {
-          "type": "copyview",
-          "label": "Copy view"
-        },
-        {
-          "type": "pasteview",
-          "label": "Paste view"
-        },
-        {
-          "type": "blankview",
-          "label": "Blank view"
-        }
-      ]
+    "queryType": "query",
+    "loadversion": "latest-major",
+    "fallbackVersion": "latest",
+    "cdn": "/visualizer",
+    "config": {
+      "modules": {
+        "folders": ["modules/types"]
+      },
+      "header": {
+        "height": "30px",
+        "elements": [
+          {
+            "type": "versionselector",
+            "label": "Switch version",
+            "url": "https://www.lactame.com/visualizer/versions.json",
+            "minVersion": "v3.1.0"
+          },
+          {
+            "type": "roc-views",
+            "label": "View manager",
+            "url": "../roc",
+            "database": "visualizer",
+            "reload": true
+          },
+          {
+            "type": "copyview",
+            "label": "Copy view"
+          },
+          {
+            "type": "pasteview",
+            "label": "Paste view"
+          },
+          {
+            "type": "blankview",
+            "label": "Blank view"
+          }
+        ]
+      }
     }
   },
   "rocLogin": {
@@ -83,10 +88,5 @@
       "reg": "^[^/]+/view.json.*",
       "replace": "https://couch.cheminfo.org/cheminfo-public/$&"
     }
-  ],
-  "visualizer": {
-    "fallbackVersion": "latest",
-    "loadversion": "latest-major",
-    "cdn": "/visualizer"
-  }
+  ]
 }
