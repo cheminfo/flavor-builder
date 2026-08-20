@@ -47,7 +47,6 @@
     }
   },
   "rocLogin": {
-    "urlAbsolute": "../login.html?continue=/../on-tabs/",
     "url": "../roc",
     "user": "admin@cheminfo.org",
     "auto": true
