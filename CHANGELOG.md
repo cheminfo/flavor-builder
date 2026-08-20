@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.0.6](https://github.com/cheminfo/flavor-builder/compare/v7.0.5...v7.0.6) (2026-08-20)
+
+
+### Bug Fixes
+
+* correct invalid default on-tabs config ([#116](https://github.com/cheminfo/flavor-builder/issues/116)) ([b3b0e96](https://github.com/cheminfo/flavor-builder/commit/b3b0e96104e9a8f24b23257eeac518c57a5b35ab))
+
 ## [7.0.5](https://github.com/cheminfo/flavor-builder/compare/v7.0.4...v7.0.5) (2026-08-20)
 
 
