@@ -5,7 +5,7 @@
       "url": ""
     }
   },
-  "visualizerConfig": {
+  "visualizer": {
     "modules": {
       "folders": ["modules/types"]
     },
